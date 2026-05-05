@@ -13,7 +13,7 @@ type AuthUser = {
 type AuthContextType = {
   user: AuthUser | null;
   isLoading: boolean;
-  sendCode: (email: string, fullName?: string, extra?: { joinCoop?: boolean; phone?: string; curp?: string }) => Promise<{ autoLogin?: boolean }>;
+  sendCode: (email: string, fullName?: string, extra?: { joinCoop?: boolean; phone?: string; curp?: string; mode?: "login" | "register" }) => Promise<{ autoLogin?: boolean }>;
   verifyCode: (email: string, code: string) => Promise<void>;
   adminLogin: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const sendCode = async (email: string, fullName?: string, extra?: { joinCoop?: boolean; phone?: string; curp?: string }): Promise<{ autoLogin?: boolean }> => {
+  const sendCode = async (email: string, fullName?: string, extra?: { joinCoop?: boolean; phone?: string; curp?: string; mode?: "login" | "register" }): Promise<{ autoLogin?: boolean }> => {
     const res = await fetch("/api/auth/send-code", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -70,8 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.message || "Error al enviar el código");
+      const data = await res.json().catch(() => ({}));
+      const err = new Error(data.message || "Error al enviar el código") as Error & { code?: string };
+      if (data.code) err.code = data.code;
+      throw err;
     }
 
     const data = await res.json();

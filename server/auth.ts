@@ -267,6 +267,19 @@ export function setupAuth(app: Express): void {
         });
       }
 
+      // If the client signals this is a registration attempt, reject if the email is already in use.
+      // Lets the UI route them to login instead of silently sending an OTP.
+      // (Demo accounts above always win, even in register mode.)
+      if (req.body?.mode === "register") {
+        const [existingForRegister] = await db.select({ id: users.id }).from(users).where(eq(users.email, normalizedEmail)).limit(1);
+        if (existingForRegister) {
+          return res.status(409).json({
+            message: "Ya tienes una cuenta. Inicia sesión para continuar.",
+            code: "USER_EXISTS",
+          });
+        }
+      }
+
       // Check for recent OTP to prevent spam (must wait 30s between requests)
       const [existing] = await db.select().from(otpCodes)
         .where(eq(otpCodes.email, normalizedEmail))

@@ -82,7 +82,7 @@ function AuthPageContent() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [sendCooldown, setSendCooldown] = useState(0);
-  const [isReturning, setIsReturning] = useState(false);
+  const [isReturning, setIsReturning] = useState(true);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [joinCoop, setJoinCoop] = useState(false);
   const [phone, setPhone] = useState("");
@@ -220,7 +220,11 @@ function AuthPageContent() {
     if (sendCooldown > 0) return;
     setLoading(true);
     try {
-      const result = await sendCode(email, fullName || undefined, joinCoop ? { joinCoop, phone: phone || undefined } : undefined);
+      const mode = isReturning ? "login" : "register";
+      const result = await sendCode(email, fullName || undefined, {
+        mode,
+        ...(joinCoop ? { joinCoop, phone: phone || undefined } : {}),
+      });
       if (result.autoLogin) {
         redirectByRole();
         return;
@@ -232,6 +236,14 @@ function AuthPageContent() {
         description: `Revisa tu correo ${email}`,
       });
     } catch (err: any) {
+      if (err.code === "USER_EXISTS") {
+        setIsReturning(true);
+        toast({
+          title: "Ya tienes una cuenta",
+          description: "Cambiamos a inicio de sesión. Presiona el botón otra vez para enviar tu código.",
+        });
+        return;
+      }
       const msg = err.message?.toLowerCase() || "";
       const isRateLimit = msg.includes("rate limit") || msg.includes("too many") || msg.includes("email rate") || msg.includes("espera") || msg.includes("429");
       if (isRateLimit) {
