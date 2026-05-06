@@ -238,7 +238,7 @@ function fillToc(ctx: DocCtx, pages: number[]) {
     doc.font("Helvetica-Bold").fontSize(13).fillColor(e.c).text(e.n, ML, y, { lineBreak: false });
     doc.font("Helvetica").fontSize(11).fillColor(INK).text(e.t, ML + 36, y + 1, { lineBreak: false });
     doc.font("Helvetica").fontSize(11).fillColor(INK_MUTED).text(`${pg}`, ML + CW - 28, y + 1, { width: 28, align: "right", lineBreak: false });
-    const tw = doc.widthOfString(e.t, { font: "Helvetica", fontSize: 11 });
+    const tw = doc.widthOfString(e.t, { font: "Helvetica", fontSize: 11 } as any);
     const dotStart = ML + 36 + tw + 8;
     const dotEnd = ML + CW - 36;
     if (dotEnd > dotStart) {

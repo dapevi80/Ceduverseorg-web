@@ -14,10 +14,12 @@ import {
   referralCodes,
   monthlyContributions,
   invoices,
+  courseUsers,
+  achievementUsers,
 } from "@shared/schema";
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, or, sql, desc } from "drizzle-orm";
 import * as facturapi from "../services/facturapi";
-import { sendEmployeeInvitationEmail } from "../email";
+import { sendEmployeeInvitationEmail, sendSamPartnerNotificationEmail } from "../email";
 import crypto from "crypto";
 import { determinePlan, UMA_VALUE_2026 } from "./admin";
 

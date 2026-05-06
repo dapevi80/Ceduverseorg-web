@@ -388,11 +388,11 @@ export function registerExternalApiRoutes(app: Express) {
         .where(and(...conditions))
         .limit(maxResults);
 
-      const names = results.flatMap(r => [r.razonSocial, r.nombreComercial].filter(Boolean));
+      const names = results.flatMap(r => [r.razonSocial, r.nombreComercial].filter((s): s is string => Boolean(s)));
       const matches69b = await find69bMatches(names);
 
       const companies = results.map(emp => {
-        const match = matches69b.get(normalizeCompanyName(emp.razonSocial || "")) || 
+        const match = matches69b.get(normalizeCompanyName(emp.razonSocial || "")) ||
                       matches69b.get(normalizeCompanyName(emp.nombreComercial || "")) || null;
         return mapEmpresaToExternal(emp, match);
       });
@@ -444,7 +444,7 @@ export function registerExternalApiRoutes(app: Express) {
         .limit(limit)
         .offset(offset);
 
-      const names = results.flatMap(r => [r.razonSocial, r.nombreComercial].filter(Boolean));
+      const names = results.flatMap(r => [r.razonSocial, r.nombreComercial].filter((s): s is string => Boolean(s)));
       const matches69b = await find69bMatches(names);
 
       const companies = results.map(emp => {
@@ -509,7 +509,7 @@ export function registerExternalApiRoutes(app: Express) {
         .orderBy(sql`${haversine}`)
         .limit(maxResults);
 
-      const nearbyNames = results.flatMap(r => [r.empresa.razonSocial, r.empresa.nombreComercial].filter(Boolean));
+      const nearbyNames = results.flatMap(r => [r.empresa.razonSocial, r.empresa.nombreComercial].filter((s): s is string => Boolean(s)));
       const nearbyMatches69b = await find69bMatches(nearbyNames);
 
       res.setHeader("Cache-Control", "public, max-age=300");
@@ -741,7 +741,7 @@ export function registerExternalApiRoutes(app: Express) {
 
   app.get(["/api/v1/external/companies/:id", "/api/v1/external/empresas/:id"], authenticateApiKey, async (req, res) => {
     try {
-      const realId = deobfuscateId(req.params.id);
+      const realId = deobfuscateId(String(req.params.id));
       if (!realId) {
         res.status(400).json({ error: "bad_request", message: "Invalid company ID format" });
         logRequest(req, res);

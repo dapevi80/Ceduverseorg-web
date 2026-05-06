@@ -505,9 +505,15 @@ export const leads = pgTable("leads", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const insertLeadSchema = createInsertSchema(leads).omit({
-  id: true,
-  createdAt: true,
+// Hand-rolled rather than createInsertSchema — drizzle-zod 0.8's .omit().extend()
+// rejects chained string validators. This is the only place this schema is used.
+export const insertLeadSchema = z.object({
+  fullName: z.string().trim().min(2, "El nombre debe tener al menos 2 caracteres").max(120),
+  email: z.string().trim().toLowerCase().email("Correo electrónico inválido").max(254),
+  phone: z.string().trim().max(40).optional().nullable(),
+  company: z.string().trim().max(200).optional().nullable(),
+  city: z.string().trim().max(120).optional().nullable(),
+  source: z.string().trim().max(60).optional(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

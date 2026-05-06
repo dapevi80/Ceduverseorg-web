@@ -260,7 +260,7 @@ export function registerFinancieroRoutes(app: Express) {
 
       let feePotencialMensual = 0;
       for (const row of rows(feeByPlan)) {
-        const p = row.plan || "Transforma";
+        const p = String(row.plan || "Transforma");
         const pct = PLAN_FEE[p] || 0.13;
         feePotencialMensual += Number(row.potencial || 0) * pct;
       }

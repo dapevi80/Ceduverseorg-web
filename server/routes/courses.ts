@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import rateLimit from "express-rate-limit";
 import { requireAuth, optionalAuth, requireAdmin } from "../auth";
 import { storage } from "../storage";
 import { db } from "../db";
@@ -9,6 +10,8 @@ import {
   insertAchievementSchema,
   insertCourseUserSchema,
   insertLeadSchema,
+  insertTeamSchema,
+  insertTeamUserSchema,
   courses,
   courseUsers,
   achievements,
@@ -22,6 +25,17 @@ import {
 } from "@shared/schema";
 import { eq, and, sql, count, desc } from "drizzle-orm";
 import { sendKitEmail } from "../email";
+import { getInitialsFromName } from "./helpers";
+
+// Public lead form — anonymous, low-volume in legitimate use.
+// 5 leads / IP / hour is generous for a real prospect (typically 1) and blocks scrapers.
+const leadFormLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Demasiadas solicitudes. Intenta en una hora." },
+});
 
 export function registerCourseRoutes(app: Express) {
   app.get("/api/courses", async (_req, res, next) => {
@@ -373,7 +387,7 @@ export function registerCourseRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
-  app.post("/api/leads", async (req, res, next) => {
+  app.post("/api/leads", leadFormLimiter, async (req, res, next) => {
     try {
       const parsed = insertLeadSchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });

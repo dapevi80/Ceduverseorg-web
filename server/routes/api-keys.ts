@@ -4,6 +4,7 @@ import { db } from "../db";
 import {
   apiKeys,
   apiRequestLogs,
+  empresasProspectos,
 } from "@shared/schema";
 import { eq, and, sql, count, desc, gte, lte } from "drizzle-orm";
 import crypto from "crypto";
