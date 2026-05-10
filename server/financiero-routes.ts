@@ -18,7 +18,10 @@ function firstRow(result: QueryResultLike): DbRow {
 
 const UMA = 113.14;
 const PLAN_UMAS: Record<string, number> = { Impulsa: 6, Transforma: 10, Lidera: 20 };
-const PLAN_FEE: Record<string, number> = { Impulsa: 0.20, Transforma: 0.13, Lidera: 0.10 };
+// Source of truth for the fee % is determinePlan() in routes/admin.ts (15/8/5).
+// These values feed internal revenue projections; they MUST stay in sync with the
+// production billing path or the dashboard shows inflated forecasts.
+const PLAN_FEE: Record<string, number> = { Impulsa: 0.15, Transforma: 0.08, Lidera: 0.05 };
 const COSTO_OPS_MENSUAL = 94857;
 
 const DC3_PRECIO_DTO = 399;

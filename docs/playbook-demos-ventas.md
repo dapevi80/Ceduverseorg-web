@@ -19,15 +19,14 @@ Este playbook explica:
 
 ---
 
-## Las cinco cuentas demo (referencia rápida)
+## Las cuatro cuentas demo (referencia rápida)
 
 | Email | Rol en la plataforma | Cuándo usarlo |
 |---|---|---|
-| `demosocio@ceduverse.org` | Empresa (admin) | Director de RH, CEO, dueño de PYME — el que firma el cheque |
+| `demosocio@ceduverse.org` | Socio Comercial | Vendedor independiente, partner de ventas, agente comercial |
+| `demodirector@ceduverse.org` | Socio Comercial (Director) | Líder con red de socios downline, comisiones de override |
 | `demoestudiante@ceduverse.org` | Estudiante / Colaborador | Empleado, gerente medio que quiere ver la experiencia del usuario final |
-| `demoinstructor@ceduverse.org` | Instructor | Capacitador independiente, profesor universitario, creador de contenido |
-| `democomercial@ceduverse.org` | Socio comercial | Vendedor independiente que busca ingreso recurrente vía referidos |
-| `demoadmin@ceduverse.org` | Admin Ceduverse | **Solo uso interno.** No usar con prospectos. |
+| `demoempresa@ceduverse.org` | Empresa Patrocinadora | Director de RH, CEO, dueño de PYME — el que firma el cheque |
 
 **Importante:** estas cuentas saltan el OTP. Cualquier persona que sepa el correo puede entrar a la plataforma. **No las publiques en redes, WhatsApp grupal, ni materiales impresos.** Úsalas solo en demos asistidas por ti.
 
@@ -66,7 +65,10 @@ Aquí entra la cuenta demo. Ver sección **"Cómo elegir la cuenta demo"** abajo
 ### 5. Cierre (2 minutos)
 
 - "¿Cuántos colaboradores tienes?"
-- Cálculo en vivo: colaboradores × $679 = mensualidad
+- Cálculo en vivo según el plan que le toca por tamaño:
+  - **Impulsa** (1–10 cols): $679 / colaborador / mes
+  - **Transforma** (11–99 cols): $1,131 / colaborador / mes
+  - **Lidera** (100+ cols): $2,263 / colaborador / mes
 - "Te puedo enviar el contrato por correo en 5 minutos"
 
 ---
@@ -82,11 +84,11 @@ Según la respuesta:
 | Si el prospecto pregunta… | Usa la cuenta… | Y muestra… |
 |---|---|---|
 | "¿Cómo se ve para mis empleados?" | `demoestudiante` | Catálogo de cursos, Tutor IA en vivo, certificado al final |
-| "¿Cómo administro la plataforma?" | `demosocio` | Dashboard de empresa, progreso por colaborador, reportes para STPS |
-| "Quiero crear contenido / soy capacitador" | `demoinstructor` | Editor de cursos, métricas de alumnos, regalías |
-| "¿Cómo gano dinero como socio?" | `democomercial` | Dashboard de comisiones, kit de ventas, niveles (Brote / Árbol / Bosque) |
+| "¿Cómo administro la plataforma?" | `demoempresa` | Dashboard de empresa, progreso por colaborador, reportes para STPS, CFDI automático |
+| "¿Cómo gano dinero como socio?" | `demosocio` | Dashboard de comisiones, kit de ventas, niveles (Brote / Árbol / Bosque) |
+| "Soy líder de equipo de socios" | `demodirector` | Red downline, comisiones de override sobre socios reclutados, métricas de equipo |
 
-**Regla:** si solo tienes tiempo para una cuenta, usa **`demosocio`** — es la perspectiva del comprador. Si tienes 30+ minutos, encadena `demosocio` → `demoestudiante` para mostrar el ciclo completo: cómo lo administra el cliente y cómo lo viven sus empleados.
+**Regla:** si solo tienes tiempo para una cuenta, usa **`demoempresa`** — es la perspectiva del comprador y de quien firma el cheque. Si tienes 30+ minutos, encadena `demoempresa` → `demoestudiante` para mostrar el ciclo completo: cómo lo administra el cliente y cómo lo viven sus empleados.
 
 ---
 
@@ -124,7 +126,7 @@ Según la respuesta:
 
 **2. "Es muy caro."**
 
-> "Son $679 al mes por colaborador, deducible al 100%. Una sola multa de STPS te cuesta hasta $565,000. Si tienes 25 colaboradores, son $17,000 al mes — la multa pagaría más de dos años de Ceduverse. Y los empleados capacitados se quedan más tiempo, así que también ahorras en rotación."
+> "El plan se ajusta al tamaño de la empresa. Para 25 colaboradores son $1,131 por colaborador al mes — alrededor de $28,275 mensuales, deducible al 100%. Una sola multa de STPS te cuesta hasta $565,000. La multa pagaría más de un año y medio de Ceduverse. Y los empleados capacitados se quedan más tiempo, así que también ahorras en rotación."
 
 **3. "No tenemos tiempo."**
 
@@ -143,9 +145,9 @@ Según la respuesta:
 ## Lo que NO debes hacer
 
 - **No compartas las cuentas demo** en LinkedIn, WhatsApp grupal, redes sociales, ni materiales impresos. Cualquier persona con el correo entra a la plataforma sin verificación.
-- **No uses `demoadmin` con prospectos.** Es para uso interno solamente. Si el prospecto pregunta por la vista de admin de plataforma, agéndale una llamada con el equipo Ceduverse.
+- **No agendes demos para mostrar la vista de admin de plataforma.** No hay cuenta demo con ese rol. Si el prospecto pregunta, agéndale una llamada directa con el equipo Ceduverse.
 - **No prometas funcionalidades que no viste en la demo.** Si el prospecto pregunta algo que no aparece en pantalla, di: "te lo confirmo en 24 horas con el equipo de producto."
-- **No mientas sobre precios.** Son $679 base. Los descuentos por volumen ya están automatizados en la plataforma — si das un precio distinto al que el cliente ve después, perdiste credibilidad.
+- **No mientas sobre precios.** Hay tres planes según el tamaño de la empresa: $679, $1,131, o $2,263 por colaborador / mes. La plataforma asigna el plan correcto automáticamente al dar de alta a los colaboradores. Si das un precio distinto al que el cliente ve después, perdiste credibilidad.
 - **No improvises promesas de personalización.** Si dices "te lo personalizamos", agenda una llamada técnica antes de cerrar.
 - **No demos sin confirmar identidad.** Si el correo del prospecto se ve raro o el dominio no existe, pide su LinkedIn antes de hacer demo.
 
