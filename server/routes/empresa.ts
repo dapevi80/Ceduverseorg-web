@@ -42,11 +42,11 @@ export function registerEmpresaRoutes(app: Express) {
 
   app.get("/api/empresa/invoices/:id/download/:format", requireAuth, async (req, res, next) => {
     try {
-      const format = req.params.format as "pdf" | "xml";
+      const format = (req.params.format as string) as "pdf" | "xml";
       if (!["pdf", "xml"].includes(format)) return res.status(400).json({ message: "Formato inválido" });
 
       const userId = req.supabaseUserId!;
-      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, req.params.id));
+      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, (req.params.id as string)));
       if (!invoice) return res.status(404).json({ message: "Factura no encontrada" });
 
       const userTeams = await db.select({ teamId: teamUsers.teamId })
@@ -252,7 +252,7 @@ export function registerEmpresaRoutes(app: Express) {
       if (!team) return res.status(403).json({ message: "No tienes una organización" });
 
       const [invitation] = await db.select().from(employeeInvitations)
-        .where(and(eq(employeeInvitations.id, req.params.id), eq(employeeInvitations.teamId, team.id)));
+        .where(and(eq(employeeInvitations.id, (req.params.id as string)), eq(employeeInvitations.teamId, team.id)));
 
       if (!invitation) return res.status(404).json({ message: "Invitación no encontrada" });
       if (invitation.status !== "pending") return res.status(400).json({ message: "Solo se pueden reenviar invitaciones pendientes" });
@@ -528,7 +528,7 @@ export function registerEmpresaRoutes(app: Express) {
   app.get("/api/invitations/validate/:token", async (req, res, next) => {
     try {
       const [invitation] = await db.select().from(employeeInvitations)
-        .where(eq(employeeInvitations.token, req.params.token));
+        .where(eq(employeeInvitations.token, (req.params.token as string)));
 
       if (!invitation) return res.status(404).json({ message: "Invitación no encontrada" });
       if (invitation.status !== "pending") return res.status(400).json({ message: "Invitación ya utilizada o expirada" });
@@ -549,7 +549,7 @@ export function registerEmpresaRoutes(app: Express) {
     try {
       const userId = req.supabaseUserId!;
       const [invitation] = await db.select().from(employeeInvitations)
-        .where(eq(employeeInvitations.token, req.params.token));
+        .where(eq(employeeInvitations.token, (req.params.token as string)));
 
       if (!invitation) return res.status(404).json({ message: "Invitación no encontrada" });
       if (invitation.status !== "pending") return res.status(400).json({ message: "Invitación ya utilizada" });

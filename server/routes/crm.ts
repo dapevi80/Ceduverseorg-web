@@ -40,7 +40,7 @@ import {
   referralCodes,
   type EmpresaProspecto,
 } from "@shared/schema";
-import { eq, and, sql, count, desc, asc, gte, lte, inArray, ilike, type SQL } from "drizzle-orm";
+import { eq, and, sql, count, desc, asc, gte, lte, inArray, ilike, type SQL, type AnyColumn } from "drizzle-orm";
 import { z } from "zod";
 import crypto from "crypto";
 
@@ -92,7 +92,7 @@ export function registerCrmRoutes(app: Express) {
       if (notes !== undefined) updates.notes = notes;
       if (paidAt) updates.paidAt = new Date(paidAt);
       if (status === "confirmed") updates.confirmedBy = req.supabaseUserId!;
-      const [updated] = await db.update(companyPayments).set(updates).where(eq(companyPayments.id, req.params.id)).returning();
+      const [updated] = await db.update(companyPayments).set(updates).where(eq(companyPayments.id, (req.params.id as string))).returning();
       if (!updated) return res.status(404).json({ message: "Pago no encontrado" });
       res.json(updated);
     } catch (err) { next(err); }
@@ -122,11 +122,11 @@ export function registerCrmRoutes(app: Express) {
       const commissions = await db.select({
         commission: partnerCommissions,
         partnerName: profiles.fullName,
-        partnerEmail: accounts.email,
+        partnerEmail: users.email,
         teamName: teams.name,
       }).from(partnerCommissions)
-        .leftJoin(profiles, eq(partnerCommissions.partnerId, profiles.userId))
-        .leftJoin(accounts, eq(partnerCommissions.partnerId, accounts.id))
+        .leftJoin(profiles, eq(partnerCommissions.partnerId, profiles.id))
+        .leftJoin(users, eq(partnerCommissions.partnerId, users.id))
         .leftJoin(teams, eq(partnerCommissions.teamId, teams.id))
         .where(and(eq(partnerCommissions.periodMonth, m), eq(partnerCommissions.periodYear, y)))
         .orderBy(desc(partnerCommissions.createdAt));
@@ -194,7 +194,7 @@ export function registerCrmRoutes(app: Express) {
       const { status } = req.body;
       const updates: Record<string, unknown> = { status };
       if (status === "paid") updates.paidAt = new Date();
-      const [updated] = await db.update(partnerCommissions).set(updates).where(eq(partnerCommissions.id, req.params.id)).returning();
+      const [updated] = await db.update(partnerCommissions).set(updates).where(eq(partnerCommissions.id, (req.params.id as string))).returning();
       if (!updated) return res.status(404).json({ message: "Comisión no encontrada" });
       res.json(updated);
     } catch (err) { next(err); }
@@ -248,7 +248,7 @@ export function registerCrmRoutes(app: Express) {
       const acct = await db.select().from(accounts).where(eq(accounts.id, userId)).limit(1);
       const role = acct[0]?.userRole;
       const isAdmin = role === "admin" || role === "superadmin";
-      const existing = await db.select().from(prospects).where(eq(prospects.id, req.params.id)).limit(1);
+      const existing = await db.select().from(prospects).where(eq(prospects.id, (req.params.id as string))).limit(1);
       if (!existing[0]) return res.status(404).json({ message: "Prospecto no encontrado" });
       if (!isAdmin && existing[0].partnerId !== userId) return res.status(403).json({ message: "No autorizado" });
 
@@ -258,7 +258,7 @@ export function registerCrmRoutes(app: Express) {
         if (req.body[k] !== undefined) updates[k] = req.body[k];
       }
       if (req.body.nextFollowUp) updates.nextFollowUp = new Date(req.body.nextFollowUp);
-      const [updated] = await db.update(prospects).set(updates).where(eq(prospects.id, req.params.id)).returning();
+      const [updated] = await db.update(prospects).set(updates).where(eq(prospects.id, (req.params.id as string))).returning();
       res.json(updated);
     } catch (err) { next(err); }
   });
@@ -269,10 +269,10 @@ export function registerCrmRoutes(app: Express) {
       const acct = await db.select().from(accounts).where(eq(accounts.id, userId)).limit(1);
       const role = acct[0]?.userRole;
       const isAdmin = role === "admin" || role === "superadmin";
-      const existing = await db.select().from(prospects).where(eq(prospects.id, req.params.id)).limit(1);
+      const existing = await db.select().from(prospects).where(eq(prospects.id, (req.params.id as string))).limit(1);
       if (!existing[0]) return res.status(404).json({ message: "Prospecto no encontrado" });
       if (!isAdmin && existing[0].partnerId !== userId) return res.status(403).json({ message: "No autorizado" });
-      await db.delete(prospects).where(eq(prospects.id, req.params.id));
+      await db.delete(prospects).where(eq(prospects.id, (req.params.id as string)));
       res.json({ ok: true });
     } catch (err) { next(err); }
   });
@@ -291,7 +291,7 @@ export function registerCrmRoutes(app: Express) {
 
   app.get("/api/crm/wallets/:teamId/transactions", requireAdmin, async (req, res, next) => {
     try {
-      const teamWallets = await db.select().from(companyWallets).where(eq(companyWallets.teamId, req.params.teamId));
+      const teamWallets = await db.select().from(companyWallets).where(eq(companyWallets.teamId, (req.params.teamId as string)));
       const walletIds = teamWallets.map(w => w.id);
       if (walletIds.length === 0) return res.json([]);
       const txns = await db.select().from(walletTransactions)
@@ -331,7 +331,7 @@ export function registerCrmRoutes(app: Express) {
         if (req.body.status === "applied") updates.appliedAt = new Date();
       }
       if (req.body.details) updates.details = req.body.details;
-      const [updated] = await db.update(dispersions).set(updates).where(eq(dispersions.id, req.params.id)).returning();
+      const [updated] = await db.update(dispersions).set(updates).where(eq(dispersions.id, (req.params.id as string))).returning();
       if (!updated) return res.status(404).json({ message: "Dispersión no encontrada" });
       res.json(updated);
     } catch (err) { next(err); }
@@ -677,7 +677,7 @@ export function registerCrmRoutes(app: Express) {
       if (conditions.length === 0) {
         try {
           const mvResult = await db.execute(sql`SELECT total FROM mv_prospectos_global_stats LIMIT 1`);
-          const mvRows = (mvResult as { rows: { total: string }[] }).rows;
+          const mvRows = (mvResult as unknown as { rows: { total: string }[] }).rows;
           total = mvRows?.length > 0 ? Number(mvRows[0].total) : 0;
         } catch {
           const [totalRow] = await db.select({ count: count() }).from(empresasProspectos);
@@ -688,7 +688,7 @@ export function registerCrmRoutes(app: Express) {
         total = totalRow?.count ?? 0;
       }
 
-      const sortColumns: Record<string, typeof empresasProspectos.leadScore> = {
+      const sortColumns: Record<string, AnyColumn> = {
         leadScore: empresasProspectos.leadScore,
         nombreComercial: empresasProspectos.nombreComercial,
         stage: empresasProspectos.stage,
@@ -715,7 +715,7 @@ export function registerCrmRoutes(app: Express) {
       let efosMatchMap = new Map<string, { rfc: string; situacion: string; nombre: string }>();
       if (rowIds.length > 0) {
         const efosMatches = await db.execute(sql`SELECT prospecto_id::text, efos_rfc, efos_situacion, efos_nombre FROM efos_prospectos_match WHERE prospecto_id IN (${sql.join(rowIds.map(id => sql`${id}::uuid`), sql`, `)})`);
-        const efosRows = (efosMatches as { rows: { prospecto_id: string; efos_rfc: string; efos_situacion: string; efos_nombre: string }[] }).rows || [];
+        const efosRows = (efosMatches as unknown as { rows: { prospecto_id: string; efos_rfc: string; efos_situacion: string; efos_nombre: string }[] }).rows || [];
         for (const em of efosRows) {
           efosMatchMap.set(em.prospecto_id, { rfc: em.efos_rfc, situacion: em.efos_situacion, nombre: em.efos_nombre });
         }
@@ -846,7 +846,7 @@ export function registerCrmRoutes(app: Express) {
       let satOficinas: SatOficinaRow[] = [];
       if (fallbackRows.length > 0) {
         const oficResult = await db.execute(sql`SELECT estado, municipio, latitud, longitud FROM sat_oficinas`);
-        satOficinas = (oficResult as { rows: SatOficinaRow[] }).rows || [];
+        satOficinas = (oficResult as unknown as { rows: SatOficinaRow[] }).rows || [];
       }
 
       const allRows = [...rows];
@@ -868,7 +868,7 @@ export function registerCrmRoutes(app: Express) {
       const slicedIds = sliced.map(r => r.id);
       if (slicedIds.length > 0) {
         const efosResult = await db.execute(sql`SELECT prospecto_id::text, efos_rfc, efos_situacion, efos_nombre FROM efos_prospectos_match WHERE prospecto_id IN (${sql.join(slicedIds.map(id => sql`${id}::uuid`), sql`, `)})`);
-        const efosRows = (efosResult as { rows: { prospecto_id: string; efos_rfc: string; efos_situacion: string; efos_nombre: string }[] }).rows || [];
+        const efosRows = (efosResult as unknown as { rows: { prospecto_id: string; efos_rfc: string; efos_situacion: string; efos_nombre: string }[] }).rows || [];
         for (const em of efosRows) {
           mapEfosMatchMap.set(em.prospecto_id, { rfc: em.efos_rfc, situacion: em.efos_situacion, nombre: em.efos_nombre });
         }
@@ -919,7 +919,7 @@ export function registerCrmRoutes(app: Express) {
       if (!hasFilters) {
         try {
           const globalResult = await db.execute(sql`SELECT * FROM mv_prospectos_global_stats LIMIT 1`);
-          const gRows = (globalResult as { rows: any[] }).rows;
+          const gRows = (globalResult as unknown as { rows: any[] }).rows;
           if (gRows && gRows.length > 0) {
             const g = gRows[0];
             const topMunicipios = await db.select({
@@ -1117,11 +1117,11 @@ export function registerCrmRoutes(app: Express) {
 
   app.get("/api/denue/prospectos/:id", requireAdminOrPartner, async (req, res, next) => {
     try {
-      const [row] = await db.select().from(empresasProspectos).where(eq(empresasProspectos.id, req.params.id)).limit(1);
+      const [row] = await db.select().from(empresasProspectos).where(eq(empresasProspectos.id, (req.params.id as string))).limit(1);
       if (!row) return res.status(404).json({ message: "Prospecto no encontrado" });
 
       const detailEfosResult = await db.execute(sql`SELECT efos_rfc, efos_situacion, efos_nombre FROM efos_prospectos_match WHERE prospecto_id = ${row.id} LIMIT 1`);
-      const detailEfosRows = (detailEfosResult as { rows: { efos_rfc: string; efos_situacion: string; efos_nombre: string }[] }).rows || [];
+      const detailEfosRows = (detailEfosResult as unknown as { rows: { efos_rfc: string; efos_situacion: string; efos_nombre: string }[] }).rows || [];
       const efos69b = detailEfosRows.length > 0 ? { rfc: detailEfosRows[0].efos_rfc, situacion: detailEfosRows[0].efos_situacion, nombre: detailEfosRows[0].efos_nombre } : null;
       res.json({ ...row, efos69b });
     } catch (err) { next(err); }
@@ -1135,7 +1135,7 @@ export function registerCrmRoutes(app: Express) {
 
       const [updated] = await db.update(empresasProspectos)
         .set({ stage, updatedAt: new Date() })
-        .where(eq(empresasProspectos.id, req.params.id))
+        .where(eq(empresasProspectos.id, (req.params.id as string)))
         .returning();
       if (!updated) return res.status(404).json({ message: "Prospecto no encontrado" });
 
@@ -1162,7 +1162,7 @@ export function registerCrmRoutes(app: Express) {
       }
       const [updated] = await db.update(empresasProspectos)
         .set({ partnerId: partnerId || null, updatedAt: new Date() })
-        .where(eq(empresasProspectos.id, req.params.id))
+        .where(eq(empresasProspectos.id, (req.params.id as string)))
         .returning();
       if (!updated) return res.status(404).json({ message: "Prospecto no encontrado" });
       res.json(updated);
@@ -1174,7 +1174,7 @@ export function registerCrmRoutes(app: Express) {
       const { tipo, notas } = req.body;
       if (!tipo) return res.status(400).json({ message: "Se requiere tipo de interacción" });
 
-      const [empresa] = await db.select().from(empresasProspectos).where(eq(empresasProspectos.id, req.params.id));
+      const [empresa] = await db.select().from(empresasProspectos).where(eq(empresasProspectos.id, (req.params.id as string)));
       if (!empresa) return res.status(404).json({ message: "Prospecto no encontrado" });
 
       const [record] = await db.insert(interaccionesProspectos).values({
@@ -1190,7 +1190,7 @@ export function registerCrmRoutes(app: Express) {
   app.get("/api/denue/prospectos/:id/interacciones", requireAdminOrPartner, async (req, res, next) => {
     try {
       const rows = await db.select().from(interaccionesProspectos)
-        .where(eq(interaccionesProspectos.empresaId, req.params.id))
+        .where(eq(interaccionesProspectos.empresaId, (req.params.id as string)))
         .orderBy(desc(interaccionesProspectos.createdAt));
       res.json(rows);
     } catch (err) { next(err); }
@@ -1728,7 +1728,7 @@ export function registerCrmRoutes(app: Express) {
 
   app.patch("/api/denue/prospectos/:id", requireAdminOrPartner, async (req, res, next) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as Record<string, string>;
       const allowedFields = ["stage", "partnerId", "contactGroupId", "notas", "lastContactedAt", "planRecomendado", "nombreContacto", "rfc", "telefono", "correoElectronico", "sitioWeb"];
       const updates: Record<string, any> = { updatedAt: new Date() };
       for (const f of allowedFields) {
@@ -1766,7 +1766,7 @@ export function registerCrmRoutes(app: Express) {
 
   app.patch("/api/denue/contact-groups/:id", requireAdminOrPartner, async (req, res, next) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as Record<string, string>;
       const { name, description, filterCriteria, assignedSocioId } = req.body;
       const updates: Record<string, any> = { updatedAt: new Date() };
       if (name !== undefined) updates.name = name;
@@ -1781,7 +1781,7 @@ export function registerCrmRoutes(app: Express) {
 
   app.delete("/api/denue/contact-groups/:id", requireAdminOrPartner, async (req, res, next) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as Record<string, string>;
       await db.update(empresasProspectos).set({ contactGroupId: null }).where(eq(empresasProspectos.contactGroupId, id));
       await db.delete(contactGroups).where(eq(contactGroups.id, id));
       res.json({ deleted: true });
@@ -1807,7 +1807,7 @@ export function registerCrmRoutes(app: Express) {
 
   app.delete("/api/denue/saved-filters/:id", requireAdminOrPartner, async (req, res, next) => {
     try {
-      await db.delete(savedFilters).where(eq(savedFilters.id, req.params.id));
+      await db.delete(savedFilters).where(eq(savedFilters.id, (req.params.id as string)));
       res.json({ deleted: true });
     } catch (err) { next(err); }
   });

@@ -47,7 +47,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.get("/api/courses/:id", async (req, res, next) => {
     try {
-      const id = String(req.params.id);
+      const id = String((req.params.id as string));
       const course = await storage.getCourse(id);
       if (!course) return res.status(404).json({ message: "Curso no encontrado" });
       res.json(course);
@@ -65,7 +65,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.patch("/api/courses/:id", requireAdmin, async (req, res, next) => {
     try {
-      const id = String(req.params.id);
+      const id = String((req.params.id as string));
       const course = await storage.updateCourse(id, req.body);
       if (!course) return res.status(404).json({ message: "Curso no encontrado" });
       res.json(course);
@@ -74,7 +74,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.delete("/api/courses/:id", requireAdmin, async (req, res, next) => {
     try {
-      const id = String(req.params.id);
+      const id = String((req.params.id as string));
       const deleted = await storage.deleteCourse(id);
       if (!deleted) return res.status(404).json({ message: "Curso no encontrado" });
       res.json({ message: "Curso eliminado" });
@@ -115,7 +115,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.get("/api/teams/:id/members", requireAuth, async (req, res, next) => {
     try {
-      const teamId = String(req.params.id);
+      const teamId = String((req.params.id as string));
       const members = await storage.getTeamMembers(teamId);
       const isMember = members.some(m => m.userId === req.supabaseUserId!);
       if (!isMember) {
@@ -127,7 +127,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.post("/api/teams/:id/members", requireAuth, async (req, res, next) => {
     try {
-      const teamId = String(req.params.id);
+      const teamId = String((req.params.id as string));
       const currentMembers = await storage.getTeamMembers(teamId);
       const isTeamMember = currentMembers.some(m => m.userId === req.supabaseUserId!);
       if (!isTeamMember) {
@@ -143,8 +143,8 @@ export function registerCourseRoutes(app: Express) {
 
   app.delete("/api/teams/:id/members/:userId", requireAuth, async (req, res, next) => {
     try {
-      const teamId = String(req.params.id);
-      const targetUserId = String(req.params.userId);
+      const teamId = String((req.params.id as string));
+      const targetUserId = String((req.params.userId as string));
       const currentMembers = await storage.getTeamMembers(teamId);
       const callerMembership = currentMembers.find(m => m.userId === req.supabaseUserId!);
       if (!callerMembership) {
@@ -175,7 +175,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.patch("/api/me/courses/:courseId", requireAuth, async (req, res, next) => {
     try {
-      const courseId = String(req.params.courseId);
+      const courseId = String((req.params.courseId as string));
       const { completed } = req.body;
       if (typeof completed !== "number" || completed < 0 || completed > 100) {
         return res.status(400).json({ message: "El progreso debe ser un número entre 0 y 100" });
@@ -226,7 +226,7 @@ export function registerCourseRoutes(app: Express) {
   const listeningRateLimit = new Map<string, number>();
   app.patch("/api/me/courses/:courseId/listening", requireAuth, async (req, res, next) => {
     try {
-      const courseId = String(req.params.courseId);
+      const courseId = String((req.params.courseId as string));
       const userId = req.supabaseUserId!;
       const { listeningProgress } = req.body;
       if (typeof listeningProgress !== "number" || listeningProgress < 0 || listeningProgress > 100) {
@@ -330,7 +330,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.delete("/api/me/courses/:courseId", requireAuth, async (req, res, next) => {
     try {
-      const courseId = String(req.params.courseId);
+      const courseId = String((req.params.courseId as string));
       const removed = await storage.unenrollCourse(req.supabaseUserId!, courseId);
       if (!removed) return res.status(404).json({ message: "Inscripción no encontrada" });
       res.json({ message: "Desinscrito del curso" });
@@ -429,7 +429,7 @@ export function registerCourseRoutes(app: Express) {
       if (razonSocial && typeof razonSocial === "string") teamData.razonSocial = razonSocial.trim();
       if (regimenFiscal && typeof regimenFiscal === "string") teamData.regimenFiscal = regimenFiscal.trim();
       if (codigoPostalFiscal && typeof codigoPostalFiscal === "string" && codigoPostalFiscal.trim().length === 5) teamData.codigoPostalFiscal = codigoPostalFiscal.trim();
-      const team = await storage.createTeam(teamData);
+      const team = await storage.createTeam(teamData as any);
       await storage.addTeamMember({
         teamId: team.id,
         userId: req.supabaseUserId!,
@@ -468,7 +468,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.get("/api/courses/:id/modules", optionalAuth, async (req, res, next) => {
     try {
-      const courseId = String(req.params.id);
+      const courseId = String((req.params.id as string));
       const modules = await storage.getCourseModules(courseId);
       modules.sort((a, b) => a.order - b.order);
       if (!req.supabaseUserId) {
@@ -484,8 +484,8 @@ export function registerCourseRoutes(app: Express) {
 
   app.get("/api/courses/:courseId/modules/:moduleId", optionalAuth, async (req, res, next) => {
     try {
-      const courseId = String(req.params.courseId);
-      const mod = await storage.getCourseModule(String(req.params.moduleId));
+      const courseId = String((req.params.courseId as string));
+      const mod = await storage.getCourseModule(String((req.params.moduleId as string)));
       if (!mod || mod.courseId !== courseId) return res.status(404).json({ message: "Módulo no encontrado" });
       if (!req.supabaseUserId) {
         const allModules = await storage.getCourseModules(courseId);
@@ -501,7 +501,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.get("/api/courses/:id/quiz", optionalAuth, async (req, res, next) => {
     try {
-      const courseId = String(req.params.id);
+      const courseId = String((req.params.id as string));
       const quiz = await storage.getQuizByCourse(courseId);
       if (!quiz) return res.status(404).json({ message: "Este curso aún no tiene evaluación" });
       if (!req.supabaseUserId) {
@@ -521,7 +521,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.post("/api/courses/:id/quiz/submit", requireAuth, async (req, res, next) => {
     try {
-      const courseId = String(req.params.id);
+      const courseId = String((req.params.id as string));
       const userId = req.supabaseUserId!;
       const { answers } = req.body;
       if (!answers || !Array.isArray(answers)) {
@@ -605,7 +605,7 @@ export function registerCourseRoutes(app: Express) {
   });
   app.get("/api/academy/courses/:id/quiz", async (req, res, next) => {
     try {
-      const academyCourseId = parseInt(String(req.params.id));
+      const academyCourseId = parseInt(String((req.params.id as string)));
       if (isNaN(academyCourseId)) return res.status(400).json({ message: "ID inválido" });
 
       let quiz = await storage.getQuizByAcademyCourse(academyCourseId);
@@ -684,7 +684,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.post("/api/academy/courses/:id/quiz/submit", requireAuth, async (req, res, next) => {
     try {
-      const academyCourseId = parseInt(String(req.params.id));
+      const academyCourseId = parseInt(String((req.params.id as string)));
       const userId = req.supabaseUserId!;
       const { answers } = req.body;
       if (!answers || !Array.isArray(answers)) {
@@ -758,7 +758,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.get("/api/academy/courses/:id", async (req, res, next) => {
     try {
-      const courseId = parseInt(String(req.params.id));
+      const courseId = parseInt(String((req.params.id as string)));
       if (isNaN(courseId)) return res.status(400).json({ message: "ID de curso inválido" });
       const { getCachedCourse } = await import("../academy-sync");
       const course = await getCachedCourse(courseId);
@@ -771,7 +771,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.get("/api/academy/courses/:id/curriculum", async (req, res, next) => {
     try {
-      const courseId = parseInt(String(req.params.id));
+      const courseId = parseInt(String((req.params.id as string)));
       if (isNaN(courseId)) return res.status(400).json({ message: "ID de curso inválido" });
 
       function normalizeCurriculum(raw: any): any {
@@ -877,7 +877,7 @@ export function registerCourseRoutes(app: Express) {
 
   app.get("/api/studio/courses/:slug", async (req, res, next) => {
     try {
-      const slug = String(req.params.slug);
+      const slug = String((req.params.slug as string));
       const course = await storage.getStudioCourse(slug);
       if (!course) return res.status(404).json({ message: "Curso no encontrado" });
       const modules = await storage.getStudioModules(course.id);
@@ -888,8 +888,8 @@ export function registerCourseRoutes(app: Express) {
 
   app.get("/api/studio/courses/:slug/modules/:index", async (req, res, next) => {
     try {
-      const slug = String(req.params.slug);
-      const moduleIndex = Number(req.params.index);
+      const slug = String((req.params.slug as string));
+      const moduleIndex = Number((req.params.index as string));
       if (!Number.isFinite(moduleIndex) || moduleIndex < 0) return res.status(400).json({ message: "Índice inválido" });
       const result = await storage.getStudioModuleBySlugAndIndex(slug, moduleIndex);
       if (!result) return res.status(404).json({ message: "Módulo no encontrado" });
@@ -900,8 +900,8 @@ export function registerCourseRoutes(app: Express) {
   app.post("/api/studio/courses/:slug/modules/:index/generate", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const slug = String(req.params.slug);
-      const moduleIndex = Number(req.params.index);
+      const slug = String((req.params.slug as string));
+      const moduleIndex = Number((req.params.index as string));
       if (!Number.isFinite(moduleIndex) || moduleIndex < 0) return res.status(400).json({ message: "Índice inválido" });
 
       const regenerate = req.query.regenerate === "true";
@@ -954,8 +954,8 @@ export function registerCourseRoutes(app: Express) {
   app.delete("/api/studio/courses/:slug/modules/:index/generated", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const slug = String(req.params.slug);
-      const moduleIndex = Number(req.params.index);
+      const slug = String((req.params.slug as string));
+      const moduleIndex = Number((req.params.index as string));
       if (!Number.isFinite(moduleIndex) || moduleIndex < 0) return res.status(400).json({ message: "Índice inválido" });
       const deleted = await storage.deleteGeneratedContent(userId, slug, moduleIndex);
       res.json({ deleted });
@@ -965,7 +965,7 @@ export function registerCourseRoutes(app: Express) {
   app.put("/api/studio/enrollments/:enrollmentId/modules/:identifier/complete", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const { enrollmentId, identifier } = req.params;
+      const { enrollmentId, identifier } = req.params as Record<string, string>;
       const allEnrollments = await storage.getStudioEnrollments(userId);
       const target = allEnrollments.find(e => e.id === enrollmentId);
       if (!target) return res.status(404).json({ message: "Inscripción no encontrada" });
@@ -1025,8 +1025,8 @@ export function registerCourseRoutes(app: Express) {
   app.post("/api/studio/courses/:slug/modules/:index/quiz/submit", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const slug = String(req.params.slug);
-      const moduleIndex = Number(req.params.index);
+      const slug = String((req.params.slug as string));
+      const moduleIndex = Number((req.params.index as string));
       if (!Number.isFinite(moduleIndex) || moduleIndex < 0) return res.status(400).json({ message: "Índice inválido" });
       const { answers, score: clientScore } = req.body;
 
@@ -1161,8 +1161,8 @@ export function registerCourseRoutes(app: Express) {
   app.get("/api/studio/courses/:slug/modules/:index/chat/history", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const slug = String(req.params.slug);
-      const moduleIndex = Number(req.params.index);
+      const slug = String((req.params.slug as string));
+      const moduleIndex = Number((req.params.index as string));
       if (!Number.isFinite(moduleIndex) || moduleIndex < 0) return res.status(400).json({ message: "Índice inválido" });
       const session = await storage.getChatSession(userId, slug, moduleIndex);
       res.json({ messages: (session?.messages as any[]) || [] });
@@ -1172,8 +1172,8 @@ export function registerCourseRoutes(app: Express) {
   app.get("/api/studio/courses/:slug/modules/:index/audio", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const slug = String(req.params.slug);
-      const moduleIndex = Number(req.params.index);
+      const slug = String((req.params.slug as string));
+      const moduleIndex = Number((req.params.index as string));
       if (!Number.isFinite(moduleIndex) || moduleIndex < 0) return res.status(400).json({ message: "Índice inválido" });
 
       const generated = await storage.getGeneratedContent(userId, slug, moduleIndex);
@@ -1212,8 +1212,8 @@ export function registerCourseRoutes(app: Express) {
   app.get("/api/studio/courses/:slug/modules/:index/audio/status", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const slug = String(req.params.slug);
-      const moduleIndex = Number(req.params.index);
+      const slug = String((req.params.slug as string));
+      const moduleIndex = Number((req.params.index as string));
       if (!Number.isFinite(moduleIndex) || moduleIndex < 0) return res.status(400).json({ message: "Índice inválido" });
 
       const generated = await storage.getGeneratedContent(userId, slug, moduleIndex);
@@ -1242,8 +1242,8 @@ export function registerCourseRoutes(app: Express) {
   app.post("/api/studio/courses/:slug/modules/:index/audio/regenerate", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const slug = String(req.params.slug);
-      const moduleIndex = Number(req.params.index);
+      const slug = String((req.params.slug as string));
+      const moduleIndex = Number((req.params.index as string));
       if (!Number.isFinite(moduleIndex) || moduleIndex < 0) return res.status(400).json({ message: "Índice inválido" });
 
       const generated = await storage.getGeneratedContent(userId, slug, moduleIndex);
@@ -1278,7 +1278,7 @@ export function registerCourseRoutes(app: Express) {
   app.get("/api/studio/enrollments/:enrollmentId/progress", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const { enrollmentId } = req.params;
+      const { enrollmentId } = req.params as Record<string, string>;
       const allEnrollments = await storage.getStudioEnrollments(userId);
       const target = allEnrollments.find(e => e.id === enrollmentId);
       if (!target) return res.status(404).json({ message: "Inscripción no encontrada" });
@@ -1290,8 +1290,8 @@ export function registerCourseRoutes(app: Express) {
   app.post("/api/studio/courses/:slug/modules/:index/chat", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const slug = String(req.params.slug);
-      const moduleIndex = Number(req.params.index);
+      const slug = String((req.params.slug as string));
+      const moduleIndex = Number((req.params.index as string));
       if (!Number.isFinite(moduleIndex) || moduleIndex < 0) return res.status(400).json({ message: "Índice inválido" });
       const { message } = req.body;
       if (!message || typeof message !== "string") return res.status(400).json({ message: "Mensaje requerido" });
@@ -1360,7 +1360,7 @@ export function registerCourseRoutes(app: Express) {
   app.delete("/api/studio/enrollments/:courseSlug", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const courseSlug = String(req.params.courseSlug);
+      const courseSlug = String((req.params.courseSlug as string));
       const removed = await storage.deleteStudioEnrollment(userId, courseSlug);
       if (!removed) return res.status(404).json({ message: "Inscripción no encontrada" });
       res.json({ message: "Desinscrito del curso" });
@@ -1370,7 +1370,7 @@ export function registerCourseRoutes(app: Express) {
   app.post("/api/studio/enrollments/:enrollmentId/reset", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const { enrollmentId } = req.params;
+      const { enrollmentId } = req.params as Record<string, string>;
       const allEnrollments = await storage.getStudioEnrollments(userId);
       const target = allEnrollments.find(e => e.id === enrollmentId);
       if (!target) return res.status(404).json({ message: "Inscripción no encontrada" });

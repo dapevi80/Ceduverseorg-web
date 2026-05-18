@@ -102,7 +102,7 @@ export async function registerRoutes(
 
   app.get("/api/role-definition/:roleKey", requireAuth, async (req, res, next) => {
     try {
-      const [def] = await db.select().from(roleDefinitions).where(eq(roleDefinitions.roleKey, req.params.roleKey));
+      const [def] = await db.select().from(roleDefinitions).where(eq(roleDefinitions.roleKey, (req.params.roleKey as string)));
       if (!def) return res.status(404).json({ message: "Rol no encontrado" });
       res.json(def);
     } catch (err) { next(err); }
@@ -143,7 +143,7 @@ export async function registerRoutes(
 
   app.patch("/api/admin/config/:key", requireAuth, requireSuperadmin, async (req, res, next) => {
     try {
-      const configKey = req.params.key;
+      const configKey = (req.params.key as string);
       const { value } = req.body;
       if (value === undefined) return res.status(400).json({ message: "Valor requerido" });
 
@@ -704,7 +704,7 @@ export async function registerRoutes(
   app.get("/api/instructor/my-courses/:id", requireAuth, requireInstructor, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const [course] = await db.select().from(instructorCourses).where(and(eq(instructorCourses.id, req.params.id), eq(instructorCourses.instructorId, userId)));
+      const [course] = await db.select().from(instructorCourses).where(and(eq(instructorCourses.id, (req.params.id as string)), eq(instructorCourses.instructorId, userId)));
       if (!course) return res.status(404).json({ message: "Curso no encontrado" });
       res.json(course);
     } catch (err) { next(err); }
@@ -713,7 +713,7 @@ export async function registerRoutes(
   app.patch("/api/instructor/my-courses/:id", requireAuth, requireInstructor, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const [existing] = await db.select().from(instructorCourses).where(and(eq(instructorCourses.id, req.params.id), eq(instructorCourses.instructorId, userId)));
+      const [existing] = await db.select().from(instructorCourses).where(and(eq(instructorCourses.id, (req.params.id as string)), eq(instructorCourses.instructorId, userId)));
       if (!existing) return res.status(404).json({ message: "Curso no encontrado" });
 
       const { title, description, category, level, durationHours, certificationType, isFree, price, availableForAll, tags, nomsRelated, modules, quizzes, status } = req.body;
@@ -736,8 +736,8 @@ export async function registerRoutes(
         if (status === "review" && !existing.publishedAt) updateData.publishedAt = new Date();
       }
 
-      await db.update(instructorCourses).set(updateData).where(eq(instructorCourses.id, req.params.id));
-      const [updated] = await db.select().from(instructorCourses).where(eq(instructorCourses.id, req.params.id));
+      await db.update(instructorCourses).set(updateData).where(eq(instructorCourses.id, (req.params.id as string)));
+      const [updated] = await db.select().from(instructorCourses).where(eq(instructorCourses.id, (req.params.id as string)));
       res.json(updated);
     } catch (err) { next(err); }
   });
@@ -745,9 +745,9 @@ export async function registerRoutes(
   app.delete("/api/instructor/my-courses/:id", requireAuth, requireInstructor, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const [existing] = await db.select().from(instructorCourses).where(and(eq(instructorCourses.id, req.params.id), eq(instructorCourses.instructorId, userId)));
+      const [existing] = await db.select().from(instructorCourses).where(and(eq(instructorCourses.id, (req.params.id as string)), eq(instructorCourses.instructorId, userId)));
       if (!existing) return res.status(404).json({ message: "Curso no encontrado" });
-      await db.delete(instructorCourses).where(eq(instructorCourses.id, req.params.id));
+      await db.delete(instructorCourses).where(eq(instructorCourses.id, (req.params.id as string)));
       res.json({ success: true });
     } catch (err) { next(err); }
   });
@@ -755,7 +755,7 @@ export async function registerRoutes(
   app.get("/api/instructor/courses/:courseId/modules", requireAuth, requireInstructor, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const [course] = await db.select().from(courses).where(and(eq(courses.id, req.params.courseId), eq(courses.instructorId, userId)));
+      const [course] = await db.select().from(courses).where(and(eq(courses.id, (req.params.courseId as string)), eq(courses.instructorId, userId)));
       if (!course) return res.status(404).json({ message: "Curso no encontrado o no autorizado" });
 
       const modules = await db.select().from(courseModules).where(eq(courseModules.courseId, course.id)).orderBy(courseModules.order);
@@ -786,7 +786,7 @@ export async function registerRoutes(
   app.post("/api/instructor/courses/:courseId/modules/:moduleId/audio", requireAuth, requireInstructor, audioUpload.single("audio"), async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const { courseId, moduleId } = req.params;
+      const { courseId, moduleId } = req.params as Record<string, string>;
 
       const [course] = await db.select().from(courses).where(and(eq(courses.id, courseId), eq(courses.instructorId, userId)));
       if (!course) return res.status(403).json({ message: "No autorizado para este curso" });
@@ -807,7 +807,7 @@ export async function registerRoutes(
   app.delete("/api/instructor/courses/:courseId/modules/:moduleId/audio", requireAuth, requireInstructor, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const { courseId, moduleId } = req.params;
+      const { courseId, moduleId } = req.params as Record<string, string>;
 
       const [course] = await db.select().from(courses).where(and(eq(courses.id, courseId), eq(courses.instructorId, userId)));
       if (!course) return res.status(403).json({ message: "No autorizado para este curso" });
@@ -830,7 +830,7 @@ export async function registerRoutes(
   app.patch("/api/instructor/courses/:courseId/modules/:moduleId/content", requireAuth, requireInstructor, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const { courseId, moduleId } = req.params;
+      const { courseId, moduleId } = req.params as Record<string, string>;
       const { contentHtml } = req.body;
 
       const [course] = await db.select().from(courses).where(and(eq(courses.id, courseId), eq(courses.instructorId, userId)));
@@ -1002,7 +1002,7 @@ export async function registerRoutes(
 
   app.get("/api/teams/:id/objectives", requireAuth, async (req, res, next) => {
     try {
-      const teamId = String(req.params.id);
+      const teamId = String((req.params.id as string));
       const userId = req.supabaseUserId!;
 
       const account = await storage.getAccount(userId);
@@ -1040,8 +1040,8 @@ export async function registerRoutes(
 
   app.post("/api/teams/:id/objectives/:objId/assign", requireAuth, async (req, res, next) => {
     try {
-      const teamId = String(req.params.id);
-      const objId = String(req.params.objId);
+      const teamId = String((req.params.id as string));
+      const objId = String((req.params.objId as string));
       const userId = req.supabaseUserId!;
 
       const account = await storage.getAccount(userId);
@@ -1085,7 +1085,7 @@ export async function registerRoutes(
 
   app.get("/api/teams/:id/progress", requireAuth, async (req, res, next) => {
     try {
-      const teamId = String(req.params.id);
+      const teamId = String((req.params.id as string));
       const userId = req.supabaseUserId!;
 
       const account = await storage.getAccount(userId);
@@ -1121,7 +1121,7 @@ export async function registerRoutes(
 
   app.post("/api/teams/:id/invite", requireAuth, async (req, res, next) => {
     try {
-      const teamId = String(req.params.id);
+      const teamId = String((req.params.id as string));
       const userId = req.supabaseUserId!;
 
       const account = await storage.getAccount(userId);
@@ -1177,7 +1177,7 @@ export async function registerRoutes(
 
   app.get("/api/referral/:code", async (req, res, next) => {
     try {
-      const [ref] = await db.select().from(referralCodes).where(eq(referralCodes.code, String(req.params.code)));
+      const [ref] = await db.select().from(referralCodes).where(eq(referralCodes.code, String((req.params.code as string))));
       if (!ref || !ref.isActive) return res.status(404).json({ message: "Código no válido" });
       const profile = await storage.getProfile(ref.ownerId);
       const account = await storage.getAccount(ref.ownerId);
@@ -1279,7 +1279,7 @@ export async function registerRoutes(
   app.get("/api/support/threads/:threadId", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const { threadId } = req.params;
+      const { threadId } = req.params as Record<string, string>;
       const thread = await storage.getSupportThread(threadId);
       if (!thread) return res.status(404).json({ message: "Conversación no encontrada" });
 
@@ -1295,7 +1295,7 @@ export async function registerRoutes(
   app.post("/api/support/threads/:threadId/messages", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const { threadId } = req.params;
+      const { threadId } = req.params as Record<string, string>;
       const { content } = req.body;
       if (!content) return res.status(400).json({ message: "Mensaje requerido" });
 
@@ -1319,7 +1319,7 @@ export async function registerRoutes(
 
   app.patch("/api/support/threads/:threadId", requireAuth, requireAdmin, async (req, res, next) => {
     try {
-      const { threadId } = req.params;
+      const { threadId } = req.params as Record<string, string>;
       const { status } = req.body;
       if (!status || !["open", "closed"].includes(status)) return res.status(400).json({ message: "Estado inválido, debe ser 'open' o 'closed'" });
 
@@ -1430,7 +1430,7 @@ export async function registerRoutes(
 
   app.get("/api/vcard/:slug", async (req, res, next) => {
     try {
-      const card = await storage.getContactCardBySlug(req.params.slug);
+      const card = await storage.getContactCardBySlug((req.params.slug as string));
       if (!card || !card.isActive) return res.status(404).json({ message: "Contacto no encontrado" });
 
       const nameParts = card.displayName.split(" ");
@@ -1451,14 +1451,14 @@ export async function registerRoutes(
       ].filter(Boolean).join("\r\n");
 
       res.setHeader("Content-Type", "text/vcard; charset=utf-8");
-      res.setHeader("Content-Disposition", `attachment; filename="${req.params.slug}.vcf"`);
+      res.setHeader("Content-Disposition", `attachment; filename="${(req.params.slug as string)}.vcf"`);
       res.send(vcf);
     } catch (err) { next(err); }
   });
 
   app.get("/api/vcard-data/:slug", async (req, res, next) => {
     try {
-      const card = await storage.getContactCardBySlug(req.params.slug);
+      const card = await storage.getContactCardBySlug((req.params.slug as string));
       if (!card || !card.isActive) return res.status(404).json({ message: "Contacto no encontrado" });
       res.json({
         fullName: card.displayName,

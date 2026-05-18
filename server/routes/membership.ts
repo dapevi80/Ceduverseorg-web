@@ -62,7 +62,7 @@ export function registerMembershipRoutes(app: Express) {
 
   app.get("/api/verify/socio/:numero", async (req, res, next) => {
     try {
-      const { numero } = req.params;
+      const { numero } = req.params as Record<string, string>;
       const [membership] = await db.select().from(cooperativeMemberships).where(eq(cooperativeMemberships.membershipNumber, numero.toUpperCase()));
       if (!membership) return res.status(404).json({ valid: false, message: "Número de membresía no encontrado" });
       res.json({
@@ -86,7 +86,7 @@ export function registerMembershipRoutes(app: Express) {
 
   app.patch("/api/admin/memberships/:id/status", requireAdmin, async (req, res, next) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as Record<string, string>;
       const { status, separationReason } = req.body;
       const validStatuses = ["activo", "suspendido", "separado", "excluido"];
       if (!validStatuses.includes(status)) return res.status(400).json({ message: "Estado inválido" });

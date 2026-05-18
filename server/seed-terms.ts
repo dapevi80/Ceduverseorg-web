@@ -52,7 +52,7 @@ export async function seedTermsVersions(): Promise<void> {
     return;
   }
 
-  await db.insert(termsVersions).values(INITIAL_VERSIONS);
+  await db.insert(termsVersions).values(INITIAL_VERSIONS as any);
   console.log("[seed] Inserted 4 initial terms versions (T&C, Privacy, Cookies, Adhesion)");
 
   await ensureMembershipSeq();
@@ -161,6 +161,6 @@ export async function seedInsurancePlans() {
     console.log(`[seed] Insurance plans already exist (${existing}), skipping`);
     return;
   }
-  await db.insert(insurancePlans).values(INSURANCE_PLANS_SEED);
+  await db.insert(insurancePlans).values(INSURANCE_PLANS_SEED as any);
   console.log(`[seed] Inserted ${INSURANCE_PLANS_SEED.length} insurance plans`);
 }

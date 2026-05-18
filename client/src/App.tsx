@@ -82,7 +82,7 @@ function Router() {
       <Route path="/privacidad" component={PrivacidadPage} />
       <Route path="/cookies" component={CookiesPage} />
       <Route path="/verify/socio/:numero" component={VerifySocioPage} />
-      <Route path="/tutor-ia-vivo" component={LiveTutor} />
+      <Route path="/tutor-ia-vivo" component={LiveTutor as any} />
       <Route path="/sesiones-privadas" component={PrivateSessionsPage} />
       <Route path="/tienda/success" component={TiendaSuccess} />
       <Route path="/tienda/failure" component={TiendaFailure} />

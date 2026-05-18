@@ -15,6 +15,7 @@ import {
   courseModules,
   accounts,
   users,
+  profiles,
 } from "@shared/schema";
 import { eq, and, sql, count, desc, asc, inArray } from "drizzle-orm";
 import { heygenService } from "../services/heygen";
@@ -179,7 +180,8 @@ export function registerHeygenRoutes(app: Express) {
         return res.status(400).json({ message: "Debes grabar el video de consentimiento y el video de entrenamiento primero" });
       }
 
-      const [userRow] = await db.select().from(users).where(eq(users.id, userId));
+      const [userRow] = await db.select({ email: users.email, fullName: profiles.fullName })
+        .from(users).leftJoin(profiles, eq(users.id, profiles.id)).where(eq(users.id, userId));
       const instructorName = userRow?.fullName || userRow?.email?.split("@")[0] || "Instructor";
 
       const twinResult = await heygenService.createDigitalTwin(
@@ -393,7 +395,8 @@ export function registerHeygenRoutes(app: Express) {
         return res.status(400).json({ message: "Primero debes registrar tu Digital Twin" });
       }
 
-      const [userRow] = await db.select().from(users).where(eq(users.id, userId));
+      const [userRow] = await db.select({ email: users.email, fullName: profiles.fullName })
+        .from(users).leftJoin(profiles, eq(users.id, profiles.id)).where(eq(users.id, userId));
       const instructorName = userRow?.fullName || userRow?.email?.split("@")[0] || "Instructor";
 
       const previewScript = `Hola, soy ${instructorName}, o mejor dicho, soy tu gemelo digital. ` +
@@ -489,7 +492,7 @@ export function registerHeygenRoutes(app: Express) {
         return res.status(503).json({ message: "HeyGen API no configurada" });
       }
       const userId = req.supabaseUserId!;
-      const { videoId } = req.params;
+      const { videoId } = req.params as Record<string, string>;
 
       const [job] = await db.select().from(heygenVideoJobs).where(
         and(eq(heygenVideoJobs.heygenVideoId, videoId), eq(heygenVideoJobs.instructorId, userId))
@@ -537,7 +540,7 @@ export function registerHeygenRoutes(app: Express) {
   app.get("/api/heygen/video/module/:courseId/:moduleId", requireAuth, requireInstructor, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const { courseId, moduleId } = req.params;
+      const { courseId, moduleId } = req.params as Record<string, string>;
       const jobs = await db.select().from(heygenVideoJobs).where(
         and(
           eq(heygenVideoJobs.courseId, courseId),
@@ -714,7 +717,7 @@ export function registerHeygenRoutes(app: Express) {
   app.get("/api/liveavatar/history/:courseId", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const courseId = req.params.courseId;
+      const courseId = (req.params.courseId as string);
       const sessions = await db.select().from(liveAvatarSessions)
         .where(and(eq(liveAvatarSessions.studentId, userId), eq(liveAvatarSessions.courseId, courseId)))
         .orderBy(desc(liveAvatarSessions.createdAt));
@@ -726,7 +729,7 @@ export function registerHeygenRoutes(app: Express) {
 
   app.get("/api/instructor-session-config/:instructorId", requireAuth, async (req, res, next) => {
     try {
-      const instructorId = req.params.instructorId;
+      const instructorId = (req.params.instructorId as string);
       const [config] = await db.select().from(instructorSessionConfig)
         .where(eq(instructorSessionConfig.instructorId, instructorId));
       res.json(config || null);
@@ -736,7 +739,7 @@ export function registerHeygenRoutes(app: Express) {
   app.put("/api/instructor-session-config", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const acct = await db.select().from(accounts).where(eq(accounts.userId, userId));
+      const acct = await db.select().from(accounts).where(eq(accounts.id, userId));
       if (!acct.length || (!acct[0].isInstructor && acct[0].userRole !== "socio_instructor" && !["admin", "superadmin"].includes(acct[0].userRole))) return res.status(403).json({ message: "Solo instructores" });
 
       const schema = z.object({
@@ -774,7 +777,7 @@ export function registerHeygenRoutes(app: Express) {
     try {
       const slots = await db.select().from(instructorAvailability)
         .where(and(
-          eq(instructorAvailability.instructorId, req.params.instructorId),
+          eq(instructorAvailability.instructorId, (req.params.instructorId as string)),
           eq(instructorAvailability.isActive, true)
         ));
       res.json(slots);
@@ -784,7 +787,7 @@ export function registerHeygenRoutes(app: Express) {
   app.put("/api/instructor-availability", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const acct = await db.select().from(accounts).where(eq(accounts.userId, userId));
+      const acct = await db.select().from(accounts).where(eq(accounts.id, userId));
       if (!acct.length || (!acct[0].isInstructor && acct[0].userRole !== "socio_instructor" && !["admin", "superadmin"].includes(acct[0].userRole))) return res.status(403).json({ message: "Solo instructores" });
 
       const schema = z.object({
@@ -814,7 +817,7 @@ export function registerHeygenRoutes(app: Express) {
   app.post("/api/private-sessions", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const acct = await db.select().from(accounts).where(eq(accounts.userId, userId));
+      const acct = await db.select().from(accounts).where(eq(accounts.id, userId));
       if (!acct.length || (!acct[0].isInstructor && acct[0].userRole !== "socio_instructor" && !["admin", "superadmin"].includes(acct[0].userRole))) return res.status(403).json({ message: "Solo instructores" });
 
       const schema = z.object({
@@ -878,7 +881,7 @@ export function registerHeygenRoutes(app: Express) {
   app.get("/api/private-sessions", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const acct = await db.select().from(accounts).where(eq(accounts.userId, userId));
+      const acct = await db.select().from(accounts).where(eq(accounts.id, userId));
       const isInstructor = acct.length && (acct[0].isInstructor || acct[0].userRole === "socio_instructor" || ["admin", "superadmin"].includes(acct[0].userRole));
 
       let sessions;
@@ -910,13 +913,13 @@ export function registerHeygenRoutes(app: Express) {
         .orderBy(asc(privateSessions.scheduledDate));
 
       const sessionsWithInstructor = await Promise.all(sessions.map(async (s) => {
-        const [user] = await db.select().from(users).where(eq(users.id, s.instructorId));
+        const [user] = await db.select({ fullName: profiles.fullName }).from(profiles).where(eq(profiles.id, s.instructorId));
         const enrolled = await db.select({ count: count() }).from(sessionParticipants)
           .where(eq(sessionParticipants.sessionId, s.id));
         return {
           ...s,
           dailyRoomToken: undefined,
-          instructorName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "Instructor",
+          instructorName: user?.fullName?.trim() || "Instructor",
           enrolledCount: enrolled[0]?.count || 0,
         };
       }));
@@ -927,7 +930,7 @@ export function registerHeygenRoutes(app: Express) {
 
   app.post("/api/private-sessions/:id/book", requireAuth, async (req, res, next) => {
     try {
-      const sessionId = req.params.id;
+      const sessionId = (req.params.id as string);
       const userId = req.supabaseUserId!;
 
       const [session] = await db.select().from(privateSessions).where(eq(privateSessions.id, sessionId));
@@ -958,7 +961,7 @@ export function registerHeygenRoutes(app: Express) {
 
   app.get("/api/private-sessions/:id/join", requireAuth, async (req, res, next) => {
     try {
-      const sessionId = req.params.id;
+      const sessionId = (req.params.id as string);
       const userId = req.supabaseUserId!;
 
       const [session] = await db.select().from(privateSessions).where(eq(privateSessions.id, sessionId));
@@ -976,8 +979,8 @@ export function registerHeygenRoutes(app: Express) {
         return res.status(503).json({ message: "Sala no disponible" });
       }
 
-      const [userRow] = await db.select().from(users).where(eq(users.id, userId));
-      const userName = userRow ? `${userRow.firstName || ""} ${userRow.lastName || ""}`.trim() : "Estudiante";
+      const [userRow] = await db.select({ fullName: profiles.fullName }).from(profiles).where(eq(profiles.id, userId));
+      const userName = userRow?.fullName?.trim() || "Estudiante";
 
       const token = await dailyService.createMeetingToken({
         roomName: session.dailyRoomName,
@@ -994,7 +997,7 @@ export function registerHeygenRoutes(app: Express) {
 
   app.post("/api/private-sessions/:id/end", requireAuth, async (req, res, next) => {
     try {
-      const sessionId = req.params.id;
+      const sessionId = (req.params.id as string);
       const userId = req.supabaseUserId!;
 
       const [session] = await db.select().from(privateSessions).where(eq(privateSessions.id, sessionId));
@@ -1016,7 +1019,7 @@ export function registerHeygenRoutes(app: Express) {
 
   app.post("/api/private-sessions/:id/cancel", requireAuth, async (req, res, next) => {
     try {
-      const sessionId = req.params.id;
+      const sessionId = (req.params.id as string);
       const userId = req.supabaseUserId!;
 
       const [session] = await db.select().from(privateSessions).where(eq(privateSessions.id, sessionId));
@@ -1064,12 +1067,12 @@ export function registerHeygenRoutes(app: Express) {
   app.get("/api/instructor-reviews/:instructorId", requireAuth, async (req, res, next) => {
     try {
       const reviews = await db.select().from(instructorReviews)
-        .where(eq(instructorReviews.instructorId, req.params.instructorId))
+        .where(eq(instructorReviews.instructorId, (req.params.instructorId as string)))
         .orderBy(desc(instructorReviews.createdAt));
 
       const reviewsWithNames = await Promise.all(reviews.map(async (r) => {
-        const [student] = await db.select().from(users).where(eq(users.id, r.studentId));
-        return { ...r, studentName: student ? `${student.firstName || ""} ${student.lastName || ""}`.trim() : "Estudiante" };
+        const [student] = await db.select({ fullName: profiles.fullName }).from(profiles).where(eq(profiles.id, r.studentId));
+        return { ...r, studentName: student?.fullName?.trim() || "Estudiante" };
       }));
 
       const avg = reviews.length

@@ -219,7 +219,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.get("/api/admin/orgs/:id", requireAuth, requireAdmin, async (req, res, next) => {
     try {
-      const team = await storage.getTeam(String(req.params.id));
+      const team = await storage.getTeam(String((req.params.id as string)));
       if (!team) return res.status(404).json({ message: "Organización no encontrada" });
 
       const members = await db.select({ teamUser: teamUsers, profile: profiles, account: accounts })
@@ -284,7 +284,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.patch("/api/admin/orgs/:id", requireAuth, requireAdmin, async (req, res, next) => {
     try {
-      const teamId = String(req.params.id);
+      const teamId = String((req.params.id as string));
       const team = await storage.getTeam(teamId);
       if (!team) return res.status(404).json({ message: "Organización no encontrada" });
       const { rfc, feePercent, contractUrl, plan, status } = req.body;
@@ -302,7 +302,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.post("/api/admin/orgs/:id/objectives", requireAuth, requireAdmin, async (req, res, next) => {
     try {
-      const teamId = String(req.params.id);
+      const teamId = String((req.params.id as string));
       const team = await storage.getTeam(teamId);
       if (!team) return res.status(404).json({ message: "Organización no encontrada" });
 
@@ -330,7 +330,7 @@ export function registerAdminRoutes(app: Express) {
   app.delete("/api/admin/orgs/:id/objectives/:objId", requireAuth, requireAdmin, async (req, res, next) => {
     try {
       const result = await db.delete(orgObjectives)
-        .where(and(eq(orgObjectives.id, String(req.params.objId)), eq(orgObjectives.teamId, String(req.params.id))))
+        .where(and(eq(orgObjectives.id, String((req.params.objId as string))), eq(orgObjectives.teamId, String((req.params.id as string)))))
         .returning();
       if (result.length === 0) return res.status(404).json({ message: "Objetivo no encontrado" });
       res.json({ message: "Objetivo eliminado" });
@@ -389,7 +389,7 @@ export function registerAdminRoutes(app: Express) {
       if (!mappedRole || !validRoles.includes(mappedRole)) {
         return res.status(400).json({ message: "Rol inválido" });
       }
-      const targetUserId = String(req.params.id);
+      const targetUserId = String((req.params.id as string));
       const user = await storage.getUser(targetUserId);
       if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
@@ -461,7 +461,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.get("/api/admin/users/:id", requireAuth, requireAdmin, async (req, res, next) => {
     try {
-      const userId = String(req.params.id);
+      const userId = String((req.params.id as string));
       const [row] = await db.select()
         .from(users)
         .leftJoin(accounts, eq(users.id, accounts.id))
@@ -525,14 +525,14 @@ export function registerAdminRoutes(app: Express) {
         id: userTermsAcceptances.id,
         acceptedAt: userTermsAcceptances.acceptedAt,
         versionTitle: termsVersions.title,
-        versionType: termsVersions.type,
+        versionType: termsVersions.docType,
       }).from(userTermsAcceptances)
         .leftJoin(termsVersions, eq(userTermsAcceptances.termsVersionId, termsVersions.id))
         .where(eq(userTermsAcceptances.userId, userId))
         .orderBy(desc(userTermsAcceptances.acceptedAt))
         .limit(10);
 
-      const isCoopMember = userData.account?.isCooperativeMember ?? false;
+      const isCoopMember = (userData.account as any)?.isCooperativeMember ?? false;
 
       res.json({
         id: userData.user.id,
@@ -580,17 +580,17 @@ export function registerAdminRoutes(app: Express) {
       if (!accountType || !validTypes.includes(accountType)) {
         return res.status(400).json({ message: "Tipo de cuenta inválido" });
       }
-      const user = await storage.getUser(String(req.params.id));
+      const user = await storage.getUser(String((req.params.id as string)));
       if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
-      await storage.updateAccount(String(req.params.id), { accountType });
-      res.json({ message: "Tipo de cuenta actualizado", userId: String(req.params.id), newAccountType: accountType });
+      await storage.updateAccount(String((req.params.id as string)), { accountType });
+      res.json({ message: "Tipo de cuenta actualizado", userId: String((req.params.id as string)), newAccountType: accountType });
     } catch (err) { next(err); }
   });
 
   app.patch("/api/admin/users/:id/profile", requireAuth, requireAdmin, async (req, res, next) => {
     try {
-      const userId = String(req.params.id);
+      const userId = String((req.params.id as string));
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
 
@@ -736,7 +736,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.get(["/api/teams/:teamId/contributions", "/api/companies/:teamId/contributions"], requireAuth, async (req, res, next) => {
     try {
-      const { teamId } = req.params;
+      const { teamId } = req.params as Record<string, string>;
       const userId = req.supabaseUserId!;
 
       const membership = await db.select().from(teamUsers)
@@ -759,7 +759,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.get(["/api/teams/:teamId/contributions/current", "/api/companies/:teamId/contributions/current"], requireAuth, async (req, res, next) => {
     try {
-      const { teamId } = req.params;
+      const { teamId } = req.params as Record<string, string>;
       const userId = req.supabaseUserId!;
 
       const membership = await db.select().from(teamUsers)
@@ -785,7 +785,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.post(["/api/teams/:teamId/contributions/:cid/confirm", "/api/companies/:teamId/contributions/:cid/confirm"], requireAuth, async (req, res, next) => {
     try {
-      const { teamId, cid } = req.params;
+      const { teamId, cid } = req.params as Record<string, string>;
       const userId = req.supabaseUserId!;
       const user = await storage.getUser(userId);
 
@@ -859,7 +859,7 @@ export function registerAdminRoutes(app: Express) {
         netToCooperative: contribution.netToCooperative,
         hash,
         confirmedAt: new Date().toISOString(),
-        confirmedByName: user?.fullName || user?.email || "Usuario",
+        confirmedByName: (user as any)?.fullName || user?.email || "Usuario",
       };
 
       const orgAdmins = await db.select().from(teamUsers)
@@ -883,7 +883,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.put(["/api/teams/:teamId/contributions/:cid/adjust", "/api/companies/:teamId/contributions/:cid/adjust"], requireAuth, async (req, res, next) => {
     try {
-      const { teamId, cid } = req.params;
+      const { teamId, cid } = req.params as Record<string, string>;
       const userId = req.supabaseUserId!;
       const user = await storage.getUser(userId);
       const { collaborators, reason } = req.body;
@@ -1056,7 +1056,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.get("/api/teams/:teamId/contributions/alerts", requireAuth, async (req, res, next) => {
     try {
-      const { teamId } = req.params;
+      const { teamId } = req.params as Record<string, string>;
       const userId = req.supabaseUserId!;
 
       const membership = await db.select().from(teamUsers)
@@ -1092,7 +1092,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.post("/api/admin/contributions/:cid/payment", requireAuth, requireAdmin, async (req, res, next) => {
     try {
-      const { cid } = req.params;
+      const { cid } = req.params as Record<string, string>;
       const userId = req.supabaseUserId!;
       const user = await storage.getUser(userId);
       const { method, reference, receiptUrl } = req.body;
@@ -1132,7 +1132,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.get(["/api/teams/:teamId/contributions/:cid/audit", "/api/companies/:teamId/contributions/:cid/audit"], requireAuth, async (req, res, next) => {
     try {
-      const { teamId, cid } = req.params;
+      const { teamId, cid } = req.params as Record<string, string>;
       const userId = req.supabaseUserId!;
 
       const acct = await storage.getAccount(userId);
@@ -1165,7 +1165,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.patch("/api/admin/orgs/:id/fiscal", requireAdmin, async (req, res, next) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as Record<string, string>;
       const schema = z.object({
         rfc: z.string().min(12).max(13).regex(/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i, "RFC con formato inválido"),
         razonSocial: z.string().min(1),
@@ -1325,7 +1325,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.get("/api/admin/invoices/:id", requireAdmin, async (req, res, next) => {
     try {
-      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, req.params.id));
+      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, (req.params.id as string)));
       if (!invoice) return res.status(404).json({ message: "Factura no encontrada" });
       res.json(invoice);
     } catch (err) { next(err); }
@@ -1333,7 +1333,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.post("/api/admin/invoices/:id/cancel", requireAdmin, async (req, res, next) => {
     try {
-      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, req.params.id));
+      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, (req.params.id as string)));
       if (!invoice) return res.status(404).json({ message: "Factura no encontrada" });
       if (invoice.status === "cancelled") return res.status(400).json({ message: "Ya está cancelada" });
 
@@ -1347,7 +1347,7 @@ export function registerAdminRoutes(app: Express) {
         status: "cancelled",
         cancelledAt: new Date(),
         cancellationReason: reason,
-      }).where(eq(invoices.id, req.params.id));
+      }).where(eq(invoices.id, (req.params.id as string)));
 
       if (invoice.contributionId) {
         await db.update(monthlyContributions).set({
@@ -1355,17 +1355,17 @@ export function registerAdminRoutes(app: Express) {
         }).where(eq(monthlyContributions.id, invoice.contributionId));
       }
 
-      const [updated] = await db.select().from(invoices).where(eq(invoices.id, req.params.id));
+      const [updated] = await db.select().from(invoices).where(eq(invoices.id, (req.params.id as string)));
       res.json(updated);
     } catch (err) { next(err); }
   });
 
   app.get("/api/admin/invoices/:id/download/:format", requireAdmin, async (req, res, next) => {
     try {
-      const format = req.params.format as "pdf" | "xml";
+      const format = (req.params.format as string) as "pdf" | "xml";
       if (!["pdf", "xml"].includes(format)) return res.status(400).json({ message: "Formato inválido" });
 
-      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, req.params.id));
+      const [invoice] = await db.select().from(invoices).where(eq(invoices.id, (req.params.id as string)));
       if (!invoice) return res.status(404).json({ message: "Factura no encontrada" });
       if (!invoice.facturapiInvoiceId) return res.status(400).json({ message: "Factura sin ID de Facturapi" });
 
@@ -1425,7 +1425,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.get("/api/blog/posts/:slug", async (req, res, next) => {
     try {
-      const [post] = await db.select().from(blogPosts).where(and(eq(blogPosts.slug, req.params.slug), eq(blogPosts.status, "published"))).limit(1);
+      const [post] = await db.select().from(blogPosts).where(and(eq(blogPosts.slug, (req.params.slug as string)), eq(blogPosts.status, "published"))).limit(1);
       if (!post) return res.status(404).json({ message: "Artículo no encontrado" });
       db.update(blogPosts).set({ blogViews: sql`${blogPosts.blogViews} + 1` }).where(eq(blogPosts.id, post.id)).catch(() => {});
       res.json(post);
@@ -1442,7 +1442,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.get("/api/blog/related/:slug", async (req, res, next) => {
     try {
-      const [post] = await db.select({ category: blogPosts.category, id: blogPosts.id }).from(blogPosts).where(eq(blogPosts.slug, req.params.slug)).limit(1);
+      const [post] = await db.select({ category: blogPosts.category, id: blogPosts.id }).from(blogPosts).where(eq(blogPosts.slug, (req.params.slug as string))).limit(1);
       if (!post) return res.json([]);
       const related = await db.select({
         id: blogPosts.id, title: blogPosts.title, slug: blogPosts.slug, excerpt: blogPosts.excerpt,
@@ -1524,7 +1524,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.patch("/api/admin/blog/posts/:id", requireAdmin, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt((req.params.id as string));
       const updates: any = {};
       const { title, slug, content_html, content_text, excerpt, category, target_sectors, seo_keywords, featured_image_url, status, newsletter_subject } = req.body;
       if (title !== undefined) updates.title = title;
@@ -1553,7 +1553,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.delete("/api/admin/blog/posts/:id", requireAdmin, async (req, res, next) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt((req.params.id as string));
       await db.update(blogPosts).set({ status: "archived", updatedAt: new Date() }).where(eq(blogPosts.id, id));
       res.json({ archived: true });
     } catch (err) { next(err); }
@@ -1723,7 +1723,7 @@ export function registerAdminRoutes(app: Express) {
         AND ${empresasProspectos.estado} != ''
       `);
 
-      const estadosList = (estados as any).rows?.map((r: any) => r.estado) ?? estados.map((r: any) => r.estado);
+      const estadosList = ((estados as any).rows ?? []).map((r: any) => r.estado);
 
       const nullEstadoCount = await db.execute(sql`
         SELECT count(*)::int as cnt FROM ${empresasProspectos}
@@ -1880,11 +1880,11 @@ export function registerAdminRoutes(app: Express) {
       const userId = req.supabaseUserId;
       if (!userId) return res.status(401).json({ message: "No autenticado" });
       const [enrollment] = await db.select().from(insuranceEnrollments)
-        .where(and(eq(insuranceEnrollments.id, req.params.id), eq(insuranceEnrollments.userId, userId)));
+        .where(and(eq(insuranceEnrollments.id, (req.params.id as string)), eq(insuranceEnrollments.userId, userId)));
       if (!enrollment) return res.status(404).json({ message: "Enrollment no encontrado" });
       const [updated] = await db.update(insuranceEnrollments)
         .set({ status: "cancelled", updatedAt: new Date() })
-        .where(eq(insuranceEnrollments.id, req.params.id)).returning();
+        .where(eq(insuranceEnrollments.id, (req.params.id as string))).returning();
       res.json(updated);
     } catch (err) { next(err); }
   });
@@ -1918,7 +1918,7 @@ export function registerAdminRoutes(app: Express) {
       if (policyNumber !== undefined) updates.policyNumber = policyNumber;
       if (certificateUrl !== undefined) updates.certificateUrl = certificateUrl;
       const [updated] = await db.update(insuranceEnrollments)
-        .set(updates).where(eq(insuranceEnrollments.id, req.params.id)).returning();
+        .set(updates).where(eq(insuranceEnrollments.id, (req.params.id as string))).returning();
       res.json(updated);
     } catch (err) { next(err); }
   });
@@ -2048,7 +2048,7 @@ export function registerAdminRoutes(app: Express) {
             }).filter(v => v.nombreComercial !== "Sin nombre" || v.razonSocial);
 
             if (valuesToInsert.length > 0) {
-              await db.insert(empresasProspectos).values(valuesToInsert).onConflictDoNothing();
+              await db.insert(empresasProspectos).values(valuesToInsert as any).onConflictDoNothing();
               insertedCount += valuesToInsert.length;
             }
             if (insertedCount % 5000 === 0) console.log(`[import] Inserted ${insertedCount} rows...`);
@@ -2126,7 +2126,7 @@ export function registerAdminRoutes(app: Express) {
           planRecomendado: sanitizeStr(r.plan_recomendado, 100),
           direccionCompleta: sanitizeStr(r.direccion_completa, 500),
         }));
-        await db.insert(empresasProspectos).values(valuesToInsert).onConflictDoNothing();
+        await db.insert(empresasProspectos).values(valuesToInsert as any).onConflictDoNothing();
         insertedCount += batch.length;
       }
       res.json({ ok: true, inserted: insertedCount });
@@ -2435,7 +2435,7 @@ export function registerAdminRoutes(app: Express) {
 
   app.patch("/api/admin/instructor-applications/:id", requireAdmin, async (req, res, next) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as Record<string, string>;
       const { action, notes } = req.body;
       const adminUserId = req.supabaseUserId!;
 

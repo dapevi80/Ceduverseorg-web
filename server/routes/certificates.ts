@@ -83,7 +83,7 @@ export function registerCertificateRoutes(app: Express) {
 
   app.patch("/api/admin/certificates/:id", requireAuth, requireAdmin, async (req, res, next) => {
     try {
-      const id = req.params.id as string;
+      const id = (req.params.id as string) as string;
       const { status, rejectReason, pdfUrl } = req.body;
       const request = await storage.getCertificateRequest(id);
       if (!request) {
@@ -200,14 +200,14 @@ export function registerCertificateRoutes(app: Express) {
       if (r2Storage.isConfigured) {
         const localPath = req.file.path;
         const buffer = fs.readFileSync(localPath);
-        const r2Key = `certificates/cert-${req.params.id}-${Date.now()}.pdf`;
+        const r2Key = `certificates/cert-${(req.params.id as string)}-${Date.now()}.pdf`;
         pdfUrl = await r2Storage.uploadBuffer(buffer, r2Key, "application/pdf");
         fs.unlinkSync(localPath);
       } else {
         pdfUrl = `/uploads/certificates/${req.file.filename}`;
       }
 
-      const updated = await storage.updateCertificateRequest(req.params.id as string, { pdfUrl });
+      const updated = await storage.updateCertificateRequest((req.params.id as string) as string, { pdfUrl });
       res.json({ pdfUrl, request: updated });
     } catch (err) { next(err); }
   });

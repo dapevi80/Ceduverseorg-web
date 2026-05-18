@@ -265,7 +265,7 @@ router.post("/create-order", async (req, res) => {
         .where(eq(storeStock.productId, prod.id));
     }
 
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = orderItems.map((oi, idx) => {
+    const lineItems: any[] = orderItems.map((oi, idx) => {
       const item = items[idx];
       const prod = prodMap[item.product_id];
       return {

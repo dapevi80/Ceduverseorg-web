@@ -130,7 +130,7 @@ export function registerApiKeyRoutes(app: Express) {
 
   app.patch("/api/admin/apis/keys/:id", requireSuperadmin, async (req, res, next) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as Record<string, string>;
       const { name, owner, isActive, allowedOrigins, rateLimitPerMinute, rateLimitPerDay, expiresAt } = req.body;
       const updates: any = { updatedAt: new Date() };
       if (typeof name === "string") updates.name = name;
@@ -149,7 +149,7 @@ export function registerApiKeyRoutes(app: Express) {
 
   app.patch("/api/admin/api-keys/:id", requireAdmin, async (req, res, next) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as Record<string, string>;
       const { isActive, allowedOrigins, rateLimitPerMinute, rateLimitPerDay } = req.body;
       const updates: any = { updatedAt: new Date() };
       if (typeof isActive === "boolean") updates.isActive = isActive;
@@ -167,7 +167,7 @@ export function registerApiKeyRoutes(app: Express) {
     try {
       const [updated] = await db.update(apiKeys)
         .set({ isActive: false, updatedAt: new Date() })
-        .where(eq(apiKeys.id, req.params.id)).returning();
+        .where(eq(apiKeys.id, (req.params.id as string))).returning();
       if (!updated) return res.status(404).json({ message: "API key no encontrada" });
       res.json({ success: true, message: "API key desactivada" });
     } catch (err) { next(err); }
@@ -180,7 +180,7 @@ export function registerApiKeyRoutes(app: Express) {
       const keyPrefix = rawKey.slice(0, 8);
       const [updated] = await db.update(apiKeys)
         .set({ keyHash, keyPrefix, updatedAt: new Date() })
-        .where(eq(apiKeys.id, req.params.id)).returning();
+        .where(eq(apiKeys.id, (req.params.id as string))).returning();
       if (!updated) return res.status(404).json({ message: "API key no encontrada" });
       res.json({ rawKey, message: "Key regenerada. Guárdala ahora." });
     } catch (err) { next(err); }
@@ -222,7 +222,7 @@ export function registerApiKeyRoutes(app: Express) {
 
   app.get("/api/admin/api-keys/:id/logs", requireAdmin, async (req, res, next) => {
     try {
-      const { id } = req.params;
+      const { id } = req.params as Record<string, string>;
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
       const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
       const logs = await db.select().from(apiRequestLogs)

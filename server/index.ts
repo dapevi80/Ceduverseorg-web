@@ -207,6 +207,10 @@ httpServer.listen(
   log("routes registered");
 
   (async () => {
+    if (process.env.SKIP_SEEDS === "true") {
+      log("seeds/imports skipped (SKIP_SEEDS=true)");
+      return;
+    }
     await migrateRoles().catch((err) => console.error("[seed] Role migration Error:", err.message));
     await seedCourses().catch((err) => console.error("[seed] Error:", err.message));
     await seedModulesAndQuizzes().catch((err) => console.error("[seed] Modules/Quizzes Error:", err.message));

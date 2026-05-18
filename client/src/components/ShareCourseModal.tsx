@@ -237,7 +237,7 @@ export default function ShareCourseModal({
                 Email
               </Button>
             </div>
-            {typeof navigator !== "undefined" && navigator.share && (
+            {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
               <Button
                 onClick={handleNativeShare}
                 variant="outline"

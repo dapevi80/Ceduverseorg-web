@@ -399,7 +399,7 @@ export default function SegurosPage() {
         {(plansLoading || enrollLoading) ? (
           <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-[#1b5adf]" /></div>
         ) : hasActive ? (
-          <ActiveEnrollmentView data={myEnrollment} />
+          <ActiveEnrollmentView data={myEnrollment as any} />
         ) : (
           <>
             <div className="text-center mb-8">
