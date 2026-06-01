@@ -37,6 +37,63 @@ const leadFormLimiter = rateLimit({
   message: { message: "Demasiadas solicitudes. Intenta en una hora." },
 });
 
+// A 'generating' row older than this is considered stale (e.g. process restarted
+// mid-generation) and may be re-triggered instead of blocking forever.
+const STALE_GENERATION_MS = 10 * 60 * 1000;
+
+// Runs the (slow, ~3-5 min) module content generation off the request path. The
+// HTTP handler returns a 'generating' placeholder immediately and the client polls;
+// this writes the final content (or marks 'failed') when Claude returns.
+async function runModuleGeneration(
+  userId: string,
+  slug: string,
+  moduleIndex: number,
+  result: NonNullable<Awaited<ReturnType<typeof storage.getStudioModuleBySlugAndIndex>>>,
+  profile: Awaited<ReturnType<typeof storage.getStudentProfile>>,
+): Promise<void> {
+  try {
+    const { generateModuleContent } = await import("../ai-engine");
+    const generated = await generateModuleContent(
+      result.module.title,
+      result.module.contentHtml,
+      profile ? {
+        jobTitle: profile.jobTitle || undefined,
+        industry: profile.industry || undefined,
+        companySize: profile.companySize || undefined,
+        experienceLevel: profile.experienceLevel || undefined,
+        learningGoals: profile.learningGoals || undefined,
+        preferredStyle: profile.preferredStyle || undefined,
+      } : null,
+      result.course.title,
+      result.module.description || undefined,
+      result.module.references ? (result.module.references as string[]).join("; ") : undefined,
+    );
+    await storage.saveGeneratedContent({
+      userId,
+      courseSlug: slug,
+      moduleIndex,
+      lectureHtml: generated.lectureHtml,
+      mindMap: generated.mindMap,
+      reflections: generated.reflections,
+      adaptiveQuiz: generated.adaptiveQuiz,
+      suggestedSources: generated.suggestedSources,
+      classScript: generated.classScript || null,
+      personalizedFor: profile ? { jobTitle: profile.jobTitle, industry: profile.industry } : null,
+      generationStatus: generated.isStub ? "failed" : (generated.adaptiveQuiz && generated.adaptiveQuiz.length > 0 ? "complete" : "partial"),
+      isStub: generated.isStub || false,
+    });
+    console.log(`[studio-gen] ${slug}#${moduleIndex} done (stub=${generated.isStub === true})`);
+  } catch (err: any) {
+    console.error(`[studio-gen] ${slug}#${moduleIndex} background generation failed:`, err.message);
+    await storage.saveGeneratedContent({
+      userId, courseSlug: slug, moduleIndex,
+      lectureHtml: null, mindMap: null, reflections: [], adaptiveQuiz: null,
+      suggestedSources: null, classScript: null, personalizedFor: null,
+      generationStatus: "failed", isStub: true,
+    }).catch(() => {});
+  }
+}
+
 export function registerCourseRoutes(app: Express) {
   app.get("/api/courses", async (_req, res, next) => {
     try {
@@ -906,48 +963,45 @@ export function registerCourseRoutes(app: Express) {
 
       const regenerate = req.query.regenerate === "true";
       const cached = await storage.getGeneratedContent(userId, slug, moduleIndex);
-      if (cached && !regenerate) return res.json(cached);
-      if (cached && regenerate) {
-        await storage.deleteGeneratedContent(userId, slug, moduleIndex);
+
+      // A generation already in flight for this module — let the client keep polling
+      // (unless it's stale from a crashed/restarted process, in which case re-trigger).
+      const generatingAge = cached?.generatedAt ? Date.now() - new Date(cached.generatedAt).getTime() : Infinity;
+      const isFresh = generatingAge < STALE_GENERATION_MS;
+      if (cached?.generationStatus === "generating" && isFresh) {
+        return res.status(202).json(cached);
+      }
+
+      // Finished content already present — return it unless the user asked to regenerate.
+      if (cached && !regenerate && cached.generationStatus !== "generating") {
+        return res.json(cached);
       }
 
       const result = await storage.getStudioModuleBySlugAndIndex(slug, moduleIndex);
       if (!result) return res.status(404).json({ message: "Módulo no encontrado" });
 
       const profile = await storage.getStudentProfile(userId);
-      const { generateModuleContent } = await import("../ai-engine");
-      const generated = await generateModuleContent(
-        result.module.title,
-        result.module.contentHtml,
-        profile ? {
-          jobTitle: profile.jobTitle || undefined,
-          industry: profile.industry || undefined,
-          companySize: profile.companySize || undefined,
-          experienceLevel: profile.experienceLevel || undefined,
-          learningGoals: profile.learningGoals || undefined,
-          preferredStyle: profile.preferredStyle || undefined,
-        } : null,
-        result.course.title,
-        result.module.description || undefined,
-        result.module.references ? (result.module.references as string[]).join("; ") : undefined,
-      );
 
-      const saved = await storage.saveGeneratedContent({
+      // Mark in-progress immediately so concurrent loads/polls don't double-trigger,
+      // then run the slow generation off the request path and return 202 right away.
+      const placeholder = await storage.saveGeneratedContent({
         userId,
         courseSlug: slug,
         moduleIndex,
-        lectureHtml: generated.lectureHtml,
-        mindMap: generated.mindMap,
-        reflections: generated.reflections,
-        adaptiveQuiz: generated.adaptiveQuiz,
-        suggestedSources: generated.suggestedSources,
-        classScript: generated.classScript || null,
+        lectureHtml: null,
+        mindMap: null,
+        reflections: [],
+        adaptiveQuiz: null,
+        suggestedSources: null,
+        classScript: null,
         personalizedFor: profile ? { jobTitle: profile.jobTitle, industry: profile.industry } : null,
-        generationStatus: generated.isStub ? "failed" : (generated.adaptiveQuiz && generated.adaptiveQuiz.length > 0 ? "complete" : "partial"),
-        isStub: generated.isStub || false,
+        generationStatus: "generating",
+        isStub: false,
       });
 
-      res.json(saved);
+      void runModuleGeneration(userId, slug, moduleIndex, result, profile);
+
+      res.status(202).json(placeholder);
     } catch (err) { next(err); }
   });
 

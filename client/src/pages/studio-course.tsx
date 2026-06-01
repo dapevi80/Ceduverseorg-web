@@ -1093,6 +1093,10 @@ export default function StudioCoursePage() {
       return res.json();
     },
     enabled: !!user && !!courseData,
+    // Generation runs async server-side (~3-5 min). While in progress the server
+    // returns a "generating" placeholder; poll until the real content lands.
+    refetchInterval: (query) =>
+      query.state.data?.generationStatus === "generating" ? 5000 : false,
   });
 
   const [showUnenrollDialog, setShowUnenrollDialog] = useState(false);
@@ -1168,12 +1172,14 @@ export default function StudioCoursePage() {
       const res = await apiRequest("POST", `/api/studio/courses/${slug}/modules/${activeModule}/generate?regenerate=true`);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["studio-generated", slug, activeModule] });
-      toast({ title: "Contenido regenerado", description: "Tu contenido personalizado está listo." });
+    onSuccess: (data) => {
+      // Server returns a "generating" placeholder; seed the cache so the loading
+      // state shows immediately and the query starts polling for the result.
+      queryClient.setQueryData(["studio-generated", slug, activeModule], data);
+      toast({ title: "Generando contenido", description: "Esto puede tomar unos minutos. Se actualizará automáticamente al terminar." });
     },
     onError: () => {
-      toast({ title: "Error", description: "No se pudo regenerar el contenido. Intenta de nuevo.", variant: "destructive" });
+      toast({ title: "Error", description: "No se pudo iniciar la regeneración. Intenta de nuevo.", variant: "destructive" });
     },
   });
 
@@ -1507,7 +1513,7 @@ export default function StudioCoursePage() {
           </div>
 
           <div className="max-w-4xl mx-auto px-4 sm:px-8 py-6">
-            {isGenerating && !generatedContent ? (
+            {(isGenerating && !generatedContent) || generatedContent?.generationStatus === "generating" ? (
               <LoadingState profile={studentProfile || undefined} />
             ) : (
               <>
