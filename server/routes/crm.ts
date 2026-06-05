@@ -44,7 +44,43 @@ import { eq, and, sql, count, desc, asc, gte, lte, inArray, ilike, type SQL, typ
 import { z } from "zod";
 import crypto from "crypto";
 
+// --- Hybrid ownership model for the DENUE prospect pipeline ---
+// Socios comerciales see their OWN prospects (partnerId = them) plus UNASSIGNED
+// ones (partnerId IS NULL, available to claim). Admins/directors see everything
+// and may reassign freely. These helpers centralize that policy.
+const PROSPECT_ADMIN_ROLES = ["admin", "superadmin", "director"];
+
+type ProspectActor = { userId: string; role: string; isAdmin: boolean };
+
+export const DENUE_VALID_STAGES = ["nuevo", "contactado", "demo", "propuesta", "negociacion", "cliente", "perdido"] as const;
+
 export function registerCrmRoutes(app: Express) {
+  async function getProspectActor(userId: string): Promise<ProspectActor> {
+    const account = await storage.getAccount(userId);
+    const role = account?.userRole ?? "";
+    return { userId, role, isAdmin: PROSPECT_ADMIN_ROLES.includes(role) };
+  }
+
+  // SQL conditions that restrict a query to what `actor` is allowed to see.
+  // scope: "mine" = only owned, "available" = only unassigned, otherwise the
+  // default visible set (own + unassigned for socios; everything for admins).
+  function prospectVisibility(actor: ProspectActor, scope?: string): SQL[] {
+    if (scope === "mine") return [eq(empresasProspectos.partnerId, actor.userId)];
+    if (scope === "available") return [sql`${empresasProspectos.partnerId} IS NULL`];
+    if (actor.isAdmin) return [];
+    return [sql`(${empresasProspectos.partnerId} = ${actor.userId}::uuid OR ${empresasProspectos.partnerId} IS NULL)`];
+  }
+
+  // Row-level write decision for a single prospect.
+  // "ok" = proceed, "claim" = unassigned, auto-claim to actor then proceed,
+  // "deny" = owned by another socio (forbidden for non-admins).
+  function prospectWriteDecision(actor: ProspectActor, ownerId: string | null): "ok" | "claim" | "deny" {
+    if (actor.isAdmin) return "ok";
+    if (ownerId === actor.userId) return "ok";
+    if (ownerId == null) return "claim";
+    return "deny";
+  }
+
   app.get("/api/crm/payments", requireAdmin, async (req, res, next) => {
     try {
       const { month, year } = req.query;
@@ -613,10 +649,11 @@ export function registerCrmRoutes(app: Express) {
 
   app.get("/api/denue/prospectos", requireAdminOrPartner, async (req, res, next) => {
     try {
-      const { municipio, estado, zona, scian, scoreMin, scoreMax, stage, partnerId, search, enrichment, page = "1", limit = "50", sortField = "leadScore", sortDir = "desc" } = req.query as Record<string, string>;
+      const { municipio, estado, zona, scian, scoreMin, scoreMax, stage, partnerId, search, enrichment, scope, page = "1", limit = "50", sortField = "leadScore", sortDir = "desc" } = req.query as Record<string, string>;
 
-      const validStages = ["nuevo", "contactado", "demo", "propuesta", "negociacion", "cliente"] as const;
-      const conditions: SQL[] = [];
+      const validStages = DENUE_VALID_STAGES;
+      const actor = await getProspectActor(req.supabaseUserId!);
+      const conditions: SQL[] = [...prospectVisibility(actor, scope)];
 
       const efos = (req.query as Record<string, string>).efos;
       const isEfosOnly = efos === "only";
@@ -658,7 +695,7 @@ export function registerCrmRoutes(app: Express) {
       if (stage && validStages.includes(stage as typeof validStages[number])) {
         conditions.push(sql`${empresasProspectos.stage} = ${stage}`);
       }
-      if (partnerId) conditions.push(eq(empresasProspectos.partnerId, partnerId));
+      if (partnerId && actor.isAdmin) conditions.push(eq(empresasProspectos.partnerId, partnerId));
       if (search) conditions.push(ilike(empresasProspectos.nombreComercial, `%${search}%`));
 
       if (isEfosOnly) {
@@ -726,6 +763,99 @@ export function registerCrmRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
+  // Manually add a single prospect to the pipeline. Auto-claimed to the creator
+  // (admins may target another socio via partnerId).
+  app.post("/api/denue/prospectos", requireAdminOrPartner, async (req, res, next) => {
+    try {
+      const actor = await getProspectActor(req.supabaseUserId!);
+      const body = req.body as Record<string, any>;
+      const nombreComercial = (body.nombreComercial || "").trim();
+      if (!nombreComercial) return res.status(400).json({ message: "El nombre comercial es obligatorio" });
+      if (body.stage && !DENUE_VALID_STAGES.includes(body.stage)) return res.status(400).json({ message: "Etapa inválida" });
+
+      const ownerId = actor.isAdmin && body.partnerId ? body.partnerId : actor.userId;
+      const [created] = await db.insert(empresasProspectos).values({
+        nombreComercial,
+        razonSocial: body.razonSocial || null,
+        actividadEconomica: body.actividadEconomica || null,
+        nombreContacto: body.nombreContacto || null,
+        telefono: body.telefono || null,
+        correoElectronico: body.correoElectronico || null,
+        sitioWeb: body.sitioWeb || null,
+        rfc: body.rfc || null,
+        municipio: body.municipio || null,
+        estado: body.estado || null,
+        zonaComercial: body.estado ? (ZONA_POR_ESTADO[body.estado] || null) : null,
+        empleadosEstimados: body.empleadosEstimados != null ? Number(body.empleadosEstimados) : null,
+        potencialAportacionMensual: body.potencialAportacionMensual != null ? Number(body.potencialAportacionMensual) : null,
+        planRecomendado: body.planRecomendado || null,
+        notas: body.notas || null,
+        stage: body.stage || "nuevo",
+        leadScore: body.leadScore != null ? Number(body.leadScore) : 0,
+        partnerId: ownerId,
+      }).returning();
+
+      await db.insert(interaccionesProspectos).values({
+        empresaId: created.id, userId: actor.userId, tipo: "creado", notas: "Prospecto agregado manualmente",
+      });
+      prospectStatsCacheMap.clear();
+      res.status(201).json(created);
+    } catch (err) { next(err); }
+  });
+
+  // Pipeline value for the actor's OWN book: count + monthly/annual potential by
+  // stage, plus a probability-weighted forecast. Powers the "value if you close"
+  // overview on the socio dashboard.
+  app.get("/api/denue/prospectos/pipeline-value", requireAdminOrPartner, async (req, res, next) => {
+    try {
+      const actor = await getProspectActor(req.supabaseUserId!);
+      // Admins can inspect a specific socio's book via ?partnerId=; default to own.
+      const targetId = actor.isAdmin && typeof req.query.partnerId === "string" && req.query.partnerId
+        ? req.query.partnerId
+        : actor.userId;
+
+      const rows = await db.select({
+        stage: empresasProspectos.stage,
+        count: count(),
+        monthly: sql<number>`COALESCE(SUM(${empresasProspectos.potencialAportacionMensual}), 0)`,
+      }).from(empresasProspectos)
+        .where(eq(empresasProspectos.partnerId, targetId))
+        .groupBy(empresasProspectos.stage);
+
+      // Probability of closing by stage (open stages only; cliente=won, perdido=lost).
+      const STAGE_PROB: Record<string, number> = {
+        nuevo: 0.1, contactado: 0.2, demo: 0.4, propuesta: 0.6, negociacion: 0.8, cliente: 1, perdido: 0,
+      };
+      const byStage: Record<string, { count: number; monthly: number }> = {};
+      let openMonthly = 0, wonMonthly = 0, weightedMonthly = 0, totalCount = 0, openCount = 0, wonCount = 0;
+      for (const r of rows) {
+        const monthly = Number(r.monthly) || 0;
+        const c = Number(r.count) || 0;
+        byStage[r.stage] = { count: c, monthly };
+        totalCount += c;
+        weightedMonthly += monthly * (STAGE_PROB[r.stage] ?? 0);
+        if (r.stage === "cliente") { wonMonthly += monthly; wonCount += c; }
+        else if (r.stage !== "perdido") { openMonthly += monthly; openCount += c; }
+      }
+
+      res.json({
+        targetId,
+        byStage,
+        totals: {
+          totalCount,
+          openCount,
+          wonCount,
+          openMonthly,                       // recurring monthly value of open deals
+          openAnnual: openMonthly * 12,
+          wonMonthly,                        // recurring monthly value already closed
+          wonAnnual: wonMonthly * 12,
+          weightedMonthly,                   // probability-weighted forecast (monthly)
+          weightedAnnual: weightedMonthly * 12,
+        },
+      });
+    } catch (err) { next(err); }
+  });
+
   type SatOficinaRow = { estado: string; municipio: string | null; latitud: number; longitud: number };
 
   const mapCache = new Map<string, { data: unknown; ts: number }>();
@@ -734,16 +864,18 @@ export function registerCrmRoutes(app: Express) {
 
   app.get("/api/denue/prospectos/map", requireAdminOrPartner, async (req, res, next) => {
     try {
-      const { municipio, estado, zona, scian, scoreMin, scoreMax, stage, partnerId, search, enrichment, efos } = req.query as Record<string, string>;
+      const { municipio, estado, zona, scian, scoreMin, scoreMax, stage, partnerId, search, enrichment, efos, scope } = req.query as Record<string, string>;
+      const actor = await getProspectActor(req.supabaseUserId!);
 
-      const mapCacheKey = JSON.stringify({ municipio, estado, zona, scian, scoreMin, scoreMax, stage, partnerId, search, enrichment, efos });
+      // Cache key is scoped per viewer so a socio's restricted map is never served to another.
+      const mapCacheKey = JSON.stringify({ municipio, estado, zona, scian, scoreMin, scoreMax, stage, partnerId, search, enrichment, efos, scope, viewer: actor.isAdmin ? "admin" : actor.userId });
       const cachedMap = mapCache.get(mapCacheKey);
       if (cachedMap && Date.now() - cachedMap.ts < MAP_CACHE_TTL) {
         return res.json(cachedMap.data);
       }
 
-      const validStages = ["nuevo", "contactado", "demo", "propuesta", "negociacion", "cliente"] as const;
-      const conditions: SQL[] = [];
+      const validStages = DENUE_VALID_STAGES;
+      const conditions: SQL[] = [...prospectVisibility(actor, scope)];
       const isEfosOnly = efos === "only";
 
       if (zona && ZONA_POR_ESTADO) {
@@ -793,7 +925,7 @@ export function registerCrmRoutes(app: Express) {
         conditions.push(sql`${empresasProspectos.stage} = ${stage}`);
         geoConditions.push(sql`${empresasProspectos.stage} = ${stage}`);
       }
-      if (partnerId) { conditions.push(eq(empresasProspectos.partnerId, partnerId)); geoConditions.push(eq(empresasProspectos.partnerId, partnerId)); }
+      if (partnerId && actor.isAdmin) { conditions.push(eq(empresasProspectos.partnerId, partnerId)); geoConditions.push(eq(empresasProspectos.partnerId, partnerId)); }
       if (search) { conditions.push(ilike(empresasProspectos.nombreComercial, `%${search}%`)); geoConditions.push(ilike(empresasProspectos.nombreComercial, `%${search}%`)); }
 
       if (isEfosOnly) {
@@ -908,9 +1040,16 @@ export function registerCrmRoutes(app: Express) {
 
   app.get("/api/denue/prospectos/stats", requireAdminOrPartner, async (req, res, next) => {
     try {
-      const { municipio, estado, zona, scian, scoreMin, stage, partnerId, search, enrichment, efos } = req.query as Record<string, string>;
-      const hasFilters = !!(municipio || estado || zona || scian || scoreMin || stage || partnerId || search || enrichment || efos);
-      const cacheKey = hasFilters ? JSON.stringify({ municipio, estado, zona, scian, scoreMin, stage, partnerId, search, enrichment, efos }) : "__global__";
+      const { municipio, estado, zona, scian, scoreMin, stage, partnerId, search, enrichment, efos, scope } = req.query as Record<string, string>;
+      const actor = await getProspectActor(req.supabaseUserId!);
+      // Non-admin or scoped requests must never use the global materialized view
+      // (it aggregates the whole pool). Treat them as "filtered" so they fall
+      // through to the visibility-constrained query below.
+      const restricted = !actor.isAdmin || !!scope;
+      const hasFilters = restricted || !!(municipio || estado || zona || scian || scoreMin || stage || partnerId || search || enrichment || efos);
+      const cacheKey = hasFilters
+        ? JSON.stringify({ municipio, estado, zona, scian, scoreMin, stage, partnerId, search, enrichment, efos, scope, viewer: actor.isAdmin ? "admin" : actor.userId })
+        : "__global__";
       const cached = prospectStatsCacheMap.get(cacheKey);
       if (cached && Date.now() - cached.ts < STATS_CACHE_TTL) {
         return res.json(cached.data);
@@ -963,7 +1102,7 @@ export function registerCrmRoutes(app: Express) {
         }
       }
 
-      const conditions: SQL[] = [];
+      const conditions: SQL[] = [...prospectVisibility(actor, scope)];
       const isEfosOnly = efos === "only";
 
       if (zona && ZONA_POR_ESTADO) {
@@ -998,7 +1137,7 @@ export function registerCrmRoutes(app: Express) {
       if (scian) conditions.push(eq(empresasProspectos.codigoScian, scian));
       if (scoreMin) conditions.push(gte(empresasProspectos.leadScore, parseInt(scoreMin)));
       if (stage) conditions.push(sql`${empresasProspectos.stage} = ${stage}`);
-      if (partnerId) conditions.push(eq(empresasProspectos.partnerId, partnerId));
+      if (partnerId && actor.isAdmin) conditions.push(eq(empresasProspectos.partnerId, partnerId));
       if (search) conditions.push(ilike(empresasProspectos.nombreComercial, `%${search}%`));
       if (isEfosOnly) {
         conditions.push(sql`is_efos = true`);
@@ -1117,8 +1256,12 @@ export function registerCrmRoutes(app: Express) {
 
   app.get("/api/denue/prospectos/:id", requireAdminOrPartner, async (req, res, next) => {
     try {
+      const actor = await getProspectActor(req.supabaseUserId!);
       const [row] = await db.select().from(empresasProspectos).where(eq(empresasProspectos.id, (req.params.id as string))).limit(1);
       if (!row) return res.status(404).json({ message: "Prospecto no encontrado" });
+      if (prospectWriteDecision(actor, row.partnerId) === "deny") {
+        return res.status(403).json({ message: "Este prospecto está asignado a otro socio" });
+      }
 
       const detailEfosResult = await db.execute(sql`SELECT efos_rfc, efos_situacion, efos_nombre FROM efos_prospectos_match WHERE prospecto_id = ${row.id} LIMIT 1`);
       const detailEfosRows = (detailEfosResult as unknown as { rows: { efos_rfc: string; efos_situacion: string; efos_nombre: string }[] }).rows || [];
@@ -1130,14 +1273,20 @@ export function registerCrmRoutes(app: Express) {
   app.patch("/api/denue/prospectos/:id/stage", requireAdminOrPartner, async (req, res, next) => {
     try {
       const { stage } = req.body;
-      const validStages = ["nuevo", "contactado", "demo", "propuesta", "negociacion", "cliente"];
-      if (!validStages.includes(stage)) return res.status(400).json({ message: "Etapa inválida" });
+      if (!DENUE_VALID_STAGES.includes(stage)) return res.status(400).json({ message: "Etapa inválida" });
 
+      const actor = await getProspectActor(req.supabaseUserId!);
+      const [row] = await db.select({ partnerId: empresasProspectos.partnerId }).from(empresasProspectos).where(eq(empresasProspectos.id, (req.params.id as string))).limit(1);
+      if (!row) return res.status(404).json({ message: "Prospecto no encontrado" });
+      const decision = prospectWriteDecision(actor, row.partnerId);
+      if (decision === "deny") return res.status(403).json({ message: "Este prospecto está asignado a otro socio" });
+
+      // Moving an available prospect into your pipeline claims it for you.
+      const claimPatch = decision === "claim" ? { partnerId: actor.userId } : {};
       const [updated] = await db.update(empresasProspectos)
-        .set({ stage, updatedAt: new Date() })
+        .set({ stage, updatedAt: new Date(), ...claimPatch })
         .where(eq(empresasProspectos.id, (req.params.id as string)))
         .returning();
-      if (!updated) return res.status(404).json({ message: "Prospecto no encontrado" });
 
       await db.insert(interaccionesProspectos).values({
         empresaId: updated.id,
@@ -1151,8 +1300,12 @@ export function registerCrmRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
+  // Reassigning to an arbitrary socio is an admin/director power. Socios use
+  // claim/release (below) to manage their own book.
   app.patch("/api/denue/prospectos/:id/assign", requireAdminOrPartner, async (req, res, next) => {
     try {
+      const actor = await getProspectActor(req.supabaseUserId!);
+      if (!actor.isAdmin) return res.status(403).json({ message: "Solo un administrador puede reasignar prospectos. Usa 'reclamar' o 'liberar'." });
       const { partnerId } = req.body;
       if (partnerId) {
         const partnerAccount = await storage.getAccount(partnerId);
@@ -1165,6 +1318,51 @@ export function registerCrmRoutes(app: Express) {
         .where(eq(empresasProspectos.id, (req.params.id as string)))
         .returning();
       if (!updated) return res.status(404).json({ message: "Prospecto no encontrado" });
+      prospectStatsCacheMap.clear();
+      res.json(updated);
+    } catch (err) { next(err); }
+  });
+
+  // Claim an available (unassigned) prospect. Cannot steal one already owned by
+  // another socio; admins may take over any prospect.
+  app.post("/api/denue/prospectos/:id/claim", requireAdminOrPartner, async (req, res, next) => {
+    try {
+      const actor = await getProspectActor(req.supabaseUserId!);
+      const [row] = await db.select({ partnerId: empresasProspectos.partnerId }).from(empresasProspectos).where(eq(empresasProspectos.id, (req.params.id as string))).limit(1);
+      if (!row) return res.status(404).json({ message: "Prospecto no encontrado" });
+      if (row.partnerId && row.partnerId !== actor.userId && !actor.isAdmin) {
+        return res.status(409).json({ message: "Este prospecto ya fue reclamado por otro socio" });
+      }
+      const [updated] = await db.update(empresasProspectos)
+        .set({ partnerId: actor.userId, updatedAt: new Date() })
+        .where(eq(empresasProspectos.id, (req.params.id as string)))
+        .returning();
+      await db.insert(interaccionesProspectos).values({
+        empresaId: updated.id, userId: actor.userId, tipo: "reclamado", notas: "Prospecto reclamado",
+      });
+      prospectStatsCacheMap.clear();
+      res.json(updated);
+    } catch (err) { next(err); }
+  });
+
+  // Release a prospect back to the available pool. Socios may release only their
+  // own; admins may release any.
+  app.post("/api/denue/prospectos/:id/release", requireAdminOrPartner, async (req, res, next) => {
+    try {
+      const actor = await getProspectActor(req.supabaseUserId!);
+      const [row] = await db.select({ partnerId: empresasProspectos.partnerId }).from(empresasProspectos).where(eq(empresasProspectos.id, (req.params.id as string))).limit(1);
+      if (!row) return res.status(404).json({ message: "Prospecto no encontrado" });
+      if (!actor.isAdmin && row.partnerId !== actor.userId) {
+        return res.status(403).json({ message: "Solo puedes liberar prospectos asignados a ti" });
+      }
+      const [updated] = await db.update(empresasProspectos)
+        .set({ partnerId: null, updatedAt: new Date() })
+        .where(eq(empresasProspectos.id, (req.params.id as string)))
+        .returning();
+      await db.insert(interaccionesProspectos).values({
+        empresaId: updated.id, userId: actor.userId, tipo: "liberado", notas: "Prospecto liberado al pool",
+      });
+      prospectStatsCacheMap.clear();
       res.json(updated);
     } catch (err) { next(err); }
   });
@@ -1174,8 +1372,15 @@ export function registerCrmRoutes(app: Express) {
       const { tipo, notas } = req.body;
       if (!tipo) return res.status(400).json({ message: "Se requiere tipo de interacción" });
 
-      const [empresa] = await db.select().from(empresasProspectos).where(eq(empresasProspectos.id, (req.params.id as string)));
+      const actor = await getProspectActor(req.supabaseUserId!);
+      const [empresa] = await db.select({ id: empresasProspectos.id, partnerId: empresasProspectos.partnerId }).from(empresasProspectos).where(eq(empresasProspectos.id, (req.params.id as string)));
       if (!empresa) return res.status(404).json({ message: "Prospecto no encontrado" });
+      const decision = prospectWriteDecision(actor, empresa.partnerId);
+      if (decision === "deny") return res.status(403).json({ message: "Este prospecto está asignado a otro socio" });
+      if (decision === "claim") {
+        await db.update(empresasProspectos).set({ partnerId: actor.userId, updatedAt: new Date() }).where(eq(empresasProspectos.id, empresa.id));
+        prospectStatsCacheMap.clear();
+      }
 
       const [record] = await db.insert(interaccionesProspectos).values({
         empresaId: empresa.id,
@@ -1189,6 +1394,12 @@ export function registerCrmRoutes(app: Express) {
 
   app.get("/api/denue/prospectos/:id/interacciones", requireAdminOrPartner, async (req, res, next) => {
     try {
+      const actor = await getProspectActor(req.supabaseUserId!);
+      const [row] = await db.select({ partnerId: empresasProspectos.partnerId }).from(empresasProspectos).where(eq(empresasProspectos.id, (req.params.id as string))).limit(1);
+      if (!row) return res.status(404).json({ message: "Prospecto no encontrado" });
+      if (prospectWriteDecision(actor, row.partnerId) === "deny") {
+        return res.status(403).json({ message: "Este prospecto está asignado a otro socio" });
+      }
       const rows = await db.select().from(interaccionesProspectos)
         .where(eq(interaccionesProspectos.empresaId, (req.params.id as string)))
         .orderBy(desc(interaccionesProspectos.createdAt));
@@ -1199,10 +1410,11 @@ export function registerCrmRoutes(app: Express) {
   app.get("/api/denue/export", requireAdminOrPartner, async (req, res, next) => {
     try {
       const ExcelJS = await import("exceljs");
-      const { municipio, estado, zona, scian, scoreMin, scoreMax, stage, partnerId } = req.query as Record<string, string>;
+      const { municipio, estado, zona, scian, scoreMin, scoreMax, stage, partnerId, scope } = req.query as Record<string, string>;
+      const actor = await getProspectActor(req.supabaseUserId!);
 
-      const exportValidStages = ["nuevo", "contactado", "demo", "propuesta", "negociacion", "cliente"] as const;
-      const exportConditions: SQL[] = [];
+      const exportValidStages = DENUE_VALID_STAGES;
+      const exportConditions: SQL[] = [...prospectVisibility(actor, scope)];
       if (zona && ZONA_POR_ESTADO) {
         const estadosDeZona = Object.entries(ZONA_POR_ESTADO).filter(([, z]) => z === zona).map(([e]) => e);
         if (estadosDeZona.length > 0) exportConditions.push(inArray(empresasProspectos.estado, estadosDeZona));
@@ -1215,7 +1427,7 @@ export function registerCrmRoutes(app: Express) {
       if (stage && exportValidStages.includes(stage as typeof exportValidStages[number])) {
         exportConditions.push(sql`${empresasProspectos.stage} = ${stage}`);
       }
-      if (partnerId) exportConditions.push(eq(empresasProspectos.partnerId, partnerId));
+      if (partnerId && actor.isAdmin) exportConditions.push(eq(empresasProspectos.partnerId, partnerId));
 
       const where = exportConditions.length > 0 ? and(...exportConditions) : undefined;
       const rows = await db.select().from(empresasProspectos).where(where).orderBy(desc(empresasProspectos.leadScore)).limit(5000);
@@ -1661,8 +1873,12 @@ export function registerCrmRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
-  app.get("/api/denue/partners", requireAdminOrPartner, async (_req, res, next) => {
+  app.get("/api/denue/partners", requireAdminOrPartner, async (req, res, next) => {
     try {
+      // Only admins/directors need the socio roster (for reassignment dropdowns).
+      // Socios don't see other socios' identities.
+      const actor = await getProspectActor(req.supabaseUserId!);
+      if (!actor.isAdmin) return res.json([]);
       const partnerUsersRaw = await db.select()
         .from(users)
         .innerJoin(accounts, eq(users.id, accounts.id))
@@ -1677,20 +1893,35 @@ export function registerCrmRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
+  // Restrict a set of ids to the rows the actor may write to. Admins: all ids.
+  // Socios: only their own or unassigned rows (matched within the id set).
+  const writableIdFilter = (actor: ProspectActor, ids: string[]): SQL =>
+    actor.isAdmin
+      ? inArray(empresasProspectos.id, ids)
+      : and(inArray(empresasProspectos.id, ids), sql`(${empresasProspectos.partnerId} = ${actor.userId}::uuid OR ${empresasProspectos.partnerId} IS NULL)`)!;
+
   app.post("/api/denue/prospectos/bulk-stage", requireAdminOrPartner, async (req, res, next) => {
     try {
       const { ids, stage } = req.body;
       if (!ids?.length || !stage) return res.status(400).json({ message: "ids y stage requeridos" });
-      await db.update(empresasProspectos).set({ stage, updatedAt: new Date() }).where(inArray(empresasProspectos.id, ids));
-      res.json({ updated: ids.length });
+      if (!DENUE_VALID_STAGES.includes(stage)) return res.status(400).json({ message: "Etapa inválida" });
+      const actor = await getProspectActor(req.supabaseUserId!);
+      // For socios, moving prospects into a stage also claims any unassigned ones.
+      const setObj = actor.isAdmin ? { stage, updatedAt: new Date() } : { stage, partnerId: actor.userId, updatedAt: new Date() };
+      const updated = await db.update(empresasProspectos).set(setObj).where(writableIdFilter(actor, ids)).returning({ id: empresasProspectos.id });
+      prospectStatsCacheMap.clear();
+      res.json({ updated: updated.length });
     } catch (err) { next(err); }
   });
 
   app.post("/api/denue/prospectos/bulk-assign", requireAdminOrPartner, async (req, res, next) => {
     try {
+      const actor = await getProspectActor(req.supabaseUserId!);
+      if (!actor.isAdmin) return res.status(403).json({ message: "Solo un administrador puede reasignar prospectos en lote" });
       const { ids, partnerId } = req.body;
       if (!ids?.length) return res.status(400).json({ message: "ids requeridos" });
       await db.update(empresasProspectos).set({ partnerId: partnerId || null, updatedAt: new Date() }).where(inArray(empresasProspectos.id, ids));
+      prospectStatsCacheMap.clear();
       res.json({ updated: ids.length });
     } catch (err) { next(err); }
   });
@@ -1699,15 +1930,17 @@ export function registerCrmRoutes(app: Express) {
     try {
       const { ids, contactGroupId } = req.body;
       if (!ids?.length) return res.status(400).json({ message: "ids requeridos" });
-      const oldGroups = await db.select({ contactGroupId: empresasProspectos.contactGroupId }).from(empresasProspectos).where(inArray(empresasProspectos.id, ids));
+      const actor = await getProspectActor(req.supabaseUserId!);
+      const writable = writableIdFilter(actor, ids);
+      const oldGroups = await db.select({ contactGroupId: empresasProspectos.contactGroupId }).from(empresasProspectos).where(writable);
       const affectedGroupIds = new Set(oldGroups.map(r => r.contactGroupId).filter(Boolean) as string[]);
       if (contactGroupId) affectedGroupIds.add(contactGroupId);
-      await db.update(empresasProspectos).set({ contactGroupId: contactGroupId || null, updatedAt: new Date() }).where(inArray(empresasProspectos.id, ids));
+      const updated = await db.update(empresasProspectos).set({ contactGroupId: contactGroupId || null, updatedAt: new Date() }).where(writable).returning({ id: empresasProspectos.id });
       for (const gid of affectedGroupIds) {
         const [cnt] = await db.select({ count: sql<number>`count(*)` }).from(empresasProspectos).where(eq(empresasProspectos.contactGroupId, gid));
         await db.update(contactGroups).set({ prospectCount: cnt.count, updatedAt: new Date() }).where(eq(contactGroups.id, gid));
       }
-      res.json({ updated: ids.length });
+      res.json({ updated: updated.length });
     } catch (err) { next(err); }
   });
 
@@ -1715,26 +1948,41 @@ export function registerCrmRoutes(app: Express) {
     try {
       const { ids } = req.body;
       if (!ids?.length) return res.status(400).json({ message: "ids requeridos" });
-      const affectedRows = await db.select({ contactGroupId: empresasProspectos.contactGroupId }).from(empresasProspectos).where(inArray(empresasProspectos.id, ids));
+      const actor = await getProspectActor(req.supabaseUserId!);
+      // Deleting is destructive: socios may delete only prospects they own (not
+      // the shared/unassigned pool); admins may delete any of the given ids.
+      const deletableFilter = actor.isAdmin
+        ? inArray(empresasProspectos.id, ids)
+        : and(inArray(empresasProspectos.id, ids), eq(empresasProspectos.partnerId, actor.userId))!;
+      const affectedRows = await db.select({ contactGroupId: empresasProspectos.contactGroupId }).from(empresasProspectos).where(deletableFilter);
       const affectedGroupIds = new Set(affectedRows.map(r => r.contactGroupId).filter(Boolean) as string[]);
-      await db.delete(empresasProspectos).where(inArray(empresasProspectos.id, ids));
+      const deleted = await db.delete(empresasProspectos).where(deletableFilter).returning({ id: empresasProspectos.id });
       for (const gid of affectedGroupIds) {
         const [cnt] = await db.select({ count: sql<number>`count(*)` }).from(empresasProspectos).where(eq(empresasProspectos.contactGroupId, gid));
         await db.update(contactGroups).set({ prospectCount: cnt.count, updatedAt: new Date() }).where(eq(contactGroups.id, gid));
       }
-      res.json({ deleted: ids.length });
+      prospectStatsCacheMap.clear();
+      res.json({ deleted: deleted.length });
     } catch (err) { next(err); }
   });
 
   app.patch("/api/denue/prospectos/:id", requireAdminOrPartner, async (req, res, next) => {
     try {
       const { id } = req.params as Record<string, string>;
-      const allowedFields = ["stage", "partnerId", "contactGroupId", "notas", "lastContactedAt", "planRecomendado", "nombreContacto", "rfc", "telefono", "correoElectronico", "sitioWeb"];
+      const actor = await getProspectActor(req.supabaseUserId!);
+      // partnerId is only directly settable by admins; socios change ownership
+      // via claim/release, not this generic edit.
+      const allowedFields = ["stage", "contactGroupId", "notas", "lastContactedAt", "planRecomendado", "nombreContacto", "rfc", "telefono", "correoElectronico", "sitioWeb", ...(actor.isAdmin ? ["partnerId"] : [])];
+      if (req.body.stage !== undefined && !DENUE_VALID_STAGES.includes(req.body.stage)) return res.status(400).json({ message: "Etapa inválida" });
       const updates: Record<string, any> = { updatedAt: new Date() };
       for (const f of allowedFields) {
         if (req.body[f] !== undefined) updates[f] = req.body[f];
       }
-      const [old] = await db.select({ contactGroupId: empresasProspectos.contactGroupId }).from(empresasProspectos).where(eq(empresasProspectos.id, id));
+      const [old] = await db.select({ contactGroupId: empresasProspectos.contactGroupId, partnerId: empresasProspectos.partnerId }).from(empresasProspectos).where(eq(empresasProspectos.id, id));
+      if (!old) return res.status(404).json({ message: "Prospecto no encontrado" });
+      const decision = prospectWriteDecision(actor, old.partnerId);
+      if (decision === "deny") return res.status(403).json({ message: "Este prospecto está asignado a otro socio" });
+      if (decision === "claim") updates.partnerId = actor.userId; // editing an available prospect claims it
       const [updated] = await db.update(empresasProspectos).set(updates).where(eq(empresasProspectos.id, id)).returning();
       if (!updated) return res.status(404).json({ message: "Prospecto no encontrado" });
       if (req.body.contactGroupId !== undefined) {

@@ -907,7 +907,13 @@ function MaterialVentasTab({ codes, copyShareUrl }: { codes: ReferralCode[]; cop
       title: "Presentación Ceduverse para Empresas",
       description: "Deck ejecutivo con propuesta de valor, planes, certificaciones y casos de éxito.",
       icon: FileText,
-      action: null,
+      action: "/materiales/ceduverse-empresas-2026.pdf",
+    },
+    {
+      title: "Medios de Pago",
+      description: "Documento con las formas de pago disponibles para compartir con prospectos.",
+      icon: FileText,
+      action: "/materiales/medios-de-pago.pdf",
     },
     {
       title: "Bold Assets (Logos y Marca)",
@@ -925,13 +931,13 @@ function MaterialVentasTab({ codes, copyShareUrl }: { codes: ReferralCode[]; cop
       title: "Catálogo de Cursos STPS (Aula Virtual)",
       description: "29 cursos con DC-3 disponible. Temáticas: liderazgo, seguridad, habilidades blandas.",
       icon: GraduationCap,
-      action: null,
+      action: "/aula-virtual",
     },
     {
       title: "Catálogo Tutor IA",
       description: "49 cursos con IA adaptativa y narración de audio. Certificación digital incluida.",
       icon: GraduationCap,
-      action: null,
+      action: "/studio",
     },
   ];
 

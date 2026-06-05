@@ -147,6 +147,22 @@ type DenueFilters = {
   sectores: { codigo: string; actividad: string }[];
 };
 
+type PipelineValue = {
+  targetId: string;
+  byStage: Record<string, { count: number; monthly: number }>;
+  totals: {
+    totalCount: number;
+    openCount: number;
+    wonCount: number;
+    openMonthly: number;
+    openAnnual: number;
+    wonMonthly: number;
+    wonAnnual: number;
+    weightedMonthly: number;
+    weightedAnnual: number;
+  };
+};
+
 type SortField = "leadScore" | "nombreComercial" | "stage" | "createdAt" | "grupoSector" | "actividadEconomica" | "municipio" | "estado" | "zonaComercial" | "estratoPersonal" | "empleadosEstimados" | "potencialAportacionMensual" | "prioridad" | "codigoScian" | "nivelRiesgo" | "planRecomendado";
 
 const DENUE_STAGES = [
@@ -254,6 +270,16 @@ export default function DenueTab() {
   const [saveFilterName, setSaveFilterName] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
+  // Hybrid pipeline scope: "mine" = my book, "available" = unclaimed pool, "" = both (default).
+  const [scope, setScope] = useState<"" | "mine" | "available">("");
+  const [showAddProspect, setShowAddProspect] = useState(false);
+
+  // Who am I? Drives the hybrid own/claim UX vs. the admin reassignment UX.
+  const { data: account } = useQuery<{ id: string; userRole: string }>({
+    queryKey: ["/api/me/account"],
+  });
+  const myId = account?.id ?? null;
+  const isAdmin = !!account && ["admin", "superadmin", "director"].includes(account.userRole);
 
   const buildQueryParams = () => {
     const params = new URLSearchParams();
@@ -269,6 +295,7 @@ export default function DenueTab() {
     if (filterPartnerId) params.set("partnerId", filterPartnerId);
     if (filterEnrichment) params.set("enrichment", filterEnrichment);
     if (filterEfos) params.set("efos", filterEfos);
+    if (scope) params.set("scope", scope);
     params.set("sortField", sortField);
     params.set("sortDir", sortDir);
     return params.toString();
@@ -280,7 +307,7 @@ export default function DenueTab() {
     page: number;
     totalPages: number;
   }>({
-    queryKey: ["/api/denue/prospectos", page, search, filterZona, filterEstado, filterMunicipio, filterStage, filterScoreMin, filterScian, filterPartnerId, filterEnrichment, filterEfos, sortField, sortDir],
+    queryKey: ["/api/denue/prospectos", page, search, filterZona, filterEstado, filterMunicipio, filterStage, filterScoreMin, filterScian, filterPartnerId, filterEnrichment, filterEfos, scope, sortField, sortDir],
     queryFn: async () => {
       const token = getAuthToken();
       const res = await fetch(`/api/denue/prospectos?${buildQueryParams()}`, {
@@ -302,16 +329,29 @@ export default function DenueTab() {
   if (filterEnrichment) statsParams.set("enrichment", filterEnrichment);
   if (filterEfos) statsParams.set("efos", filterEfos);
   if (search) statsParams.set("search", search);
+  if (scope) statsParams.set("scope", scope);
   const statsQs = statsParams.toString();
 
   const { data: stats, isLoading: statsLoading } = useQuery<DenueStats>({
-    queryKey: ["/api/denue/prospectos/stats", filterZona, filterEstado, filterMunicipio, filterStage, filterScoreMin, filterScian, filterPartnerId, filterEnrichment, filterEfos, search],
+    queryKey: ["/api/denue/prospectos/stats", filterZona, filterEstado, filterMunicipio, filterStage, filterScoreMin, filterScian, filterPartnerId, filterEnrichment, filterEfos, search, scope],
     queryFn: async () => {
       const token = getAuthToken();
       const res = await fetch(`/api/denue/prospectos/stats${statsQs ? `?${statsQs}` : ""}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Error al cargar stats");
+      return res.json();
+    },
+  });
+
+  const { data: pipelineValue } = useQuery<PipelineValue>({
+    queryKey: ["/api/denue/prospectos/pipeline-value"],
+    queryFn: async () => {
+      const token = getAuthToken();
+      const res = await fetch("/api/denue/prospectos/pipeline-value", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Error al cargar valor de cartera");
       return res.json();
     },
   });
@@ -413,6 +453,7 @@ export default function DenueTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/denue/prospectos"] });
       queryClient.invalidateQueries({ queryKey: ["/api/denue/prospectos/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/denue/prospectos/pipeline-value"] });
       toast({ title: "Etapa actualizada" });
     },
   });
@@ -479,6 +520,63 @@ export default function DenueTab() {
       queryClient.invalidateQueries({ queryKey: ["/api/denue/prospectos"] });
       toast({ title: "Socio asignado" });
     },
+  });
+
+  const invalidatePipeline = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/denue/prospectos"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/denue/prospectos/stats"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/denue/prospectos/pipeline-value"] });
+  };
+
+  const claimMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("POST", `/api/denue/prospectos/${id}/claim`);
+      return res.json();
+    },
+    onSuccess: (updated) => {
+      invalidatePipeline();
+      if (selectedProspect?.id === updated.id) setSelectedProspect(updated);
+      toast({ title: "Prospecto reclamado", description: "Ahora está en tu cartera" });
+    },
+    onError: (err: Error) => toast({ title: "No se pudo reclamar", description: err.message, variant: "destructive" }),
+  });
+
+  const releaseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("POST", `/api/denue/prospectos/${id}/release`);
+      return res.json();
+    },
+    onSuccess: (updated) => {
+      invalidatePipeline();
+      if (selectedProspect?.id === updated.id) setSelectedProspect(updated);
+      toast({ title: "Prospecto liberado", description: "Regresó al pool disponible" });
+    },
+    onError: (err: Error) => toast({ title: "No se pudo liberar", description: err.message, variant: "destructive" }),
+  });
+
+  const bulkClaimMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map(id => apiRequest("POST", `/api/denue/prospectos/${id}/claim`)));
+    },
+    onSuccess: (_, ids) => {
+      invalidatePipeline();
+      setSelectedIds(new Set());
+      toast({ title: `${ids.length} prospectos reclamados` });
+    },
+    onError: (err: Error) => toast({ title: "Error al reclamar", description: err.message, variant: "destructive" }),
+  });
+
+  const createProspectMutation = useMutation({
+    mutationFn: async (data: Record<string, any>) => {
+      const res = await apiRequest("POST", "/api/denue/prospectos", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      invalidatePipeline();
+      setShowAddProspect(false);
+      toast({ title: "Prospecto agregado", description: "Se agregó a tu cartera" });
+    },
+    onError: (err: Error) => toast({ title: "No se pudo agregar", description: err.message, variant: "destructive" }),
   });
 
   const addInteractionMutation = useMutation({
@@ -609,6 +707,7 @@ export default function DenueTab() {
       if (filterScoreMin) params.set("scoreMin", filterScoreMin);
       if (filterScian) params.set("scian", filterScian);
       if (filterPartnerId) params.set("partnerId", filterPartnerId);
+      if (scope) params.set("scope", scope);
       const res = await fetch(`/api/denue/export?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -698,11 +797,35 @@ export default function DenueTab() {
               Enriquecer {filterZona || filterMunicipio || filterEstado || filterStage || filterScian || filterScoreMin ? "filtrados" : "todos"}
             </Button>
           )}
+          <Button size="sm" variant="outline" className="rounded-xl gap-1 text-xs" onClick={() => setShowAddProspect(true)} data-testid="button-add-prospect">
+            <UserPlus size={14} />
+            Agregar
+          </Button>
           <Button size="sm" variant="outline" className="rounded-xl gap-1 text-xs" onClick={() => setShowGroupManager(!showGroupManager)} data-testid="button-groups-toggle">
             <FolderOpen size={14} />
             Grupos
           </Button>
         </div>
+      </div>
+
+      <PipelineValueHero data={pipelineValue} isAdmin={isAdmin} />
+
+      <div className="flex items-center gap-1.5 flex-wrap" data-testid="scope-toggle">
+        <span className="text-[11px] text-cedu-ink-muted mr-1">Ver:</span>
+        {([
+          { key: "", label: isAdmin ? "Todos" : "Míos + disponibles" },
+          { key: "mine", label: "Solo míos" },
+          { key: "available", label: "Disponibles" },
+        ] as const).map(opt => (
+          <button
+            key={opt.key || "all"}
+            onClick={() => { setScope(opt.key); setPage(1); }}
+            className={`text-xs px-3 py-1 rounded-full transition-colors ${scope === opt.key ? "bg-cedu-violet text-white" : "bg-black/[0.04] text-cedu-ink-muted hover:bg-black/[0.08]"}`}
+            data-testid={`scope-${opt.key || "all"}`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {(filterZona || filterEstado || filterMunicipio || filterStage || filterScoreMin || filterScian || filterPartnerId || filterEnrichment || search) && (
@@ -876,15 +999,20 @@ export default function DenueTab() {
               {DENUE_STAGES.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select onValueChange={(partnerId) => bulkAssignMutation.mutate({ ids: selArr, partnerId: partnerId === "none" ? null : partnerId })}>
-            <SelectTrigger className="h-7 text-xs w-36 bg-white" data-testid="bulk-assign-select">
-              <SelectValue placeholder="Asignar socio" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Sin asignar</SelectItem>
-              {partnersList.map(p => <SelectItem key={p.id} value={p.id}>{p.fullName || p.email}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Button size="sm" variant="outline" className="h-7 text-xs rounded-xl gap-1 text-cedu-violet border-cedu-violet/30 hover:bg-cedu-violet/5" onClick={() => bulkClaimMutation.mutate(selArr)} disabled={bulkClaimMutation.isPending} data-testid="bulk-claim-button">
+            <UserPlus size={12} /> Reclamar
+          </Button>
+          {isAdmin && (
+            <Select onValueChange={(partnerId) => bulkAssignMutation.mutate({ ids: selArr, partnerId: partnerId === "none" ? null : partnerId })}>
+              <SelectTrigger className="h-7 text-xs w-36 bg-white" data-testid="bulk-assign-select">
+                <SelectValue placeholder="Asignar socio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sin asignar</SelectItem>
+                {partnersList.map(p => <SelectItem key={p.id} value={p.id}>{p.fullName || p.email}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
           {contactGroupsList.length > 0 && (
             <Select onValueChange={(groupId) => bulkGroupMutation.mutate({ ids: selArr, contactGroupId: groupId === "none" ? null : groupId })}>
               <SelectTrigger className="h-7 text-xs w-36 bg-white" data-testid="bulk-group-select">
@@ -1058,18 +1186,20 @@ export default function DenueTab() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <label className="text-[10px] text-cedu-ink-muted mb-1 block">Socio asignado</label>
-                <Select value={filterPartnerId} onValueChange={(v) => { setFilterPartnerId(v === "all" ? "" : v); setPage(1); }}>
-                  <SelectTrigger className="h-8 text-xs bg-white" data-testid="select-denue-partner">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {partnersList.map(p => <SelectItem key={p.id} value={p.id}>{p.fullName || p.email}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              {isAdmin && (
+                <div>
+                  <label className="text-[10px] text-cedu-ink-muted mb-1 block">Socio asignado</label>
+                  <Select value={filterPartnerId} onValueChange={(v) => { setFilterPartnerId(v === "all" ? "" : v); setPage(1); }}>
+                    <SelectTrigger className="h-8 text-xs bg-white" data-testid="select-denue-partner">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {partnersList.map(p => <SelectItem key={p.id} value={p.id}>{p.fullName || p.email}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div>
                 <label className="text-[10px] text-cedu-ink-muted mb-1 block">EFOS 69-B</label>
                 <Select value={filterEfos} onValueChange={(v) => { setFilterEfos(v === "all" ? "" : v); setPage(1); }}>
@@ -1124,16 +1254,19 @@ export default function DenueTab() {
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             onToggleSelectAll={toggleSelectAll}
+            myId={myId}
+            isAdmin={isAdmin}
+            onClaim={(id) => claimMutation.mutate(id)}
           />
         )}
 
         {view === "kanban" && (
-          <KanbanView rows={rows} isLoading={isLoading} onUpdateStage={(id, stage) => updateStageMutation.mutate({ id, stage })} onSelectProspect={setSelectedProspect} />
+          <KanbanView rows={rows} isLoading={isLoading} onUpdateStage={(id, stage) => updateStageMutation.mutate({ id, stage })} onSelectProspect={setSelectedProspect} myId={myId} />
         )}
 
         {view === "map" && (
           <MapView
-            filters={{ zona: filterZona, estado: filterEstado, municipio: filterMunicipio, stage: filterStage, scoreMin: filterScoreMin, scian: filterScian, partnerId: filterPartnerId, enrichment: filterEnrichment, search, efos: filterEfos }}
+            filters={{ zona: filterZona, estado: filterEstado, municipio: filterMunicipio, stage: filterStage, scoreMin: filterScoreMin, scian: filterScian, partnerId: filterPartnerId, enrichment: filterEnrichment, search, efos: filterEfos, scope }}
             onSelectProspect={setSelectedProspect}
           />
         )}
@@ -1165,6 +1298,18 @@ export default function DenueTab() {
           onAssignGroup={(groupId) => updateProspectMutation.mutate({ id: selectedProspect.id, contactGroupId: groupId })}
           onClose={() => setSelectedProspect(null)}
           isAddingInteraction={addInteractionMutation.isPending}
+          isAdmin={isAdmin}
+          myId={myId}
+          onClaim={() => claimMutation.mutate(selectedProspect.id)}
+          onRelease={() => releaseMutation.mutate(selectedProspect.id)}
+        />
+      )}
+
+      {showAddProspect && (
+        <AddProspectDialog
+          onClose={() => setShowAddProspect(false)}
+          onSubmit={(data) => createProspectMutation.mutate(data)}
+          isSubmitting={createProspectMutation.isPending}
         />
       )}
     </div>
@@ -1190,7 +1335,7 @@ function SortHeader({ label, field, currentField, currentDir, onSort }: {
 }
 
 function TableView({
-  rows, isLoading, sortField, sortDir, onSort, page, totalPages, total, onPageChange, onSelectProspect, onUpdateStage, selectedIds, onToggleSelect, onToggleSelectAll,
+  rows, isLoading, sortField, sortDir, onSort, page, totalPages, total, onPageChange, onSelectProspect, onUpdateStage, selectedIds, onToggleSelect, onToggleSelectAll, myId, isAdmin, onClaim,
 }: {
   rows: DenueProspecto[];
   isLoading: boolean;
@@ -1206,6 +1351,9 @@ function TableView({
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onToggleSelectAll: () => void;
+  myId: string | null;
+  isAdmin: boolean;
+  onClaim: (id: string) => void;
 }) {
   if (isLoading) {
     return <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>;
@@ -1237,13 +1385,14 @@ function TableView({
               <SortHeader label="Score" field="leadScore" currentField={sortField} currentDir={sortDir} onSort={onSort} />
               <SortHeader label="Etapa" field="stage" currentField={sortField} currentDir={sortDir} onSort={onSort} />
               <th className="text-left py-2.5 px-3 font-semibold text-cedu-ink-muted">Contacto</th>
+              <th className="text-left py-2.5 px-3 font-semibold text-cedu-ink-muted">Cartera</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={10} className="py-10 text-center text-cedu-ink-muted">
-                  No hay prospectos. Importa un CSV para comenzar.
+                <td colSpan={11} className="py-10 text-center text-cedu-ink-muted">
+                  No hay prospectos. Importa un CSV, agrega uno manualmente o cambia la vista a "Disponibles".
                 </td>
               </tr>
             ) : rows.map(row => {
@@ -1326,6 +1475,19 @@ function TableView({
                       )}
                     </div>
                   </td>
+                  <td className="py-2 px-3" onClick={(e) => e.stopPropagation()}>
+                    {myId && row.partnerId === myId ? (
+                      <Badge className="text-[9px] bg-cedu-violet/10 text-cedu-violet border-cedu-violet/20" variant="outline" data-testid={`badge-mine-${row.id}`}>Mío</Badge>
+                    ) : row.partnerId == null ? (
+                      <Button size="sm" variant="outline" className="h-6 text-[10px] rounded-lg gap-1 px-2 text-cedu-violet border-cedu-violet/30 hover:bg-cedu-violet/5" onClick={() => onClaim(row.id)} data-testid={`button-claim-${row.id}`}>
+                        <UserPlus size={10} /> Reclamar
+                      </Button>
+                    ) : isAdmin ? (
+                      <Badge className="text-[9px] bg-amber-50 text-amber-700 border-amber-200" variant="outline">Asignado</Badge>
+                    ) : (
+                      <span className="text-cedu-ink-muted text-[10px]">—</span>
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -1345,11 +1507,12 @@ function TableView({
   );
 }
 
-function KanbanView({ rows, isLoading, onUpdateStage, onSelectProspect }: {
+function KanbanView({ rows, isLoading, onUpdateStage, onSelectProspect, myId }: {
   rows: DenueProspecto[];
   isLoading: boolean;
   onUpdateStage: (id: string, stage: string) => void;
   onSelectProspect: (p: DenueProspecto) => void;
+  myId: string | null;
 }) {
   if (isLoading) {
     return <div className="grid grid-cols-6 gap-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}</div>;
@@ -1370,7 +1533,10 @@ function KanbanView({ rows, isLoading, onUpdateStage, onSelectProspect }: {
               {stageRows.map(p => (
                 <Card key={p.id} className="border-black/[0.08] shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => onSelectProspect(p)} data-testid={`kanban-card-${p.id}`}>
                   <CardContent className="p-2.5">
-                    <p className="text-xs font-semibold text-cedu-ink truncate mb-1">{p.nombreComercial}</p>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <p className="text-xs font-semibold text-cedu-ink truncate">{p.nombreComercial}</p>
+                      {myId && p.partnerId === myId && <Badge className="text-[8px] bg-cedu-violet/10 text-cedu-violet border-cedu-violet/20 flex-shrink-0" variant="outline">Mío</Badge>}
+                    </div>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] text-cedu-ink-muted truncate">{p.municipio || ""}</span>
                       <Badge className={`text-[9px] ${scoreColor(p.leadScore)}`} variant="outline">{p.leadScore}</Badge>
@@ -1405,7 +1571,7 @@ function KanbanView({ rows, isLoading, onUpdateStage, onSelectProspect }: {
 
 type MapFilters = {
   zona: string; estado: string; municipio: string; stage: string; scoreMin: string;
-  scian: string; partnerId: string; enrichment: string; search: string; efos: string;
+  scian: string; partnerId: string; enrichment: string; search: string; efos: string; scope: string;
 };
 
 type MapPoint = {
@@ -1425,7 +1591,7 @@ function MapView({ filters, onSelectProspect }: {
   const filterKey = JSON.stringify(filters);
 
   const { data: mapData, isLoading, isFetching: isMapFetching } = useQuery<{ data: MapPoint[]; total: number; hasMore?: boolean; efosCount?: number }>({
-    queryKey: ["/api/denue/prospectos/map", filters.zona, filters.estado, filters.municipio, filters.stage, filters.scoreMin, filters.scian, filters.partnerId, filters.enrichment, filters.search, filters.efos],
+    queryKey: ["/api/denue/prospectos/map", filters.zona, filters.estado, filters.municipio, filters.stage, filters.scoreMin, filters.scian, filters.partnerId, filters.enrichment, filters.search, filters.efos, filters.scope],
     queryFn: async () => {
       const token = localStorage.getItem("cedu_token");
       const params = new URLSearchParams();
@@ -1439,6 +1605,7 @@ function MapView({ filters, onSelectProspect }: {
       if (filters.enrichment) params.set("enrichment", filters.enrichment);
       if (filters.search) params.set("search", filters.search);
       if (filters.efos) params.set("efos", filters.efos);
+      if (filters.scope) params.set("scope", filters.scope);
       const res = await fetch(`/api/denue/prospectos/map?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -1601,7 +1768,7 @@ function MapView({ filters, onSelectProspect }: {
 }
 
 function SlideOutDetailPanel({
-  prospect, interactions, interactionNote, onInteractionNoteChange, onAddInteraction, onUpdateStage, onAssignPartner, onUpdateNotes, onUpdateField, partners, contactGroups, onAssignGroup, onClose, isAddingInteraction,
+  prospect, interactions, interactionNote, onInteractionNoteChange, onAddInteraction, onUpdateStage, onAssignPartner, onUpdateNotes, onUpdateField, partners, contactGroups, onAssignGroup, onClose, isAddingInteraction, isAdmin, myId, onClaim, onRelease,
 }: {
   prospect: DenueProspecto;
   interactions: { id: string; tipo: string; notas: string | null; createdAt: string }[];
@@ -1617,6 +1784,10 @@ function SlideOutDetailPanel({
   onAssignGroup: (groupId: string | null) => void;
   onClose: () => void;
   isAddingInteraction: boolean;
+  isAdmin: boolean;
+  myId: string | null;
+  onClaim: () => void;
+  onRelease: () => void;
 }) {
   const stageInfo = DENUE_STAGES.find(s => s.key === prospect.stage) || DENUE_STAGES[0];
   const currentIdx = DENUE_STAGES.findIndex(s => s.key === prospect.stage);
@@ -1825,16 +1996,27 @@ function SlideOutDetailPanel({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <h4 className="text-[11px] font-semibold text-cedu-ink mb-1">Socio comercial</h4>
-                  <Select value={prospect.partnerId || "none"} onValueChange={(v) => onAssignPartner(v === "none" ? null : v)}>
-                    <SelectTrigger className="h-8 text-xs bg-white" data-testid="select-assign-partner">
-                      <SelectValue placeholder="Sin asignar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin asignar</SelectItem>
-                      {partners.map(p => <SelectItem key={p.id} value={p.id}>{p.fullName || p.email}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <h4 className="text-[11px] font-semibold text-cedu-ink mb-1">Cartera</h4>
+                  {isAdmin ? (
+                    <Select value={prospect.partnerId || "none"} onValueChange={(v) => onAssignPartner(v === "none" ? null : v)}>
+                      <SelectTrigger className="h-8 text-xs bg-white" data-testid="select-assign-partner">
+                        <SelectValue placeholder="Sin asignar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin asignar</SelectItem>
+                        {partners.map(p => <SelectItem key={p.id} value={p.id}>{p.fullName || p.email}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  ) : myId && prospect.partnerId === myId ? (
+                    <div className="flex items-center gap-2">
+                      <Badge className="text-[10px] bg-cedu-violet/10 text-cedu-violet border-cedu-violet/20" variant="outline">En tu cartera</Badge>
+                      <Button size="sm" variant="outline" className="h-7 text-[10px] rounded-lg text-cedu-ink-muted" onClick={onRelease} data-testid="button-release">Liberar</Button>
+                    </div>
+                  ) : (
+                    <Button size="sm" variant="outline" className="h-8 text-xs rounded-lg gap-1 w-full text-cedu-violet border-cedu-violet/30 hover:bg-cedu-violet/5" onClick={onClaim} data-testid="button-claim-detail">
+                      <UserPlus size={12} /> Reclamar prospecto
+                    </Button>
+                  )}
                 </div>
                 <div>
                   <h4 className="text-[11px] font-semibold text-cedu-ink mb-1">Grupo de contacto</h4>
@@ -1914,6 +2096,165 @@ function SlideOutDetailPanel({
               </Button>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PipelineValueHero({ data, isAdmin }: { data?: PipelineValue; isAdmin: boolean }) {
+  if (!data) return null;
+  const t = data.totals;
+  const title = isAdmin ? "Valor de la cartera" : "Valor de tu cartera";
+
+  if (t.totalCount === 0) {
+    return (
+      <Card className="border-cedu-violet/20 bg-gradient-to-br from-cedu-violet/[0.04] to-transparent" data-testid="pipeline-value-empty">
+        <CardContent className="py-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-cedu-violet/10 flex items-center justify-center flex-shrink-0">
+            <DollarSign size={18} className="text-cedu-violet" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-cedu-ink">{title}</p>
+            <p className="text-xs text-cedu-ink-muted">Aún no tienes prospectos en tu cartera. Reclama prospectos disponibles o agrega uno para proyectar tu valor si cierras.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const metrics = [
+    { label: "Pronóstico ponderado", monthly: t.weightedMonthly, annual: t.weightedAnnual, sub: "según probabilidad por etapa", color: "text-cedu-violet", bg: "bg-cedu-violet/[0.06]" },
+    { label: "Pipeline abierto", monthly: t.openMonthly, annual: t.openAnnual, sub: `${t.openCount} prospecto${t.openCount === 1 ? "" : "s"} en proceso`, color: "text-cedu-blue", bg: "bg-cedu-blue/[0.06]" },
+    { label: "Ya cliente", monthly: t.wonMonthly, annual: t.wonAnnual, sub: `${t.wonCount} cerrado${t.wonCount === 1 ? "" : "s"}`, color: "text-cedu-green", bg: "bg-cedu-green/[0.06]" },
+  ];
+
+  return (
+    <Card className="border-black/[0.06] overflow-hidden" data-testid="pipeline-value-hero">
+      <div className="h-1 bg-gradient-to-r from-cedu-violet via-cedu-blue to-cedu-green" />
+      <CardContent className="py-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-cedu-ink flex items-center gap-1.5"><DollarSign size={15} className="text-cedu-violet" /> {title} — si cierras</h3>
+          <span className="text-[10px] text-cedu-ink-muted">{t.totalCount} prospecto{t.totalCount === 1 ? "" : "s"} en cartera</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {metrics.map(m => (
+            <div key={m.label} className={`rounded-xl p-3 ${m.bg}`} data-testid={`value-metric-${m.label}`}>
+              <p className="text-[10px] text-cedu-ink-muted">{m.label}</p>
+              <p className={`text-lg font-bold ${m.color}`}>{formatMXN(m.monthly)}<span className="text-[11px] font-medium text-cedu-ink-muted">/mes</span></p>
+              <p className="text-[11px] text-cedu-ink">{formatMXN(m.annual)}<span className="text-[10px] text-cedu-ink-muted">/año</span></p>
+              <p className="text-[10px] text-cedu-ink-muted mt-0.5">{m.sub}</p>
+            </div>
+          ))}
+        </div>
+        {t.openMonthly > 0 && (
+          <p className="text-[11px] text-cedu-ink-muted mt-3">
+            💡 Si cierras <span className="font-semibold text-cedu-ink">todo</span> tu pipeline abierto, sumarías <span className="font-semibold text-cedu-blue">{formatMXN(t.openAnnual)}/año</span> en ingresos recurrentes.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function AddProspectDialog({ onClose, onSubmit, isSubmitting }: {
+  onClose: () => void;
+  onSubmit: (data: Record<string, any>) => void;
+  isSubmitting: boolean;
+}) {
+  const [form, setForm] = useState<Record<string, string>>({
+    nombreComercial: "", razonSocial: "", nombreContacto: "", telefono: "", correoElectronico: "",
+    estado: "", municipio: "", empleadosEstimados: "", potencialAportacionMensual: "", planRecomendado: "", notas: "", stage: "nuevo",
+  });
+  const set = (k: string, v: string) => setForm(prev => ({ ...prev, [k]: v }));
+  const canSubmit = form.nombreComercial.trim().length > 0 && !isSubmitting;
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    const payload: Record<string, any> = {};
+    for (const [k, v] of Object.entries(form)) {
+      if (v === "" || v == null) continue;
+      if (k === "empleadosEstimados" || k === "potencialAportacionMensual") payload[k] = Number(v);
+      else payload[k] = v;
+    }
+    onSubmit(payload);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/30" onClick={onClose} data-testid="dialog-add-prospect">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white border-b border-black/[0.06] px-5 py-3 flex items-center justify-between">
+          <h3 className="font-serif text-lg text-cedu-ink flex items-center gap-2"><UserPlus size={16} className="text-cedu-violet" /> Agregar prospecto</h3>
+          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={onClose}><X size={16} /></Button>
+        </div>
+        <div className="p-5 space-y-3">
+          <div>
+            <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Nombre comercial *</label>
+            <Input value={form.nombreComercial} onChange={(e) => set("nombreComercial", e.target.value)} placeholder="Nombre de la empresa" className="h-8 text-xs bg-white" data-testid="add-input-nombre" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Razón social</label>
+              <Input value={form.razonSocial} onChange={(e) => set("razonSocial", e.target.value)} className="h-8 text-xs bg-white" data-testid="add-input-razon" />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Contacto</label>
+              <Input value={form.nombreContacto} onChange={(e) => set("nombreContacto", e.target.value)} className="h-8 text-xs bg-white" data-testid="add-input-contacto" />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Teléfono</label>
+              <Input value={form.telefono} onChange={(e) => set("telefono", e.target.value)} className="h-8 text-xs bg-white" data-testid="add-input-telefono" />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Email</label>
+              <Input value={form.correoElectronico} onChange={(e) => set("correoElectronico", e.target.value)} className="h-8 text-xs bg-white" data-testid="add-input-email" />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Estado</label>
+              <Select value={form.estado || "none"} onValueChange={(v) => set("estado", v === "none" ? "" : v)}>
+                <SelectTrigger className="h-8 text-xs bg-white" data-testid="add-select-estado"><SelectValue placeholder="Selecciona" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">—</SelectItem>
+                  {ESTADOS_MEXICO.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Municipio</label>
+              <Input value={form.municipio} onChange={(e) => set("municipio", e.target.value)} className="h-8 text-xs bg-white" data-testid="add-input-municipio" />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-cedu-ink mb-1 block"># Empleados (est.)</label>
+              <Input type="number" value={form.empleadosEstimados} onChange={(e) => set("empleadosEstimados", e.target.value)} className="h-8 text-xs bg-white" data-testid="add-input-empleados" />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Potencial mensual (MXN)</label>
+              <Input type="number" value={form.potencialAportacionMensual} onChange={(e) => set("potencialAportacionMensual", e.target.value)} className="h-8 text-xs bg-white" data-testid="add-input-potencial" />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Plan recomendado</label>
+              <Input value={form.planRecomendado} onChange={(e) => set("planRecomendado", e.target.value)} className="h-8 text-xs bg-white" data-testid="add-input-plan" />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Etapa</label>
+              <Select value={form.stage} onValueChange={(v) => set("stage", v)}>
+                <SelectTrigger className="h-8 text-xs bg-white" data-testid="add-select-stage"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DENUE_STAGES.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-cedu-ink mb-1 block">Notas</label>
+            <Textarea value={form.notas} onChange={(e) => set("notas", e.target.value)} className="text-xs min-h-[60px] bg-white" data-testid="add-input-notas" />
+          </div>
+        </div>
+        <div className="sticky bottom-0 bg-white border-t border-black/[0.06] px-5 py-3 flex justify-end gap-2">
+          <Button size="sm" variant="ghost" className="text-xs" onClick={onClose}>Cancelar</Button>
+          <Button size="sm" className="text-xs bg-cedu-violet hover:bg-cedu-violet/90 text-white gap-1" onClick={handleSubmit} disabled={!canSubmit} data-testid="add-submit">
+            {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />} Agregar a mi cartera
+          </Button>
         </div>
       </div>
     </div>
