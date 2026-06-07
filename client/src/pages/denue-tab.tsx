@@ -52,6 +52,8 @@ import {
   MoreHorizontal,
   StickyNote,
   Clock,
+  Video,
+  CalendarClock,
   User,
   FileText,
   ExternalLink,
@@ -577,6 +579,19 @@ export default function DenueTab() {
       toast({ title: "Prospecto agregado", description: "Se agregó a tu cartera" });
     },
     onError: (err: Error) => toast({ title: "No se pudo agregar", description: err.message, variant: "destructive" }),
+  });
+
+  const scheduleMeetingMutation = useMutation({
+    mutationFn: async ({ id, ...data }: { id: string; scheduledAt: string; durationMinutes: number; attendeeEmail: string; attendeeName?: string; note?: string; advanceStage?: boolean }) => {
+      const res = await apiRequest("POST", `/api/denue/prospectos/${id}/meeting`, data);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      invalidatePipeline();
+      queryClient.invalidateQueries({ queryKey: ["/api/denue/prospectos", selectedProspect?.id, "interacciones"] });
+      toast({ title: "Reunión agendada", description: `Invitación con Google Meet enviada a ${data.attendeeEmail}` });
+    },
+    onError: (err: Error) => toast({ title: "No se pudo agendar", description: err.message, variant: "destructive" }),
   });
 
   const addInteractionMutation = useMutation({
@@ -1302,6 +1317,8 @@ export default function DenueTab() {
           myId={myId}
           onClaim={() => claimMutation.mutate(selectedProspect.id)}
           onRelease={() => releaseMutation.mutate(selectedProspect.id)}
+          onScheduleMeeting={(data) => scheduleMeetingMutation.mutate({ id: selectedProspect.id, ...data })}
+          isSchedulingMeeting={scheduleMeetingMutation.isPending}
         />
       )}
 
@@ -1768,7 +1785,7 @@ function MapView({ filters, onSelectProspect }: {
 }
 
 function SlideOutDetailPanel({
-  prospect, interactions, interactionNote, onInteractionNoteChange, onAddInteraction, onUpdateStage, onAssignPartner, onUpdateNotes, onUpdateField, partners, contactGroups, onAssignGroup, onClose, isAddingInteraction, isAdmin, myId, onClaim, onRelease,
+  prospect, interactions, interactionNote, onInteractionNoteChange, onAddInteraction, onUpdateStage, onAssignPartner, onUpdateNotes, onUpdateField, partners, contactGroups, onAssignGroup, onClose, isAddingInteraction, isAdmin, myId, onClaim, onRelease, onScheduleMeeting, isSchedulingMeeting,
 }: {
   prospect: DenueProspecto;
   interactions: { id: string; tipo: string; notas: string | null; createdAt: string }[];
@@ -1788,6 +1805,8 @@ function SlideOutDetailPanel({
   myId: string | null;
   onClaim: () => void;
   onRelease: () => void;
+  onScheduleMeeting: (data: { scheduledAt: string; durationMinutes: number; attendeeEmail: string; attendeeName?: string; note?: string; advanceStage?: boolean }) => void;
+  isSchedulingMeeting: boolean;
 }) {
   const stageInfo = DENUE_STAGES.find(s => s.key === prospect.stage) || DENUE_STAGES[0];
   const currentIdx = DENUE_STAGES.findIndex(s => s.key === prospect.stage);
@@ -2036,6 +2055,12 @@ function SlideOutDetailPanel({
 
           {activeTab === "activity" && (
             <>
+              <MeetingScheduler
+                prospect={prospect}
+                onSchedule={onScheduleMeeting}
+                isScheduling={isSchedulingMeeting}
+              />
+
               <div>
                 <h4 className="text-[11px] font-semibold text-cedu-ink mb-2">Registrar interacción</h4>
                 <Textarea placeholder="Notas de la interacción..." value={interactionNote} onChange={(e) => onInteractionNoteChange(e.target.value)} className="text-xs min-h-[60px]" data-testid="textarea-interaction" />
@@ -2263,6 +2288,87 @@ function AddProspectDialog({ onClose, onSubmit, isSubmitting }: {
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function MeetingScheduler({ prospect, onSchedule, isScheduling }: {
+  prospect: DenueProspecto;
+  onSchedule: (data: { scheduledAt: string; durationMinutes: number; attendeeEmail: string; attendeeName?: string; note?: string; advanceStage?: boolean }) => void;
+  isScheduling: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState("");        // yyyy-mm-dd
+  const [time, setTime] = useState("");        // HH:mm
+  const [duration, setDuration] = useState("30");
+  const [email, setEmail] = useState(prospect.correoElectronico || "");
+  const [note, setNote] = useState("");
+  const [advance, setAdvance] = useState(true);
+
+  const canSubmit = !!date && !!time && email.includes("@") && !isScheduling;
+
+  const submit = () => {
+    if (!canSubmit) return;
+    // Combine local date+time into an ISO timestamp.
+    const scheduledAt = new Date(`${date}T${time}`).toISOString();
+    onSchedule({
+      scheduledAt,
+      durationMinutes: Number(duration) || 30,
+      attendeeEmail: email.trim(),
+      attendeeName: prospect.nombreContacto || prospect.nombreComercial,
+      note: note.trim() || undefined,
+      advanceStage: advance,
+    });
+    setOpen(false);
+    setNote("");
+  };
+
+  if (!open) {
+    return (
+      <Button size="sm" className="w-full rounded-xl gap-2 bg-[#1a73e8] hover:bg-[#1765cc] text-white" onClick={() => setOpen(true)} data-testid="button-schedule-meeting">
+        <Video size={14} /> Agendar reunión (Google Meet)
+      </Button>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-[#1a73e8]/20 bg-[#1a73e8]/[0.03] p-3 space-y-2" data-testid="meeting-scheduler">
+      <div className="flex items-center justify-between">
+        <h4 className="text-[11px] font-semibold text-cedu-ink flex items-center gap-1"><CalendarClock size={13} className="text-[#1a73e8]" /> Agendar reunión Google Meet</h4>
+        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setOpen(false)}><X size={14} /></Button>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="text-[10px] text-cedu-ink-muted mb-1 block">Fecha</label>
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-8 text-xs bg-white" data-testid="meeting-date" />
+        </div>
+        <div>
+          <label className="text-[10px] text-cedu-ink-muted mb-1 block">Hora</label>
+          <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="h-8 text-xs bg-white" data-testid="meeting-time" />
+        </div>
+        <div>
+          <label className="text-[10px] text-cedu-ink-muted mb-1 block">Duración (min)</label>
+          <Select value={duration} onValueChange={setDuration}>
+            <SelectTrigger className="h-8 text-xs bg-white" data-testid="meeting-duration"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {["15", "30", "45", "60"].map(d => <SelectItem key={d} value={d}>{d} min</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-[10px] text-cedu-ink-muted mb-1 block">Correo del prospecto</label>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contacto@empresa.com" className="h-8 text-xs bg-white" data-testid="meeting-email" />
+        </div>
+      </div>
+      <Textarea placeholder="Nota para la invitación (opcional)" value={note} onChange={(e) => setNote(e.target.value)} className="text-xs min-h-[44px] bg-white" data-testid="meeting-note" />
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" checked={advance} onChange={(e) => setAdvance(e.target.checked)} className="rounded border-gray-300" data-testid="meeting-advance" />
+        <span className="text-[10px] text-cedu-ink-muted">Avanzar a etapa "Demo" al agendar</span>
+      </label>
+      <Button size="sm" className="w-full rounded-xl gap-2 bg-[#1a73e8] hover:bg-[#1765cc] text-white" onClick={submit} disabled={!canSubmit} data-testid="button-confirm-meeting">
+        {isScheduling ? <Loader2 size={14} className="animate-spin" /> : <Video size={14} />} Crear Meet y enviar invitación
+      </Button>
+      <p className="text-[9px] text-cedu-ink-muted">Se creará un evento con enlace de Google Meet y Google enviará la invitación por correo al prospecto.</p>
     </div>
   );
 }
