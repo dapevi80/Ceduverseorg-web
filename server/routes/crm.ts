@@ -43,6 +43,7 @@ import {
 import { eq, and, sql, count, desc, asc, gte, lte, inArray, ilike, type SQL, type AnyColumn } from "drizzle-orm";
 import { z } from "zod";
 import crypto from "crypto";
+import { createMeetEvent, isGoogleCalendarConfigured } from "../services/google-calendar";
 
 // --- Hybrid ownership model for the DENUE prospect pipeline ---
 // Socios comerciales see their OWN prospects (partnerId = them) plus UNASSIGNED
@@ -1392,6 +1393,78 @@ export function registerCrmRoutes(app: Express) {
         notas: notas || null,
       }).returning();
       res.json(record);
+    } catch (err) { next(err); }
+  });
+
+  // Schedule a Google Meet with a prospect: creates a Calendar event with a Meet
+  // link, Google emails the invite to the attendee, and we log it as a "reunión"
+  // interaction (no schema change — the Calendar invite is the prospect record).
+  app.post("/api/denue/prospectos/:id/meeting", requireAdminOrPartner, async (req, res, next) => {
+    try {
+      if (!isGoogleCalendarConfigured()) {
+        return res.status(503).json({ message: "Google Calendar no está configurado. Falta conectar la cuenta de Google (variables GOOGLE_OAUTH_*)." });
+      }
+      const { scheduledAt, durationMinutes, attendeeEmail, attendeeName, note, advanceStage } = req.body as {
+        scheduledAt?: string; durationMinutes?: number; attendeeEmail?: string; attendeeName?: string; note?: string; advanceStage?: boolean;
+      };
+
+      const start = scheduledAt ? new Date(scheduledAt) : null;
+      if (!start || isNaN(start.getTime())) return res.status(400).json({ message: "Fecha y hora de la reunión inválidas" });
+      if (start.getTime() < Date.now() - 60_000) return res.status(400).json({ message: "La reunión no puede ser en el pasado" });
+      const duration = Number(durationMinutes) > 0 ? Number(durationMinutes) : 30;
+
+      const actor = await getProspectActor(req.supabaseUserId!);
+      const [empresa] = await db.select().from(empresasProspectos).where(eq(empresasProspectos.id, (req.params.id as string)));
+      if (!empresa) return res.status(404).json({ message: "Prospecto no encontrado" });
+      const decision = prospectWriteDecision(actor, empresa.partnerId);
+      if (decision === "deny") return res.status(403).json({ message: "Este prospecto está asignado a otro socio" });
+
+      const toEmail = (attendeeEmail || empresa.correoElectronico || "").trim();
+      if (!toEmail || !toEmail.includes("@")) return res.status(400).json({ message: "Se requiere un correo válido del prospecto para enviar la invitación" });
+
+      // Build the invite. The socio is added as a guest too so it lands on their calendar.
+      const socioProfile = await db.select({ email: users.email }).from(users).where(eq(users.id, actor.userId)).limit(1);
+      const attendees: { email: string; displayName?: string }[] = [{ email: toEmail, displayName: attendeeName || empresa.nombreContacto || empresa.nombreComercial }];
+      if (socioProfile[0]?.email && socioProfile[0].email !== toEmail) attendees.push({ email: socioProfile[0].email });
+
+      const summary = `Ceduverse — Reunión con ${empresa.nombreComercial}`;
+      const description = [
+        note?.trim() || "Reunión comercial Ceduverse.",
+        "",
+        `Empresa: ${empresa.nombreComercial}`,
+        empresa.nombreContacto ? `Contacto: ${empresa.nombreContacto}` : null,
+      ].filter(Boolean).join("\n");
+
+      let event;
+      try {
+        event = await createMeetEvent({ summary, description, startISO: start.toISOString(), durationMinutes: duration, attendees });
+      } catch (gerr: any) {
+        if (gerr.message === "GOOGLE_CALENDAR_NOT_CONFIGURED") {
+          return res.status(503).json({ message: "Google Calendar no está configurado." });
+        }
+        console.error("[crm] Google Meet creation failed:", gerr.message);
+        return res.status(502).json({ message: "No se pudo crear la reunión en Google Calendar. Intenta de nuevo." });
+      }
+
+      // Auto-claim if it was unassigned (scheduling a meeting = working the lead).
+      const claimPatch = decision === "claim" ? { partnerId: actor.userId } : {};
+      // Optionally advance an early-stage lead to "demo".
+      const earlyStages = ["nuevo", "contactado"];
+      const stagePatch = advanceStage && earlyStages.includes(empresa.stage) ? { stage: "demo" as const } : {};
+      await db.update(empresasProspectos)
+        .set({ lastContactedAt: new Date(), updatedAt: new Date(), ...claimPatch, ...stagePatch })
+        .where(eq(empresasProspectos.id, empresa.id));
+
+      const when = start.toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" });
+      await db.insert(interaccionesProspectos).values({
+        empresaId: empresa.id,
+        userId: actor.userId,
+        tipo: "reunión",
+        notas: `Reunión Google Meet agendada para ${when}${event.meetUrl ? ` · ${event.meetUrl}` : ""}. Invitación enviada a ${toEmail}.${note?.trim() ? ` Nota: ${note.trim()}` : ""}`,
+      });
+
+      prospectStatsCacheMap.clear();
+      res.json({ meetUrl: event.meetUrl, eventLink: event.htmlLink, scheduledAt: event.start, attendeeEmail: toEmail });
     } catch (err) { next(err); }
   });
 
