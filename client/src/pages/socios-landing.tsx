@@ -238,7 +238,7 @@ function SimuladorComisiones() {
   const SEP_PRICE = 1999;
   const tiposSocio = {
     trabajador: { label: "Trabajador", pct: 0.10, dc3Pct: 0.20, sepPct: 0.05, referral: 300, duracion: "12 meses" },
-    instructor: { label: "Instructor", pct: 0.15, dc3Pct: 0.40, sepPct: 0.10, referral: 500, duracion: "24 meses" },
+    instructor: { label: "Instructor", pct: 0.10, dc3Pct: 0.40, sepPct: 0.10, referral: 500, duracion: "24 meses" },
     agente: { label: "Agente", pct: 0.15, dc3Pct: 0.40, sepPct: 0.10, referral: 500, duracion: "Vitalicio" },
     consultor: { label: "Consultor", pct: 0.25, dc3Pct: 0.40, sepPct: 0.10, referral: 500, duracion: "Vitalicio" },
     director: { label: "Director", pct: 0.25, dc3Pct: 0.40, sepPct: 0.10, referral: 500, duracion: "Vitalicio", overridePct: 0.05, overrideDc3Pct: 0.10, overrideSepPct: 0.05, overrideReferral: 200 },
@@ -309,7 +309,7 @@ function SimuladorComisiones() {
                     </div>
                     <p className="text-[11px] text-gray-500 mt-2 leading-relaxed" data-testid="text-tipo-desc">
                       {tipoSocio === "trabajador" && "Refiere desde tu empresa. Ganas 10% del fee + $30/DC-3 + $100/SEP por 12 meses."}
-                      {tipoSocio === "instructor" && "Capacita e imparte cursos. Ganas 15% del fee + 40% DC-3 + 10% SEP + $500/referido por 24 meses."}
+                      {tipoSocio === "instructor" && "Capacita e imparte cursos. Ganas 10% del fee + 40% DC-3 + 10% SEP + $500/referido por 24 meses."}
                       {tipoSocio === "agente" && "Capacita e imparte cursos. Ganas 15% del fee + 40% DC-3 + 10% SEP + $500/referido. Vitalicio."}
                       {tipoSocio === "consultor" && "Vende y asesora empresas. Ganas 25% (30% si 4+, 35% si 8+ empresas) + $60/DC-3 + $200/SEP. Vitalicio."}
                       {tipoSocio === "director" && "Lidera consultores. Ganas 25-35% propio + 5% override de 3 consultores + DC-3 y SEP con bono. Vitalicio."}
@@ -420,7 +420,7 @@ function SimuladorComisiones() {
               <tbody className="bg-white">
                 {[
                   ["Trabajador", "10% del fee", "20%", "5%", "$300", "12 meses"],
-                  ["Instructor", "15% del fee", "40%", "10%", "$500", "24 meses"],
+                  ["Instructor", "10% del fee", "40%", "10%", "$500", "24 meses"],
                   ["Agente", "15% del fee", "40%", "10%", "$500", "Vitalicio"],
                   ["Consultor", "25-35% del fee", "40%", "10%", "$500", "Vitalicio"],
                   ["Director", "25-35% + 5% override", "40%+10%", "10%+5%", "$500+$200", "Vitalicio"],
