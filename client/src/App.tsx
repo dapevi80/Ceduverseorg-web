@@ -33,6 +33,7 @@ import BlogPage from "@/pages/blog";
 import BlogPostPage from "@/pages/blog-post";
 
 import AdminFinanciero from "@/pages/admin-financiero";
+import AdminGoogleMeet from "@/pages/admin-google-meet";
 import SegurosPage from "@/pages/seguros";
 import TerminosPage from "@/pages/terminos";
 import PrivacidadPage from "@/pages/privacidad";
@@ -55,6 +56,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/admin/crm" component={CrmDashboard} />
       <Route path="/admin/financiero" component={AdminFinanciero} />
+      <Route path="/admin/google-meet" component={AdminGoogleMeet} />
       <Route path="/admin" component={AdminPanel} />
 
       <Route path="/instructor/acreditacion" component={InstructorAcreditacion} />

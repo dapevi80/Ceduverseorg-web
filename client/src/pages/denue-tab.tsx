@@ -582,7 +582,7 @@ export default function DenueTab() {
   });
 
   const scheduleMeetingMutation = useMutation({
-    mutationFn: async ({ id, ...data }: { id: string; scheduledAt: string; durationMinutes: number; attendeeEmail: string; attendeeName?: string; note?: string; advanceStage?: boolean }) => {
+    mutationFn: async ({ id, ...data }: { id: string; scheduledLocal: string; timeZone: string; durationMinutes: number; attendeeEmail: string; attendeeName?: string; note?: string; advanceStage?: boolean }) => {
       const res = await apiRequest("POST", `/api/denue/prospectos/${id}/meeting`, data);
       return res.json();
     },
@@ -1805,7 +1805,7 @@ function SlideOutDetailPanel({
   myId: string | null;
   onClaim: () => void;
   onRelease: () => void;
-  onScheduleMeeting: (data: { scheduledAt: string; durationMinutes: number; attendeeEmail: string; attendeeName?: string; note?: string; advanceStage?: boolean }) => void;
+  onScheduleMeeting: (data: { scheduledLocal: string; timeZone: string; durationMinutes: number; attendeeEmail: string; attendeeName?: string; note?: string; advanceStage?: boolean }) => void;
   isSchedulingMeeting: boolean;
 }) {
   const stageInfo = DENUE_STAGES.find(s => s.key === prospect.stage) || DENUE_STAGES[0];
@@ -2292,15 +2292,30 @@ function AddProspectDialog({ onClose, onSubmit, isSubmitting }: {
   );
 }
 
+const MEETING_TIME_ZONES: { value: string; label: string }[] = [
+  { value: "America/Mexico_City", label: "Ciudad de México (CDMX)" },
+  { value: "America/Cancun", label: "Cancún / Quintana Roo" },
+  { value: "America/Monterrey", label: "Monterrey" },
+  { value: "America/Tijuana", label: "Tijuana / BC" },
+  { value: "America/Bogota", label: "Bogotá / Lima (COT/PET)" },
+  { value: "America/New_York", label: "EE.UU. Este (ET)" },
+  { value: "America/Chicago", label: "EE.UU. Central (CT)" },
+  { value: "America/Los_Angeles", label: "EE.UU. Pacífico (PT)" },
+  { value: "America/Argentina/Buenos_Aires", label: "Buenos Aires (ART)" },
+  { value: "America/Santiago", label: "Santiago (CLT)" },
+  { value: "Europe/Madrid", label: "España (CET)" },
+];
+
 function MeetingScheduler({ prospect, onSchedule, isScheduling }: {
   prospect: DenueProspecto;
-  onSchedule: (data: { scheduledAt: string; durationMinutes: number; attendeeEmail: string; attendeeName?: string; note?: string; advanceStage?: boolean }) => void;
+  onSchedule: (data: { scheduledLocal: string; timeZone: string; durationMinutes: number; attendeeEmail: string; attendeeName?: string; note?: string; advanceStage?: boolean }) => void;
   isScheduling: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState("");        // yyyy-mm-dd
   const [time, setTime] = useState("");        // HH:mm
   const [duration, setDuration] = useState("30");
+  const [timeZone, setTimeZone] = useState(MEETING_TIME_ZONES[0].value);
   const [email, setEmail] = useState(prospect.correoElectronico || "");
   const [note, setNote] = useState("");
   const [advance, setAdvance] = useState(true);
@@ -2309,10 +2324,11 @@ function MeetingScheduler({ prospect, onSchedule, isScheduling }: {
 
   const submit = () => {
     if (!canSubmit) return;
-    // Combine local date+time into an ISO timestamp.
-    const scheduledAt = new Date(`${date}T${time}`).toISOString();
+    // Send the wall-clock time + chosen IANA zone (NOT a browser-derived instant) so the
+    // meeting lands at the intended local time regardless of where the socio is scheduling.
     onSchedule({
-      scheduledAt,
+      scheduledLocal: `${date}T${time}`,
+      timeZone,
       durationMinutes: Number(duration) || 30,
       attendeeEmail: email.trim(),
       attendeeName: prospect.nombreContacto || prospect.nombreComercial,
@@ -2356,6 +2372,15 @@ function MeetingScheduler({ prospect, onSchedule, isScheduling }: {
           </Select>
         </div>
         <div>
+          <label className="text-[10px] text-cedu-ink-muted mb-1 block">Zona horaria de la cita</label>
+          <Select value={timeZone} onValueChange={setTimeZone}>
+            <SelectTrigger className="h-8 text-xs bg-white" data-testid="meeting-timezone"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {MEETING_TIME_ZONES.map(tz => <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
           <label className="text-[10px] text-cedu-ink-muted mb-1 block">Correo del prospecto</label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contacto@empresa.com" className="h-8 text-xs bg-white" data-testid="meeting-email" />
         </div>
@@ -2368,7 +2393,7 @@ function MeetingScheduler({ prospect, onSchedule, isScheduling }: {
       <Button size="sm" className="w-full rounded-xl gap-2 bg-[#1a73e8] hover:bg-[#1765cc] text-white" onClick={submit} disabled={!canSubmit} data-testid="button-confirm-meeting">
         {isScheduling ? <Loader2 size={14} className="animate-spin" /> : <Video size={14} />} Crear Meet y enviar invitación
       </Button>
-      <p className="text-[9px] text-cedu-ink-muted">Se creará un evento con enlace de Google Meet y Google enviará la invitación por correo al prospecto.</p>
+      <p className="text-[9px] text-cedu-ink-muted">Se creará un evento con enlace de Google Meet y Google enviará la invitación por correo al prospecto. La hora se fija en la zona horaria seleccionada; cada invitado la verá en su propia zona horaria.</p>
     </div>
   );
 }

@@ -8,6 +8,7 @@ type AuthUser = {
   email: string;
   fullName?: string;
   role?: string;
+  isExecutive?: boolean;
 };
 
 type AuthContextType = {
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: data.email,
             fullName: data.fullName,
             role: data.role,
+            isExecutive: data.isExecutive,
           });
         }
       })

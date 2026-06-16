@@ -43,7 +43,7 @@ import {
 import { eq, and, sql, count, desc, asc, gte, lte, inArray, ilike, type SQL, type AnyColumn } from "drizzle-orm";
 import { z } from "zod";
 import crypto from "crypto";
-import { createMeetEvent, isGoogleCalendarConfigured } from "../services/google-calendar";
+import { createMeetEvent, isGoogleCalendarConfigured, zonedWallTimeToInstant } from "../services/google-calendar";
 
 // --- Hybrid ownership model for the DENUE prospect pipeline ---
 // Socios comerciales see their OWN prospects (partnerId = them) plus UNASSIGNED
@@ -1401,14 +1401,15 @@ export function registerCrmRoutes(app: Express) {
   // interaction (no schema change — the Calendar invite is the prospect record).
   app.post("/api/denue/prospectos/:id/meeting", requireAdminOrPartner, async (req, res, next) => {
     try {
-      if (!isGoogleCalendarConfigured()) {
+      if (!(await isGoogleCalendarConfigured())) {
         return res.status(503).json({ message: "Google Calendar no está configurado. Falta conectar la cuenta de Google (variables GOOGLE_OAUTH_*)." });
       }
-      const { scheduledAt, durationMinutes, attendeeEmail, attendeeName, note, advanceStage } = req.body as {
-        scheduledAt?: string; durationMinutes?: number; attendeeEmail?: string; attendeeName?: string; note?: string; advanceStage?: boolean;
+      const { scheduledLocal, timeZone, durationMinutes, attendeeEmail, attendeeName, note, advanceStage } = req.body as {
+        scheduledLocal?: string; timeZone?: string; durationMinutes?: number; attendeeEmail?: string; attendeeName?: string; note?: string; advanceStage?: boolean;
       };
 
-      const start = scheduledAt ? new Date(scheduledAt) : null;
+      const tz = (timeZone || process.env.GOOGLE_MEET_TIMEZONE || "America/Mexico_City").trim();
+      const start = scheduledLocal ? zonedWallTimeToInstant(scheduledLocal, tz) : null;
       if (!start || isNaN(start.getTime())) return res.status(400).json({ message: "Fecha y hora de la reunión inválidas" });
       if (start.getTime() < Date.now() - 60_000) return res.status(400).json({ message: "La reunión no puede ser en el pasado" });
       const duration = Number(durationMinutes) > 0 ? Number(durationMinutes) : 30;
@@ -1437,7 +1438,7 @@ export function registerCrmRoutes(app: Express) {
 
       let event;
       try {
-        event = await createMeetEvent({ summary, description, startISO: start.toISOString(), durationMinutes: duration, attendees });
+        event = await createMeetEvent({ summary, description, startLocal: scheduledLocal!, timeZone: tz, durationMinutes: duration, attendees });
       } catch (gerr: any) {
         if (gerr.message === "GOOGLE_CALENDAR_NOT_CONFIGURED") {
           return res.status(503).json({ message: "Google Calendar no está configurado." });
@@ -1455,7 +1456,7 @@ export function registerCrmRoutes(app: Express) {
         .set({ lastContactedAt: new Date(), updatedAt: new Date(), ...claimPatch, ...stagePatch })
         .where(eq(empresasProspectos.id, empresa.id));
 
-      const when = start.toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short" });
+      const when = start.toLocaleString("es-MX", { dateStyle: "medium", timeStyle: "short", timeZone: tz }) + ` (${tz})`;
       await db.insert(interaccionesProspectos).values({
         empresaId: empresa.id,
         userId: actor.userId,

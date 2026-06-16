@@ -498,6 +498,7 @@ export function setupAuth(app: Express): void {
         email: user.email,
         fullName: profile[0]?.fullName || null,
         role: account?.userRole || "socio_estudiante",
+        isExecutive: isExecutiveEmail(user.email),
       });
     } catch (err: any) {
       console.error("[auth] me error:", err.message);
@@ -595,6 +596,33 @@ export const requireSuperadmin: RequestHandler = async (req: Request, res: Respo
       return res.status(403).json({ message: "Acceso denegado — se requiere superadmin" });
     }
 
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Executive allowlist for the Google Meet admin page. Gated by email so only the
+// named owners can manage the connection, settings, and meetings — regardless of role.
+const EXECUTIVE_EMAILS = (process.env.GOOGLE_MEET_EXECUTIVE_EMAILS || "dpvillasenor@gmail.com,atanon@gmail.com")
+  .split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+
+export function isExecutiveEmail(email: string | null | undefined): boolean {
+  return !!email && EXECUTIVE_EMAILS.includes(email.trim().toLowerCase());
+}
+
+export const requireExecutive: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = getTokenFromRequest(req);
+    if (!token) return res.status(401).json({ message: "No autenticado" });
+    const session = resolveToken(token);
+    if (!session) return res.status(401).json({ message: "Token inválido o expirado" });
+    req.supabaseUserId = session.userId;
+
+    const [row] = await db.select({ email: users.email }).from(users).where(eq(users.id, session.userId)).limit(1);
+    if (!isExecutiveEmail(row?.email)) {
+      return res.status(403).json({ message: "Acceso denegado — área ejecutiva" });
+    }
     next();
   } catch (err) {
     next(err);

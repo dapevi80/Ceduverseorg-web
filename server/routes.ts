@@ -55,6 +55,7 @@ import bcrypt from "bcryptjs";
 import { registerCourseRoutes } from "./routes/courses";
 import { registerAdminRoutes } from "./routes/admin";
 import { registerCrmRoutes } from "./routes/crm";
+import { registerGoogleMeetRoutes } from "./routes/google-meet";
 import { registerMembershipRoutes } from "./routes/membership";
 import { registerCertificateRoutes } from "./routes/certificates";
 import { registerHeygenRoutes } from "./routes/heygen";
@@ -1332,6 +1333,7 @@ export async function registerRoutes(
   });
 
   registerCrmRoutes(app);
+  registerGoogleMeetRoutes(app);
 
   async function seedContactCards() {
     const seedCards = [

@@ -98,6 +98,7 @@ import {
   Hash,
   AlertCircle,
   Edit3,
+  Video,
 } from "lucide-react";
 
 type AdminTab =
@@ -5124,6 +5125,17 @@ export default function AdminPanel() {
               Modelo Financiero
             </span>
           </Link>
+          {user?.isExecutive && (
+            <Link href="/admin/google-meet">
+              <span
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-cedu-blue hover:bg-cedu-blue-light transition-all cursor-pointer"
+                data-testid="nav-admin-google-meet"
+              >
+                <Video size={18} />
+                Google Meet
+              </span>
+            </Link>
+          )}
           <Link href="/aula-virtual">
             <span
               className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-cedu-ink-muted hover:bg-black/[0.03] hover:text-cedu-ink transition-all cursor-pointer"
