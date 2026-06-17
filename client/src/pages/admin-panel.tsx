@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -122,6 +122,7 @@ type AdminTab =
   | "api-externa"
   | "configuracion"
   | "roles"
+  | "matriz"
   | "logs"
   | "tienda";
 
@@ -4266,6 +4267,165 @@ function RolesTab() {
   );
 }
 
+type RoleDefRow = {
+  roleKey: string;
+  displayName: string;
+  description: string | null;
+  canViewCourses: boolean;
+  canCreateCourses: boolean;
+  canViewAdmin: boolean;
+  canViewPartner: boolean;
+  canViewDirector: boolean;
+  canViewEmpresa: boolean;
+  isCooperativeMember: boolean;
+};
+
+// Permission columns shown in the matrix, in display order.
+const PERMISSION_COLUMNS: { key: keyof RoleDefRow; label: string }[] = [
+  { key: "canViewCourses", label: "Cursos" },
+  { key: "canCreateCourses", label: "Crear cursos" },
+  { key: "canViewPartner", label: "CRM / Partner" },
+  { key: "canViewDirector", label: "Director" },
+  { key: "canViewEmpresa", label: "Empresa" },
+  { key: "canViewAdmin", label: "Admin" },
+  { key: "isCooperativeMember", label: "Cooperativa" },
+];
+
+// Legacy role keys map onto the canonical 8-role taxonomy so their permissions
+// resolve correctly even though role_definitions only seeds the canonical set.
+const CANONICAL_ROLE: Record<string, string> = {
+  user: "socio_estudiante",
+  moderator: "socio_estudiante",
+  partner: "socio_comercial",
+  instructor: "socio_instructor",
+};
+
+function PermissionMatrixTab() {
+  const { data: users = [], isLoading: usersLoading } = useQuery<EnhancedUserItem[]>({ queryKey: ["/api/admin/users"] });
+  const { data: roleDefs = [], isLoading: defsLoading } = useQuery<RoleDefRow[]>({ queryKey: ["/api/role-definitions"] });
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+
+  const defForUser = (role: string): RoleDefRow | undefined =>
+    roleDefs.find(d => d.roleKey === role) || roleDefs.find(d => d.roleKey === CANONICAL_ROLE[role]);
+
+  const roleOptions = useMemo(() => Array.from(new Set(users.map(u => u.role))).sort(), [users]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return users.filter(u => {
+      if (roleFilter !== "all" && u.role !== roleFilter) return false;
+      if (!q) return true;
+      return (u.fullName || "").toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    });
+  }, [users, search, roleFilter]);
+
+  const exportCsv = () => {
+    const header = ["Nombre", "Correo", "Rol", ...PERMISSION_COLUMNS.map(c => c.label)];
+    const lines = filtered.map(u => {
+      const def = defForUser(u.role);
+      return [
+        u.fullName || "",
+        u.email,
+        ROLE_LABELS[u.role]?.label || u.role,
+        ...PERMISSION_COLUMNS.map(c => (def && def[c.key] ? "Sí" : "No")),
+      ];
+    });
+    const csv = [header, ...lines]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `matriz-permisos-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (usersLoading || defsLoading) return <div className="flex justify-center py-12"><Loader2 className="animate-spin" /></div>;
+
+  return (
+    <div className="space-y-4" data-testid="tab-matriz">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="font-serif text-2xl text-cedu-ink">Matriz de Permisos</h2>
+          <p className="text-sm text-cedu-ink-muted">
+            {filtered.length} de {users.length} usuarios · permisos efectivos derivados del rol de cada usuario
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={exportCsv} className="h-9" data-testid="button-export-matriz">
+          <Download size={14} className="mr-1" /> Exportar CSV
+        </Button>
+      </div>
+
+      <div className="flex gap-2 flex-wrap items-center">
+        <Input
+          placeholder="Buscar por nombre o correo…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-64 h-9"
+          data-testid="input-search-matriz"
+        />
+        <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <SelectTrigger className="w-48 h-9" data-testid="filter-matriz-role">
+            <SelectValue placeholder="Rol" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los roles</SelectItem>
+            {roleOptions.map(r => (
+              <SelectItem key={r} value={r}>{ROLE_LABELS[r]?.label || r}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Card className="border-black/[0.06] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm" data-testid="table-matriz">
+            <thead>
+              <tr className="border-b border-black/[0.06] bg-black/[0.02]">
+                <th className="text-left px-4 py-3 font-semibold text-cedu-ink-muted text-xs sticky left-0 bg-[#f7f5f0]">Usuario</th>
+                <th className="text-left px-4 py-3 font-semibold text-cedu-ink-muted text-xs">Rol</th>
+                {PERMISSION_COLUMNS.map(c => (
+                  <th key={c.key} className="px-3 py-3 font-semibold text-cedu-ink-muted text-xs text-center whitespace-nowrap">{c.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={2 + PERMISSION_COLUMNS.length} className="text-center py-8 text-cedu-ink-muted">Sin usuarios</td></tr>
+              ) : filtered.map(u => {
+                const def = defForUser(u.role);
+                return (
+                  <tr key={u.id} className="border-b border-black/[0.04] hover:bg-black/[0.02]" data-testid={`matriz-row-${u.id}`}>
+                    <td className="px-4 py-3 sticky left-0 bg-white">
+                      <p className="font-semibold text-cedu-ink truncate max-w-[200px]">{u.fullName || "Sin nombre"}</p>
+                      <p className="text-xs text-cedu-ink-muted truncate max-w-[200px]">{u.email}</p>
+                    </td>
+                    <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
+                    {PERMISSION_COLUMNS.map(c => (
+                      <td key={c.key} className="px-3 py-3 text-center" data-testid={`matriz-${u.id}-${c.key}`}>
+                        {def && def[c.key]
+                          ? <CheckCircle2 size={16} className="inline text-emerald-600" />
+                          : <span className="text-gray-300">—</span>}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <p className="text-xs text-cedu-ink-muted">
+        Los permisos se derivan de la taxonomía de roles (pestaña «Roles»). Para cambiar el acceso de un usuario, ajusta su rol en «Usuarios».
+      </p>
+    </div>
+  );
+}
+
 function RoleChangeLogTab() {
   const { data: logs = [], isLoading } = useQuery<any[]>({ queryKey: ["/api/admin/role-change-log"] });
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="animate-spin" /></div>;
@@ -4972,6 +5132,7 @@ const NAV_ITEMS: { id: AdminTab; label: string; icon: typeof LayoutDashboard; se
   { id: "newsletter", label: "Newsletter", icon: Mail },
   { id: "api-externa", label: "API Management", icon: Shield, section: "Otros", superadminOnly: true },
   { id: "roles", label: "Roles", icon: Users, superadminOnly: true },
+  { id: "matriz", label: "Matriz de Permisos", icon: Shield, superadminOnly: true },
   { id: "logs", label: "Logs de Cambios", icon: Clock, superadminOnly: true },
   { id: "seguros", label: "Seguros", icon: HeartPulse },
   { id: "memberships", label: "Membresías", icon: Award },
@@ -5052,6 +5213,7 @@ export default function AdminPanel() {
       case "soporte": return <SoporteTab />;
       case "configuracion": return <ConfiguracionTab />;
       case "roles": return <RolesTab />;
+      case "matriz": return <PermissionMatrixTab />;
       case "logs": return <RoleChangeLogTab />;
       case "tienda": return <AdminTiendaTab isSuperadmin={isSuperadmin} />;
       default: return <OverviewTab />;
