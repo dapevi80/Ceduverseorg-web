@@ -3,7 +3,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "capacidad-analitica-resolucion-problemas": [
   {
     title: "Sesión de Capacitación: Capacidad Analítica y Resolución de Problemas",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre pensamiento analítico y resolución de problemas en el entorno industrial.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre pensamiento analítico y resolución de problemas en el entorno industrial.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy quiero hablarles de algo que a primera vista suena muy académico, pero que en la realidad del piso de planta, del almacén, de la línea de producción, es la diferencia entre una operación que funciona y una que se la pasa apagando incendios. Hablo de la capacidad analítica y la resolución de problemas.</p>
 
@@ -102,7 +102,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "liderazgo-trabajo-colaborativo": [
   {
     title: "Sesión de Capacitación: Liderazgo y Trabajo Colaborativo",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre liderazgo efectivo y trabajo en equipo en entornos industriales.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre liderazgo efectivo y trabajo en equipo en entornos industriales.",
     contentHtml: `<article class="stps-session">
 <p>Buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy quiero hablarles de algo que he aprendido no en un libro, sino en treinta años de caminar plantas, almacenes, obras de construcción y líneas de producción. Quiero hablarles de liderazgo. Pero no del liderazgo de los libros de autoayuda ni de los seminarios motivacionales con música épica de fondo. Del liderazgo real. Del que se ejerce cuando las cosas se complican, cuando la presión de producción aprieta, cuando un compañero se accidenta, o cuando hay que hacer que un equipo de personas muy diferentes, con personalidades diferentes, experiencias diferentes y motivaciones diferentes, trabaje hacia un mismo objetivo.</p>
 
@@ -195,7 +195,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "prevencion-riesgos-laborales": [
   {
     title: "Sesión de Capacitación: Prevención de Riesgos Laborales",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre identificación, evaluación y control de riesgos en el centro de trabajo.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre identificación, evaluación y control de riesgos en el centro de trabajo.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días. Soy el ingeniero Jorge Armando Medina Castillo, instructor registrado ante la Secretaría del Trabajo y Previsión Social, y llevo más de veinticinco años dedicado al campo de la seguridad y salud en el trabajo. Hoy quiero hablarles del tema que ha definido mi carrera profesional, mi vocación y, me atrevería a decir, mi propósito de vida: la prevención de riesgos laborales. Y quiero hacerlo de una manera diferente a la que probablemente están acostumbrados. No con diapositivas llenas de texto, no recitando artículos de normas, no con una lista interminable de prohibiciones. Quiero contarles historias. Porque son las historias las que cambian conductas, las que se quedan en la memoria, las que nos hacen reflexionar a las tres de la mañana cuando estamos a punto de tomar una decisión que podría ponernos en riesgo.</p>
 
@@ -290,7 +290,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "equipo-proteccion-personal": [
   {
     title: "Sesión de Capacitación: Equipo de Protección Personal (EPP)",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre la selección, uso y mantenimiento del EPP conforme a la NOM-017-STPS.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre la selección, uso y mantenimiento del EPP conforme a la NOM-017-STPS.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy vamos a hablar de algo que cada uno de ustedes usa, o debería usar, todos los días en su trabajo: el Equipo de Protección Personal, el famoso EPP. Los cascos, los guantes, los lentes de seguridad, los zapatos con casquillo, los respiradores, los arneses. Esas piezas de equipo que a veces vemos como una molestia, como un estorbo, como algo que nos impone la empresa o la norma.</p>
 
@@ -375,7 +375,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "operario-limpieza": [
   {
     title: "Sesión de Capacitación: Seguridad para Operarios de Limpieza",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre los riesgos específicos que enfrentan los operarios de limpieza y cómo protegerse.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre los riesgos específicos que enfrentan los operarios de limpieza y cómo protegerse.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy quiero hablar con ustedes de un tema que rara vez ocupa los titulares de seguridad industrial, que rara vez aparece en los congresos y que muchas empresas tratan como un tema menor: la seguridad de los operarios de limpieza. Y quiero empezar diciendo algo que debería ser obvio pero que no siempre se reconoce: el trabajo de limpieza no es un trabajo menor. Es un trabajo esencial, indispensable, y tiene riesgos reales que merecen la misma atención, la misma inversión y el mismo respeto que los riesgos de cualquier otra actividad industrial.</p>
 
@@ -464,7 +464,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "seguridad-energia-electrica": [
   {
     title: "Sesión de Capacitación: Seguridad con Energía Eléctrica",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre los riesgos eléctricos y las medidas de control para prevenir accidentes por contacto eléctrico.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre los riesgos eléctricos y las medidas de control para prevenir accidentes por contacto eléctrico.",
     contentHtml: `<article class="stps-session">
 <p>Buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy vamos a hablar de una energía que es absolutamente fundamental para nuestra vida moderna y para toda operación industrial, pero que también es una de las fuerzas más peligrosas y menos perdonadoras que existen: la electricidad. La electricidad no se ve, no se huele, no se oye. No da advertencias. No da segundas oportunidades. Y cuando hace contacto con el cuerpo humano, las consecuencias pueden ser devastadoras e instantáneas.</p>
 
@@ -551,7 +551,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "brigada-contra-incendios": [
   {
     title: "Sesión de Capacitación: Brigada Contra Incendios",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre la formación, operación y responsabilidades de las brigadas contra incendios.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre la formación, operación y responsabilidades de las brigadas contra incendios.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy vamos a hablar de fuego. Del fuego como riesgo industrial, de cómo prevenirlo, de cómo combatirlo cuando la prevención falla, y sobre todo, de las personas que voluntariamente levantan la mano y dicen "yo quiero ser parte de la brigada contra incendios de mi empresa". Personas que aceptan una responsabilidad enorme: ser los primeros en responder cuando todos los demás están evacuando. Personas que corren hacia el peligro cuando el instinto natural de supervivencia les dice que corran en la dirección opuesta.</p>
 
@@ -636,7 +636,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "brigada-primeros-auxilios": [
   {
     title: "Sesión de Capacitación: Brigada de Primeros Auxilios",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre la importancia, formación y actuación de las brigadas de primeros auxilios en el centro de trabajo.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre la importancia, formación y actuación de las brigadas de primeros auxilios en el centro de trabajo.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días. Soy el ingeniero Jorge Armando Medina Castillo, y hoy quiero hablarles de un tema que literalmente puede significar la diferencia entre la vida y la muerte: los primeros auxilios en el entorno laboral. Y más específicamente, quiero hablarles sobre las brigadas de primeros auxilios, esos compañeros de trabajo que voluntariamente se preparan para ser los primeros en responder cuando alguien sufre una emergencia médica en el centro de trabajo.</p>
 
@@ -725,7 +725,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "sistema-globalmente-armonizado-sga": [
   {
     title: "Sesión de Capacitación: Sistema Globalmente Armonizado (SGA)",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre el Sistema Globalmente Armonizado de clasificación y etiquetado de productos químicos.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre el Sistema Globalmente Armonizado de clasificación y etiquetado de productos químicos.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy vamos a hablar de algo que muchos trabajadores en la industria consideran aburrido, burocrático y alejado de su realidad cotidiana, pero que en la práctica es una herramienta que puede salvarles la vida: el Sistema Globalmente Armonizado de Clasificación y Etiquetado de Productos Químicos, que todos conocemos como SGA, o en inglés, GHS. Y mi misión hoy es convencerlos de que el SGA no es papeleo. Es un lenguaje universal de supervivencia.</p>
 
@@ -802,7 +802,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "nom-035-stps-medina": [
   {
     title: "Sesión de Capacitación: NOM-035-STPS — Factores de Riesgo Psicosocial",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre la NOM-035-STPS y la prevención de riesgos psicosociales en el trabajo.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre la NOM-035-STPS y la prevención de riesgos psicosociales en el trabajo.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días. Soy el ingeniero Jorge Armando Medina Castillo, y hoy quiero hablarles de una norma que cuando entró en vigor en octubre de 2019 revolucionó completamente la forma en que entendemos la seguridad y salud en el trabajo en México. Una norma que por primera vez en la historia regulatoria mexicana reconoce que los riesgos laborales no son solo físicos, que no se limitan a las caídas, los golpes, las quemaduras y las intoxicaciones. Una norma que reconoce que el trabajo también puede enfermar la mente, el espíritu y las emociones. Hablo de la NOM-035-STPS-2018: Factores de riesgo psicosocial en el trabajo. Identificación, análisis y prevención.</p>
 
@@ -891,7 +891,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "formacion-instructores": [
   {
     title: "Sesión de Capacitación: Formación de Instructores en Seguridad Industrial",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre cómo convertirse en un instructor efectivo de capacitación en seguridad y salud en el trabajo.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre cómo convertirse en un instructor efectivo de capacitación en seguridad y salud en el trabajo.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy tengo un tema que me apasiona profundamente porque es la base de todo lo demás que hacemos en seguridad industrial: la formación de instructores. Porque puedes tener la mejor normativa del mundo, los mejores procedimientos, el mejor equipo de protección, las mejores instalaciones, pero si no tienes instructores capaces de transmitir el conocimiento de manera efectiva, de conectar con los trabajadores, de generar cambios reales de comportamiento, todo lo demás se queda en papel. La capacitación es el puente entre el conocimiento técnico y la práctica segura, y el instructor es el ingeniero de ese puente.</p>
 
@@ -978,7 +978,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "bloqueo-etiquetado-loto": [
   {
     title: "Sesión de Capacitación: Bloqueo y Etiquetado (LOTO)",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre el procedimiento de Bloqueo y Etiquetado (Lockout/Tagout) para el control de energías peligrosas.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre el procedimiento de Bloqueo y Etiquetado (Lockout/Tagout) para el control de energías peligrosas.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días. Soy el ingeniero Jorge Armando Medina Castillo, y hoy vamos a hablar de un procedimiento que no es espectacular, que no tiene nada de glamoroso, que consiste básicamente en poner candados y etiquetas en interruptores y válvulas, pero que es responsable de salvar más vidas en la industria que probablemente cualquier otra medida de seguridad individual. Hablo del procedimiento de Bloqueo y Etiquetado, conocido mundialmente por sus siglas en inglés: LOTO, Lockout/Tagout. Y en México regulado por la NOM-004-STPS-1999 sobre maquinaria y equipo.</p>
 
@@ -1065,7 +1065,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "nom-026-colores-senales-seguridad": [
   {
     title: "Sesión de Capacitación: NOM-026 — Colores y Señales de Seguridad",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre el sistema de colores y señalización de seguridad conforme a la NOM-026-STPS.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre el sistema de colores y señalización de seguridad conforme a la NOM-026-STPS.",
     contentHtml: `<article class="stps-session">
 <p>Buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy vamos a hablar de algo que vemos todos los días en nuestros centros de trabajo pero que muchas veces pasa desapercibido, como si fuera parte del decorado: los colores y señales de seguridad. Los letreros rojos de salida de emergencia, las flechas verdes de las rutas de evacuación, los rombos amarillos de advertencia, las franjas diagonales amarillas y negras que marcan zonas peligrosas, las tuberías pintadas de diferentes colores. Todo eso no es decoración. Es un sistema de comunicación visual estandarizado, regulado por la NOM-026-STPS-2008, y su propósito es transmitirnos información crítica de seguridad de manera instantánea, sin necesidad de leer textos, sin necesidad de pensar, sin necesidad de recordar instrucciones. Es información que entra por los ojos y activa una respuesta inmediata en el cerebro.</p>
 
@@ -1146,7 +1146,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "herramientas-manuales-poder": [
   {
     title: "Sesión de Capacitación: Herramientas Manuales y de Poder",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre el uso seguro de herramientas manuales y de poder en la industria.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre el uso seguro de herramientas manuales y de poder en la industria.",
     contentHtml: `<article class="stps-session">
 <p>Buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy vamos a hablar de las compañeras más fieles de todo trabajador industrial: las herramientas. Desde el desarmador más simple hasta la esmeriladora angular más potente, las herramientas son una extensión de nuestras manos, una amplificación de nuestra fuerza y precisión. Pero como toda amplificación, cuando algo sale mal, el resultado también se amplifica. Una mano que resbala de un desarmador causa un raspón. Una mano que resbala de una esmeriladora angular girando a once mil revoluciones por minuto puede causar una amputación.</p>
 
@@ -1225,7 +1225,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "ergonomia-trastornos-musculoesqueleticos": [
   {
     title: "Sesión de Capacitación: Ergonomía y Trastornos Musculoesqueléticos",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre ergonomía ocupacional y la prevención de trastornos musculoesqueléticos en el trabajo.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre ergonomía ocupacional y la prevención de trastornos musculoesqueléticos en el trabajo.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy quiero hablarles de un tema que afecta a millones de trabajadores en México y en el mundo, que es responsable de más días de incapacidad que cualquier otro tipo de lesión laboral, pero que frecuentemente se ignora porque no es dramático, no es espectacular, no aparece en las noticias. No hay explosión, no hay fuego, no hay sangre visible. Es un enemigo silencioso que va dañando tu cuerpo milímetro a milímetro, día a día, semana a semana, mes a mes, hasta que un día ya no puedes levantar el brazo, no puedes girar la cabeza, no puedes caminar sin dolor, y el médico te dice que tienes un trastorno musculoesquelético crónico. Hablo de la ergonomía, o más bien, de la falta de ella.</p>
 
@@ -1308,7 +1308,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "soldadura-corte-seguridad": [
   {
     title: "Sesión de Capacitación: Soldadura y Corte — Seguridad",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre los riesgos y medidas de seguridad en operaciones de soldadura y corte.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre los riesgos y medidas de seguridad en operaciones de soldadura y corte.",
     contentHtml: `<article class="stps-session">
 <p>Muy buenos días. Soy el ingeniero Jorge Armando Medina Castillo, y hoy vamos a hablar de una de las actividades industriales más versátiles, más demandadas y también más peligrosas que existen: la soldadura y el corte con calor. Es una actividad que combina múltiples riesgos simultáneos como pocas otras: temperaturas extremas que superan los cinco mil grados centígrados en el arco eléctrico, radiación ultravioleta e infrarroja intensísima, proyección de chispas y metal fundido, humos metálicos tóxicos, gases asfixiantes, riesgo de incendio y explosión, riesgo eléctrico, y riesgo de quemaduras. Es un coctel de peligros que requiere un nivel de preparación, equipo y procedimientos que no admite improvisación.</p>
 
@@ -1383,7 +1383,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "operacion-segura-montacargas": [
   {
     title: "Sesión de Capacitación: Operación Segura de Montacargas",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre la operación segura de montacargas industriales y la prevención de accidentes.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre la operación segura de montacargas industriales y la prevención de accidentes.",
     contentHtml: `<article class="stps-session">
 <p>Buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy vamos a hablar de una de las máquinas más útiles y al mismo tiempo más peligrosas que existen en los centros de trabajo: el montacargas. También llamado carretilla elevadora, forklift, o simplemente "el monta". Es una herramienta indispensable en almacenes, centros de distribución, plantas de manufactura, puertos, aeropuertos y construcciones. Sin montacargas, la logística moderna simplemente no funcionaría. Pero con montacargas mal operados, la logística se convierte en un campo minado donde las lesiones graves y las muertes son terriblemente frecuentes.</p>
 
@@ -1462,7 +1462,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "actualizacion-montacargas": [
   {
     title: "Sesión de Capacitación: Actualización en Operación de Montacargas",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre actualización de conocimientos y nuevas prácticas en la operación segura de montacargas.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre actualización de conocimientos y nuevas prácticas en la operación segura de montacargas.",
     contentHtml: `<article class="stps-session">
 <p>Buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy quiero hablar específicamente con quienes ya son operadores certificados de montacargas. Con quienes ya tienen experiencia, ya conocen su equipo, ya saben maniobrar en pasillos estrechos, ya saben estibar a diferentes alturas, ya han pasado por la capacitación inicial. Esta sesión es para ustedes, los experimentados, los veteranos. Y les voy a ser completamente honesto: esta sesión es necesaria precisamente PORQUE son experimentados. Porque la experiencia, cuando no se actualiza y cuando se mezcla con exceso de confianza, puede convertirse en el mayor factor de riesgo.</p>
 
@@ -1543,7 +1543,7 @@ export const MEDINA_MODULES_DATA: Record<string, { title: string; description: s
 "nom-019-comisiones-seguridad-higiene": [
   {
     title: "Sesión de Capacitación: NOM-019 — Comisiones de Seguridad e Higiene",
-    description: "Sesión de capacitación por el Ing. Jorge Armando Medina Castillo sobre la constitución y funcionamiento de las Comisiones de Seguridad e Higiene conforme a la NOM-019-STPS.",
+    description: "Sesión de capacitación por el Lic. Jorge Armando Medina Castillo sobre la constitución y funcionamiento de las Comisiones de Seguridad e Higiene conforme a la NOM-019-STPS.",
     contentHtml: `<article class="stps-session">
 <p>Buenos días a todos. Soy el ingeniero Jorge Armando Medina Castillo, y hoy vamos a hablar de un tema que está en el corazón mismo del sistema de seguridad y salud en el trabajo en México, pero que paradójicamente es uno de los más incomprendidos, más subestimados y más deficientemente implementados: las Comisiones de Seguridad e Higiene. Reguladas por la NOM-019-STPS-2011, estas comisiones son la estructura legal que da voz a los trabajadores en la gestión de la seguridad de su propio centro de trabajo. Son, o deberían ser, el mecanismo mediante el cual los trabajadores participan activamente en la identificación de riesgos, la propuesta de soluciones, y la verificación de que las condiciones de seguridad se cumplan.</p>
 

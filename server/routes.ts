@@ -1341,7 +1341,7 @@ export async function registerRoutes(
       { slug: "leonardoherrera", displayName: "Leonardo Herrera Gasca", title: "Socio y Director Comercial Norte", phone: "+528111848109", email: "leonardoherrera@ceduverse.org" },
       { slug: "davidperez", displayName: "David Pérez Villaseñor", title: "Socio y Director Operativo", phone: "+529985933232", email: "davidperez@ceduverse.org" },
       { slug: "yuridiaiturriaga", displayName: "Psic. Yuridia Iturriaga", title: "Instructor Acreditado STPS (DC-5)", email: "yuridiaiturriaga@ceduverse.org" },
-      { slug: "jorgemedina", displayName: "Ing. Jorge Armando Medina Castillo", title: "Instructor Acreditado STPS (DC-5)", email: "jorgemedina@ceduverse.org" },
+      { slug: "jorgemedina", displayName: "Lic. Jorge Armando Medina Castillo", title: "Instructor Acreditado STPS (DC-5)", email: "jorgemedina@ceduverse.org" },
     ];
     for (const card of seedCards) {
       const existing = await storage.getContactCardBySlug(card.slug);

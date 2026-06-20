@@ -801,7 +801,7 @@ function InstructorsSection() {
       initials: "YI",
     },
     {
-      name: "Ing. Jorge Armando Medina Castillo",
+      name: "Lic. Jorge Armando Medina Castillo",
       title: "Agente Capacitador Verificado STPS",
       specialty: "Seguridad industrial, higiene laboral, normatividad técnica",
       courses: 19,

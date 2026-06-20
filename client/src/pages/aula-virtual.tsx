@@ -357,7 +357,7 @@ export default function AulaVirtual() {
             contactSlug="yuridiaiturriaga"
           />
           <InstructorCard
-            name="Ing. Jorge Armando Medina Castillo"
+            name="Lic. Jorge Armando Medina Castillo"
             count={instructors.find((i) => i.id === "MC")?.count || 19}
             initials="MC"
             specialties={["Seguridad Industrial", "NOMs", "Operaciones"]}

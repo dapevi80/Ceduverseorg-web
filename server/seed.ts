@@ -233,7 +233,7 @@ const STPS_COURSES = [
   {
     slug: "capacidad-analitica-resolucion-problemas",
     title: "Capacidad Analítica y Resolución de Problemas en el Ámbito Laboral",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 4,
     areaTematica: "Dirección y Gestión",
@@ -255,7 +255,7 @@ const STPS_COURSES = [
   {
     slug: "liderazgo-trabajo-colaborativo",
     title: "Liderazgo y Trabajo Colaborativo",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 4,
     areaTematica: "Dirección y Gestión",
@@ -280,7 +280,7 @@ const STPS_COURSES = [
   {
     slug: "prevencion-riesgos-laborales",
     title: "Prevención de Riesgos Laborales",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 6,
     areaTematica: "Higiene y Seguridad en el Trabajo",
@@ -303,7 +303,7 @@ const STPS_COURSES = [
   {
     slug: "equipo-proteccion-personal",
     title: "Equipo de Protección Personal (EPP)",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 6,
     areaTematica: "Higiene y Seguridad en el Trabajo",
@@ -326,7 +326,7 @@ const STPS_COURSES = [
   {
     slug: "operario-limpieza",
     title: "Operario de Limpieza",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 6,
     areaTematica: "Limpieza Industrial y Doméstica",
@@ -349,7 +349,7 @@ const STPS_COURSES = [
   {
     slug: "seguridad-energia-electrica",
     title: "Condiciones de Seguridad en Trabajos con Energía Eléctrica",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 8,
     areaTematica: "Higiene y Seguridad en el Trabajo",
@@ -374,7 +374,7 @@ const STPS_COURSES = [
   {
     slug: "brigada-contra-incendios",
     title: "Brigada Contra Incendios",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 8,
     areaTematica: "Seguridad",
@@ -399,7 +399,7 @@ const STPS_COURSES = [
   {
     slug: "brigada-primeros-auxilios",
     title: "Brigada de Primeros Auxilios",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 8,
     areaTematica: "Seguridad",
@@ -424,7 +424,7 @@ const STPS_COURSES = [
   {
     slug: "sistema-globalmente-armonizado-sga",
     title: "Comunicación de los Peligros — Sistema Globalmente Armonizado (SGA)",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 4,
     areaTematica: "Higiene y Seguridad en el Trabajo",
@@ -449,7 +449,7 @@ const STPS_COURSES = [
   {
     slug: "nom-035-stps-medina",
     title: "NOM-035-STPS-2018: Identificación, Análisis y Prevención de Riesgos Psicosociales",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 4,
     areaTematica: "Higiene y Seguridad en el Trabajo",
@@ -472,7 +472,7 @@ const STPS_COURSES = [
   {
     slug: "formacion-instructores",
     title: "Formación de Instructores",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 20,
     areaTematica: "Formación y Actualización de Instructores",
@@ -499,7 +499,7 @@ const STPS_COURSES = [
   {
     slug: "bloqueo-etiquetado-loto",
     title: "Bloqueo y Etiquetado de Energías Peligrosas (LOTO)",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 8,
     areaTematica: "Seguridad",
@@ -524,7 +524,7 @@ const STPS_COURSES = [
   {
     slug: "nom-026-colores-senales-seguridad",
     title: "NOM-026-STPS-2008: Colores y Señales de Seguridad e Higiene",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 8,
     areaTematica: "Seguridad",
@@ -549,7 +549,7 @@ const STPS_COURSES = [
   {
     slug: "herramientas-manuales-poder",
     title: "Uso y Manejo de Herramientas Manuales y de Poder",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 8,
     areaTematica: "Operación de Máquinas Herramienta",
@@ -574,7 +574,7 @@ const STPS_COURSES = [
   {
     slug: "ergonomia-trastornos-musculoesqueleticos",
     title: "Ergonomía en el Trabajo: Prevención de Trastornos Musculoesqueléticos",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 8,
     areaTematica: "Higiene y Seguridad en el Trabajo",
@@ -599,7 +599,7 @@ const STPS_COURSES = [
   {
     slug: "soldadura-corte-seguridad",
     title: "Actividades de Soldadura y Corte: Condiciones de Seguridad e Higiene",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 8,
     areaTematica: "Higiene y Seguridad en el Trabajo",
@@ -625,7 +625,7 @@ const STPS_COURSES = [
   {
     slug: "operacion-segura-montacargas",
     title: "Operación Segura de Montacargas",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 20,
     areaTematica: "Seguridad",
@@ -654,7 +654,7 @@ const STPS_COURSES = [
   {
     slug: "actualizacion-montacargas",
     title: "Actualización en Operación Segura de Montacargas",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 8,
     areaTematica: "Seguridad",
@@ -677,7 +677,7 @@ const STPS_COURSES = [
   {
     slug: "nom-019-comisiones-seguridad-higiene",
     title: "NOM-019-STPS-2011: Comisiones de Seguridad e Higiene",
-    instructor: "Ing. Jorge Armando Medina Castillo",
+    instructor: "Lic. Jorge Armando Medina Castillo",
     instructorId: "MC",
     durationHrs: 8,
     areaTematica: "Higiene y Seguridad en el Trabajo",
@@ -1086,7 +1086,7 @@ export async function seedSuperadmin() {
 
 const INSTRUCTOR_ACCOUNTS: { email: string; code: string; fullName: string }[] = [
   { email: "yuridiaiturriaga@ceduverse.org", code: "YI", fullName: "Psic. Yuridia Iturriaga" },
-  { email: "jorgemedina@ceduverse.org", code: "MC", fullName: "Ing. Jorge Armando Medina Castillo" },
+  { email: "jorgemedina@ceduverse.org", code: "MC", fullName: "Lic. Jorge Armando Medina Castillo" },
 ];
 
 export async function seedInstructorCourses() {

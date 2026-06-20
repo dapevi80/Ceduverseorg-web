@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-// QUIZZES — CURSOS ING. JORGE ARMANDO MEDINA CASTILLO (16)
+// QUIZZES — CURSOS LIC. JORGE ARMANDO MEDINA CASTILLO (16)
 // Formato TypeScript para Replit / Ceduverse
 // ═══════════════════════════════════════════════════════════
 
