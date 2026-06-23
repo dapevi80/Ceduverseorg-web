@@ -123,6 +123,7 @@ type AdminTab =
   | "configuracion"
   | "roles"
   | "matriz"
+  | "recursos-socios"
   | "logs"
   | "tienda";
 
@@ -4464,6 +4465,168 @@ function RoleChangeLogTab() {
   );
 }
 
+type AdminSocioResource = {
+  id: string;
+  category: string;
+  kind: string;
+  title: string;
+  description: string | null;
+  url: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+};
+
+const SR_KINDS: Record<string, { value: string; label: string }[]> = {
+  compliance: [
+    { value: "approved", label: "Permitido (SÍ decir)" },
+    { value: "prohibited", label: "Prohibido (NO decir)" },
+    { value: "conditional", label: "Condicional (con aclaración)" },
+    { value: "disclaimer", label: "Aviso / Disclaimer" },
+  ],
+  download: [
+    { value: "pdf", label: "PDF" },
+    { value: "deck", label: "Presentación" },
+    { value: "brand", label: "Marca / Assets" },
+    { value: "link", label: "Enlace" },
+  ],
+};
+
+const SR_BLANK: Partial<AdminSocioResource> = { category: "compliance", kind: "approved", title: "", description: "", url: "", sortOrder: 0, isPublished: true };
+
+function SocioResourcesTab() {
+  const { toast } = useToast();
+  const { data: resources = [], isLoading } = useQuery<AdminSocioResource[]>({ queryKey: ["/api/admin/socio-resources"] });
+  const [editing, setEditing] = useState<Partial<AdminSocioResource> | null>(null);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/socio-resources"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/socio/resources"] });
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async (r: Partial<AdminSocioResource>) => {
+      const body = { category: r.category, kind: r.kind, title: r.title, description: r.description || null, url: r.url || null, sortOrder: Number(r.sortOrder) || 0, isPublished: r.isPublished ?? true };
+      if (r.id) return apiRequest("PATCH", `/api/admin/socio-resources/${r.id}`, body);
+      return apiRequest("POST", "/api/admin/socio-resources", body);
+    },
+    onSuccess: () => { invalidate(); setEditing(null); toast({ title: "Recurso guardado" }); },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => apiRequest("DELETE", `/api/admin/socio-resources/${id}`),
+    onSuccess: () => { invalidate(); toast({ title: "Recurso eliminado" }); },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="animate-spin" /></div>;
+
+  const groups = [
+    { key: "compliance", label: "Cumplimiento y Protección" },
+    { key: "download", label: "Descargas y Materiales" },
+  ];
+
+  return (
+    <div className="space-y-4" data-testid="tab-recursos-socios">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="font-serif text-2xl text-cedu-ink">Recursos para Socios Comerciales</h2>
+          <p className="text-sm text-cedu-ink-muted">Reglas de cumplimiento y materiales que ven los socios en su Centro de Recursos.</p>
+        </div>
+        <Button size="sm" onClick={() => setEditing({ ...SR_BLANK })} data-testid="button-new-resource">
+          <Plus size={14} className="mr-1" /> Nuevo recurso
+        </Button>
+      </div>
+
+      {groups.map(g => {
+        const items = resources.filter(r => r.category === g.key).sort((a, b) => a.sortOrder - b.sortOrder);
+        return (
+          <div key={g.key}>
+            <h3 className="font-semibold text-sm text-cedu-ink-muted mb-2 mt-2">{g.label} ({items.length})</h3>
+            <div className="space-y-2">
+              {items.length === 0 && <p className="text-xs text-cedu-ink-muted">Sin recursos.</p>}
+              {items.map(r => (
+                <Card key={r.id} className="border-black/[0.06]">
+                  <CardContent className="py-3 flex items-center gap-3">
+                    <Badge variant="outline" className="text-[10px] whitespace-nowrap">{SR_KINDS[r.category]?.find(k => k.value === r.kind)?.label || r.kind}</Badge>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-cedu-ink truncate">{r.title}</p>
+                      {r.description && <p className="text-xs text-cedu-ink-muted truncate">{r.description}</p>}
+                      {r.url && <p className="text-[10px] text-cedu-blue truncate">{r.url}</p>}
+                    </div>
+                    {!r.isPublished && <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-200">Oculto</Badge>}
+                    <Button variant="ghost" size="sm" onClick={() => setEditing(r)} data-testid={`button-edit-${r.id}`}><Edit3 size={14} /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => { if (confirm("¿Eliminar este recurso?")) deleteMutation.mutate(r.id); }} data-testid={`button-delete-${r.id}`}><Trash2 size={14} className="text-red-500" /></Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      <Dialog open={!!editing} onOpenChange={o => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editing?.id ? "Editar recurso" : "Nuevo recurso"}</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Categoría</Label>
+                  <Select value={editing.category} onValueChange={v => setEditing({ ...editing, category: v, kind: SR_KINDS[v][0].value })}>
+                    <SelectTrigger data-testid="select-category"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="compliance">Cumplimiento</SelectItem>
+                      <SelectItem value="download">Descarga</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Tipo</Label>
+                  <Select value={editing.kind} onValueChange={v => setEditing({ ...editing, kind: v })}>
+                    <SelectTrigger data-testid="select-kind"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {(SR_KINDS[editing.category || "compliance"] || []).map(k => <SelectItem key={k.value} value={k.value}>{k.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Título</Label>
+                <Input value={editing.title || ""} onChange={e => setEditing({ ...editing, title: e.target.value })} data-testid="input-title" />
+              </div>
+              <div>
+                <Label className="text-xs">Descripción / Texto</Label>
+                <Textarea value={editing.description || ""} onChange={e => setEditing({ ...editing, description: e.target.value })} rows={3} data-testid="input-description" />
+              </div>
+              <div>
+                <Label className="text-xs">URL (solo descargas — dejar vacío = "Próximamente")</Label>
+                <Input value={editing.url || ""} onChange={e => setEditing({ ...editing, url: e.target.value })} placeholder="/materiales/archivo.pdf" data-testid="input-url" />
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <Label className="text-xs">Orden</Label>
+                  <Input type="number" value={editing.sortOrder ?? 0} onChange={e => setEditing({ ...editing, sortOrder: Number(e.target.value) })} data-testid="input-sort" />
+                </div>
+                <div className="flex items-center gap-2 pt-5">
+                  <Switch checked={editing.isPublished ?? true} onCheckedChange={v => setEditing({ ...editing, isPublished: v })} data-testid="switch-published" />
+                  <Label className="text-xs">Publicado</Label>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
+                <Button onClick={() => saveMutation.mutate(editing)} disabled={!editing.title || saveMutation.isPending} data-testid="button-save-resource">
+                  {saveMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : "Guardar"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 interface StoreOrderListItem {
   id: number;
   orderNumber: string;
@@ -5133,6 +5296,7 @@ const NAV_ITEMS: { id: AdminTab; label: string; icon: typeof LayoutDashboard; se
   { id: "api-externa", label: "API Management", icon: Shield, section: "Otros", superadminOnly: true },
   { id: "roles", label: "Roles", icon: Users, superadminOnly: true },
   { id: "matriz", label: "Matriz de Permisos", icon: Shield, superadminOnly: true },
+  { id: "recursos-socios", label: "Recursos Socios", icon: Handshake, superadminOnly: true },
   { id: "logs", label: "Logs de Cambios", icon: Clock, superadminOnly: true },
   { id: "seguros", label: "Seguros", icon: HeartPulse },
   { id: "memberships", label: "Membresías", icon: Award },
@@ -5214,6 +5378,7 @@ export default function AdminPanel() {
       case "configuracion": return <ConfiguracionTab />;
       case "roles": return <RolesTab />;
       case "matriz": return <PermissionMatrixTab />;
+      case "recursos-socios": return <SocioResourcesTab />;
       case "logs": return <RoleChangeLogTab />;
       case "tienda": return <AdminTiendaTab isSuperadmin={isSuperadmin} />;
       default: return <OverviewTab />;

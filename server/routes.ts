@@ -43,6 +43,8 @@ import {
   globalConfig,
   userContactCards,
   partnerCommissions,
+  socioResources,
+  insertSocioResourceSchema,
 } from "@shared/schema";
 import { eq, and, or, sql, count, desc, asc, gte, lte, inArray, ilike, type SQL } from "drizzle-orm";
 import { r2Storage } from "./services/r2-storage";
@@ -513,6 +515,59 @@ export async function registerRoutes(
       })));
     } catch (err) { next(err); }
   });
+
+  // ==================== SOCIO RESOURCE HUB ====================
+  // Partner-facing: published resources (compliance rules + downloads).
+  app.get("/api/socio/resources", requireAuth, requirePartner, async (_req, res, next) => {
+    try {
+      const rows = await db.select().from(socioResources)
+        .where(eq(socioResources.isPublished, true))
+        .orderBy(asc(socioResources.category), asc(socioResources.sortOrder));
+      res.json(rows);
+    } catch (err) { next(err); }
+  });
+
+  // Admin: full CRUD over socio resources (superadmin only).
+  app.get("/api/admin/socio-resources", requireAuth, requireSuperadmin, async (_req, res, next) => {
+    try {
+      const rows = await db.select().from(socioResources)
+        .orderBy(asc(socioResources.category), asc(socioResources.sortOrder));
+      res.json(rows);
+    } catch (err) { next(err); }
+  });
+
+  app.post("/api/admin/socio-resources", requireAuth, requireSuperadmin, async (req, res, next) => {
+    try {
+      const parsed = insertSocioResourceSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
+      const [row] = await db.insert(socioResources)
+        .values({ ...parsed.data, updatedBy: req.supabaseUserId! })
+        .returning();
+      res.status(201).json(row);
+    } catch (err) { next(err); }
+  });
+
+  app.patch("/api/admin/socio-resources/:id", requireAuth, requireSuperadmin, async (req, res, next) => {
+    try {
+      const parsed = insertSocioResourceSchema.partial().safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ message: parsed.error.issues[0].message });
+      const [row] = await db.update(socioResources)
+        .set({ ...parsed.data, updatedBy: req.supabaseUserId!, updatedAt: new Date() })
+        .where(eq(socioResources.id, req.params.id as string))
+        .returning();
+      if (!row) return res.status(404).json({ message: "Recurso no encontrado" });
+      res.json(row);
+    } catch (err) { next(err); }
+  });
+
+  app.delete("/api/admin/socio-resources/:id", requireAuth, requireSuperadmin, async (req, res, next) => {
+    try {
+      const result = await db.delete(socioResources).where(eq(socioResources.id, req.params.id as string)).returning();
+      if (!result.length) return res.status(404).json({ message: "Recurso no encontrado" });
+      res.json({ success: true });
+    } catch (err) { next(err); }
+  });
+
   // ==================== INSTRUCTOR ROUTES ====================
 
   app.get("/api/instructor/courses", requireAuth, requireInstructor, async (req, res, next) => {

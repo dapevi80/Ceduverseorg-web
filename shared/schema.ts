@@ -2072,6 +2072,31 @@ export const insertStoreReferralUseSchema = createInsertSchema(storeReferralUses
 export type StoreReferralUse = typeof storeReferralUses.$inferSelect;
 export type InsertStoreReferralUse = z.infer<typeof insertStoreReferralUseSchema>;
 
+// Socio comercial resource hub — hybrid: compliance rules and downloadable
+// resources are admin-managed here; sales scripts/FAQs live in the client.
+// category: "compliance" | "download"
+// kind (compliance): "approved" | "prohibited" | "conditional" | "disclaimer"
+// kind (download):   "pdf" | "deck" | "brand" | "link"
+export const socioResources = pgTable("socio_resources", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  category: text("category").notNull(),
+  kind: text("kind").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  url: text("url"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isPublished: boolean("is_published").notNull().default(true),
+  updatedBy: uuid("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+}, (table) => [
+  index("idx_socio_resources_category").on(table.category),
+]);
+
+export const insertSocioResourceSchema = createInsertSchema(socioResources).omit({ id: true, createdAt: true, updatedAt: true });
+export type SocioResource = typeof socioResources.$inferSelect;
+export type InsertSocioResource = z.infer<typeof insertSocioResourceSchema>;
+
 // OTP codes — persisted to DB for multi-instance support and server restart resilience
 export const otpCodes = pgTable("otp_codes", {
   id: uuid("id").primaryKey().defaultRandom(),

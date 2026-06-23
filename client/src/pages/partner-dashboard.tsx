@@ -47,6 +47,12 @@ import {
   Award,
   Banknote,
   Target,
+  AlertTriangle,
+  Info,
+  HelpCircle,
+  MessageSquare,
+  ShieldCheck,
+  Ban,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import DenueTab from "@/pages/denue-tab";
@@ -240,7 +246,7 @@ export default function PartnerDashboard() {
     { key: "commissions", label: "Comisiones", icon: DollarSign },
     { key: "code", label: "Código de Referido", icon: Tag },
     { key: "denue", label: "Prospectos", icon: Target },
-    { key: "material", label: "Material de Ventas", icon: FileText },
+    { key: "material", label: "Centro de Recursos", icon: ShieldCheck },
     { key: "profile", label: "Perfil", icon: UserCircle },
   ];
 
@@ -895,118 +901,223 @@ function CodigoReferidoTab({ codes, codesLoading, copiedCode, copyCode, copyShar
   );
 }
 
-function MaterialVentasTab({ codes, copyShareUrl }: { codes: ReferralCode[]; copyShareUrl: (code: string) => void }) {
-  const materials = [
-    {
-      title: "Kit Cooperativo PDF",
-      description: "Documento completo del modelo cooperativo Ceduverse con beneficios, planes y precios.",
-      icon: FileText,
-      action: "/kit-cooperativo",
-    },
-    {
-      title: "Presentación Ceduverse para Empresas",
-      description: "Deck ejecutivo con propuesta de valor, planes, certificaciones y casos de éxito.",
-      icon: FileText,
-      action: "/materiales/ceduverse-empresas-2026.pdf",
-    },
-    {
-      title: "Medios de Pago",
-      description: "Documento con las formas de pago disponibles para compartir con prospectos.",
-      icon: FileText,
-      action: "/materiales/medios-de-pago.pdf",
-    },
-    {
-      title: "Bold Assets (Logos y Marca)",
-      description: "Logotipos, paleta de colores, tipografías y lineamientos de marca Ceduverse.",
-      icon: Star,
-      action: null,
-    },
-    {
-      title: "Script de Ventas",
-      description: "Guión recomendado para presentaciones con tomadores de decisiones en empresas.",
-      icon: FileText,
-      action: null,
-    },
-    {
-      title: "Catálogo de Cursos STPS (Aula Virtual)",
-      description: "29 cursos con DC-3 disponible. Temáticas: liderazgo, seguridad, habilidades blandas.",
-      icon: GraduationCap,
-      action: "/aula-virtual",
-    },
-    {
-      title: "Catálogo Tutor IA",
-      description: "49 cursos con IA adaptativa y narración de audio. Certificación digital incluida.",
-      icon: GraduationCap,
-      action: "/studio",
-    },
-  ];
+type SocioResource = {
+  id: string;
+  category: string;
+  kind: string;
+  title: string;
+  description: string | null;
+  url: string | null;
+  sortOrder: number;
+};
 
+// Compliance kind → visual grouping. Order defines display order.
+const COMPLIANCE_GROUPS: { kind: string; label: string; icon: typeof ShieldCheck; tone: string; bg: string }[] = [
+  { kind: "approved",    label: "Lo que SÍ puedes decir",     icon: CheckCircle2,  tone: "text-emerald-700", bg: "bg-emerald-50 border-emerald-100" },
+  { kind: "prohibited",  label: "Lo que NUNCA debes decir",   icon: Ban,           tone: "text-red-700",     bg: "bg-red-50 border-red-100" },
+  { kind: "conditional", label: "Di solo con aclaración",     icon: AlertTriangle, tone: "text-amber-700",   bg: "bg-amber-50 border-amber-100" },
+  { kind: "disclaimer",  label: "Avisos que debes incluir",   icon: Info,          tone: "text-slate-700",   bg: "bg-slate-50 border-slate-200" },
+];
+
+const SALES_SCRIPT = [
+  { step: "1. Apertura", text: "Preséntate como socio cooperativista de Ceduverse. Identifica al tomador de decisiones (RH, dirección o contabilidad)." },
+  { step: "2. Diagnóstico", text: "Pregunta por sus obligaciones de capacitación (LFT 132/153), NOM-035 y cómo las cubren hoy. Escucha el dolor antes de proponer." },
+  { step: "3. Propuesta de valor", text: "29 cursos STPS con DC-3 + 49 con Tutor IA, deducibles con CFDI. El Tutor IA personaliza al puesto de cada trabajador." },
+  { step: "4. Manejo de objeciones", text: "Usa las respuestas de abajo. Nunca prometas resultados fiscales garantizados." },
+  { step: "5. Cierre", text: "Comparte tu enlace personalizado y agenda el alta. El registro se vincula a tu cuenta automáticamente." },
+];
+
+const OBJECTIONS = [
+  { q: "«¿Esto es realmente deducible?»", a: "Sí, con CFDI válido y siempre que corresponda a capacitación real del trabajador. Sugiere validarlo con su contador." },
+  { q: "«Ya tenemos otro proveedor de cursos.»", a: "Resalta el Tutor IA personalizado, la DC-3 STPS y el modelo cooperativo (deducible y respaldado por la LGSC)." },
+  { q: "«¿La DC-3 tiene validez oficial?»", a: "La DC-3 es la constancia STPS reconocida; su emisión requiere completar el curso y el pago correspondiente." },
+  { q: "«Suena a esquema para facturar.»", a: "Aclara que NO lo es: la cooperativa entrega capacitación real. Cualquier uso para gastos no reales está prohibido y es riesgoso." },
+];
+
+const FAQS = [
+  { q: "¿Qué es el modelo cooperativo Ceduverse?", a: "Una sociedad cooperativa (LGSC) donde las empresas se afilian como patrocinadoras y sus trabajadores acceden a la oferta formativa como socios." },
+  { q: "¿Cómo funciona la deducibilidad?", a: "Las aportaciones son deducibles con CFDI 4.0 válido, siempre que correspondan a capacitación real. No es asesoría fiscal; cada empresa valida con su contador." },
+  { q: "¿Qué certificaciones existen?", a: "Diploma Digital NFT (gratis), Constancia DC-3 STPS ($499) y Certificado SEP ($1,999) con validez oficial." },
+  { q: "¿Qué es el Tutor IA?", a: "Un tutor con IA (Claude) que adapta cada curso al puesto, industria y experiencia del trabajador: lectura, mapa mental, quiz y chat." },
+  { q: "¿Cómo gano comisiones?", a: "Por las altas vinculadas a tu enlace/código de referido. Consulta tu avance en la pestaña Comisiones." },
+];
+
+function MaterialVentasTab({ codes, copyShareUrl }: { codes: ReferralCode[]; copyShareUrl: (code: string) => void }) {
+  const { data: resources = [], isLoading } = useQuery<SocioResource[]>({ queryKey: ["/api/socio/resources"] });
   const primaryCode = codes.find(c => c.isActive);
 
+  const compliance = resources.filter(r => r.category === "compliance");
+  const downloads = resources.filter(r => r.category === "download");
+
   return (
-    <div className="space-y-6">
-      <h2 className="font-['DM_Serif_Display'] text-2xl">Material de Ventas</h2>
+    <div className="space-y-8">
+      <div>
+        <h2 className="font-['DM_Serif_Display'] text-2xl">Centro de Recursos</h2>
+        <p className="text-sm text-gray-500 font-['Plus_Jakarta_Sans']">Todo lo que necesitas para vender con confianza y proteger a la cooperativa.</p>
+      </div>
 
-      {primaryCode && (
-        <Card className="border-cedu-violet/20 bg-cedu-violet/[0.03]">
-          <CardContent className="pt-5 pb-5">
-            <div className="flex items-start gap-3">
-              <Star className="w-5 h-5 text-cedu-violet flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-['DM_Serif_Display'] text-base mb-1">Tu Enlace Personalizado</h3>
-                <p className="text-sm text-gray-600 font-['Plus_Jakarta_Sans'] mb-2">
-                  Incluye este enlace en tus materiales y presentaciones. Los registros se vinculan a tu cuenta automáticamente.
-                </p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <code className="bg-white px-3 py-1.5 rounded border text-xs font-mono text-cedu-violet break-all" data-testid="text-material-share-url">
-                    {SHARE_BASE_URL}/empresas?ref={primaryCode.code}
-                  </code>
-                  <Button size="sm" variant="outline" onClick={() => copyShareUrl(primaryCode.code)} data-testid="button-copy-material-link">
-                    <Copy className="w-3 h-3 mr-1" /> Copiar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* 1 — CUMPLIMIENTO Y PROTECCIÓN */}
+      <section data-testid="section-compliance">
+        <div className="flex items-center gap-2 mb-3">
+          <ShieldCheck className="w-5 h-5 text-cedu-violet" />
+          <h3 className="font-['DM_Serif_Display'] text-lg">Cumplimiento y Protección</h3>
+        </div>
+        <p className="text-xs text-gray-500 mb-4 font-['Plus_Jakarta_Sans']">
+          Reglas de comunicación obligatorias. Seguirlas te protege a ti y a Ceduverse de riesgos legales y fiscales.
+        </p>
+        {isLoading ? (
+          <Skeleton className="h-24 w-full rounded-lg" />
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {COMPLIANCE_GROUPS.map(g => {
+              const items = compliance.filter(c => c.kind === g.kind);
+              if (items.length === 0) return null;
+              return (
+                <Card key={g.kind} className={`border ${g.bg}`} data-testid={`compliance-${g.kind}`}>
+                  <CardContent className="py-4">
+                    <div className={`flex items-center gap-2 mb-3 ${g.tone}`}>
+                      <g.icon className="w-4 h-4" />
+                      <p className="font-semibold text-sm font-['Plus_Jakarta_Sans']">{g.label}</p>
+                    </div>
+                    <ul className="space-y-2.5">
+                      {items.map(item => (
+                        <li key={item.id} className="text-xs">
+                          <p className="font-semibold text-gray-800">{item.title}</p>
+                          {item.description && <p className="text-gray-600 mt-0.5">{item.description}</p>}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
-      <div className="grid gap-3">
-        {materials.map((mat, i) => (
-          <Card key={i} className="border-black/[0.06]" data-testid={`material-item-${i}`}>
+      {/* 2 — HERRAMIENTAS DE VENTA */}
+      <section data-testid="section-sales-tools">
+        <div className="flex items-center gap-2 mb-3">
+          <Target className="w-5 h-5 text-cedu-blue" />
+          <h3 className="font-['DM_Serif_Display'] text-lg">Herramientas de Venta</h3>
+        </div>
+
+        {primaryCode && (
+          <Card className="border-cedu-violet/20 bg-cedu-violet/[0.03] mb-3">
             <CardContent className="py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-cedu-blue/10 rounded-lg flex items-center justify-center">
-                    <mat.icon className="w-5 h-5 text-cedu-blue" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm font-['Plus_Jakarta_Sans']">{mat.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{mat.description}</p>
+              <div className="flex items-start gap-3">
+                <Star className="w-5 h-5 text-cedu-violet flex-shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <h4 className="font-semibold text-sm mb-1 font-['Plus_Jakarta_Sans']">Tu Enlace Personalizado</h4>
+                  <p className="text-xs text-gray-600 mb-2">Inclúyelo en tus materiales: los registros se vinculan a tu cuenta automáticamente.</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <code className="bg-white px-3 py-1.5 rounded border text-xs font-mono text-cedu-violet break-all" data-testid="text-material-share-url">
+                      {SHARE_BASE_URL}/empresas?ref={primaryCode.code}
+                    </code>
+                    <Button size="sm" variant="outline" onClick={() => copyShareUrl(primaryCode.code)} data-testid="button-copy-material-link">
+                      <Copy className="w-3 h-3 mr-1" /> Copiar
+                    </Button>
                   </div>
                 </div>
-                {mat.action ? (
-                  <a href={mat.action} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm" data-testid={`button-download-${i}`}>
-                      <Download className="w-3 h-3 mr-1" /> Descargar
-                    </Button>
-                  </a>
-                ) : (
-                  <Button variant="outline" size="sm" disabled data-testid={`button-download-${i}`}>
-                    <Download className="w-3 h-3 mr-1" /> Próximamente
-                  </Button>
-                )}
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+        )}
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <Card className="border-black/[0.06]">
+            <CardContent className="py-4">
+              <p className="font-semibold text-sm mb-3 font-['Plus_Jakarta_Sans']">Guión de venta</p>
+              <ol className="space-y-2.5">
+                {SALES_SCRIPT.map((s, i) => (
+                  <li key={i} className="text-xs">
+                    <span className="font-semibold text-cedu-blue">{s.step}.</span> <span className="text-gray-600">{s.text}</span>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
+          <Card className="border-black/[0.06]">
+            <CardContent className="py-4">
+              <p className="font-semibold text-sm mb-3 font-['Plus_Jakarta_Sans']">Manejo de objeciones</p>
+              <ul className="space-y-3">
+                {OBJECTIONS.map((o, i) => (
+                  <li key={i} className="text-xs">
+                    <p className="font-semibold text-gray-800">{o.q}</p>
+                    <p className="text-gray-600 mt-0.5">{o.a}</p>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* 3 — DESCARGAS */}
+      <section data-testid="section-downloads">
+        <div className="flex items-center gap-2 mb-3">
+          <Download className="w-5 h-5 text-cedu-blue" />
+          <h3 className="font-['DM_Serif_Display'] text-lg">Descargas y Materiales</h3>
+        </div>
+        {isLoading ? (
+          <Skeleton className="h-20 w-full rounded-lg" />
+        ) : (
+          <div className="grid gap-3">
+            {downloads.map((mat, i) => (
+              <Card key={mat.id} className="border-black/[0.06]" data-testid={`material-item-${i}`}>
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 bg-cedu-blue/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5 text-cedu-blue" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm font-['Plus_Jakarta_Sans'] truncate">{mat.title}</p>
+                        {mat.description && <p className="text-xs text-gray-500 mt-0.5">{mat.description}</p>}
+                      </div>
+                    </div>
+                    {mat.url ? (
+                      <a href={mat.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+                        <Button variant="outline" size="sm" data-testid={`button-download-${i}`}>
+                          <Download className="w-3 h-3 mr-1" /> Abrir
+                        </Button>
+                      </a>
+                    ) : (
+                      <Button variant="outline" size="sm" disabled data-testid={`button-download-${i}`}>
+                        <Download className="w-3 h-3 mr-1" /> Próximamente
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 4 — CAPACITACIÓN Y FAQs */}
+      <section data-testid="section-faqs">
+        <div className="flex items-center gap-2 mb-3">
+          <HelpCircle className="w-5 h-5 text-cedu-blue" />
+          <h3 className="font-['DM_Serif_Display'] text-lg">Capacitación y Preguntas Frecuentes</h3>
+        </div>
+        <div className="grid gap-2">
+          {FAQS.map((f, i) => (
+            <Card key={i} className="border-black/[0.06]">
+              <CardContent className="py-4">
+                <p className="font-semibold text-sm text-gray-800 font-['Plus_Jakarta_Sans']">{f.q}</p>
+                <p className="text-xs text-gray-600 mt-1">{f.a}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
 
       <Card className="border-black/[0.06]">
-        <CardContent className="py-6 text-center">
-          <Mail className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+        <CardContent className="py-5 text-center">
+          <MessageSquare className="w-8 h-8 text-gray-300 mx-auto mb-2" />
           <p className="text-sm text-gray-500 font-['Plus_Jakarta_Sans']">
-            ¿Necesitas material adicional o personalizado? Contacta a tu ejecutivo de cuenta en{" "}
+            ¿Necesitas material adicional o tienes dudas de cumplimiento? Escribe a{" "}
             <a href="mailto:socios@ceduverse.org" className="text-cedu-violet font-semibold" data-testid="link-sales-support">socios@ceduverse.org</a>
           </p>
         </CardContent>
