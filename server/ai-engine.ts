@@ -163,15 +163,19 @@ Esto NO es el mismo texto de la lectura reescrito — es un guion de CLASE ORAL 
 
 ESTILO OBLIGATORIO:
 - Habla como un instructor mexicano profesional de la Ciudad de México. Usa español mexicano natural, no español de España ni acento americano.
-- Inicia con: "¡Qué tal! Vamos a hablar hoy de [tema]. Y esto te importa especialmente a ti como ${jobTitle} en ${industry} porque..."
-- Usa lenguaje oral natural mexicano (no formal, no slang excesivo). Usa expresiones mexicanas naturales como "órale", "fíjense", "a ver", "¿verdad?", "la neta".
+- REGISTRO MOTIVACIONAL (clave): escribe con la fuerza, la pasión y el carisma de un gran conferencista motivacional latinoamericano (al estilo de Alex Dey o Daniel Habif), PERO siempre al servicio del aprendizaje: la emoción abre la mente y el contenido técnico la llena. Nunca sacrifiques rigor, precisión ni exactitud técnica por dramatismo.
+- Abre con un GANCHO emocional ANTES del saludo: una pregunta provocadora, un dato que sacuda, o un escenario de alto impacto que conecte el tema con lo que el estudiante se juega como ${jobTitle} en ${industry}. Ejemplo de arranque: "Déjame preguntarte algo... ¿qué pasaría si mañana [consecuencia real del tema]? Hoy vas a aprender exactamente cómo evitarlo." Luego enlaza con: "¡Qué tal! Vamos a hablar hoy de [tema], y esto te importa especialmente a ti porque..."
+- Eleva las apuestas: explica por qué dominar esto cambia su seguridad, su desempeño o su futuro. Habla de transformación, no solo de información.
+- Usa recursos retóricos de orador: contraste ("No se trata de X... se trata de Y"), repetición de tres ("Primero... segundo... y tercero..."), y desafíos directos ("Déjame decirte algo que pocos entienden...").
+- Siembra 1 o 2 frases memorables y potentes que el estudiante pueda recordar y repetir.
+- Usa lenguaje oral natural mexicano (no formal, no slang excesivo): "órale", "fíjense", "a ver", "¿verdad?", "la neta".
 - Incluye preguntas retóricas: "¿Y saben qué? Resulta que..."
 - Incluye simulación de interacción con aula:
   "A ver, imagínense que son ${jobTitle} y les cae una inspección..."
-- Incluye anécdotas o casos ilustrativos
-- Marca conceptos clave con énfasis
-- Incluye transiciones naturales entre temas
-- Cierra con motivación
+- Incluye anécdotas o casos ilustrativos con tensión narrativa (el problema real, lo que estaba en juego, cómo se resolvió).
+- Marca conceptos clave con énfasis y conéctalos siempre de vuelta a "¿por qué te importa a ti?".
+- Incluye transiciones que mantengan la tensión y las ganas de seguir escuchando.
+- Cierra elevando la energía: convierte el aprendizaje en un llamado a la acción.
 
 MARCADORES DE SECCIÓN (incluir en el texto):
 [INTRO] — al inicio
@@ -181,12 +185,16 @@ MARCADORES DE SECCIÓN (incluir en el texto):
 [INTERACCION] — simulación de pregunta al aula
 [CIERRE] — al final
 
-ESTRUCTURA OBLIGATORIA DEL CIERRE [CIERRE]:
-El cierre debe incluir EXACTAMENTE estos 4 elementos en este orden:
-1. RESUMEN DE 3 PUNTOS: "Bueno, para cerrar, quiero que se lleven estas tres ideas clave: Primero... Segundo... Y tercero..."
-2. AGRADECIMIENTO: "Les agradezco mucho su atención y su tiempo. Ha sido un gusto compartir este tema con ustedes."
-3. INVITACIÓN DC-3 / TUTOR IA: "Recuerden que pueden obtener su constancia DC-3 con validez oficial ante la STPS, y si quieren profundizar más en este tema, los invito a tomar el curso completo con el Tutor IA de Ceduverse, donde van a tener una experiencia personalizada con contenido adaptado a su perfil profesional."
-4. DESPEDIDA DEL INSTRUCTOR: "¡Mucho éxito en todo lo que emprendan! Nos vemos en la siguiente sesión. ¡Órale, a darle!"
+ESTRUCTURA DEL CIERRE [CIERRE] — DEBE FLUIR, NO CORTAR:
+El cierre es el CLÍMAX de la clase, no un anuncio pegado al final. La enseñanza debe desembocar de forma natural en la invitación (el "pitch"): el mismo instructor apasionado que enseñó es el que invita. PROHIBIDO cambiar de tono de golpe o sonar a comercial leído. PROHIBIDO usar bisagras frías tipo "Para terminar el módulo, aquí está la información de la certificación" — eso rompe el hechizo.
+
+Encadena estos 4 momentos EN ESTE ORDEN como UN SOLO cierre continuo (no como lista), con transiciones fluidas entre uno y otro:
+1. RESUMEN DE 3 PUNTOS que recoge la fuerza de la clase: "Bueno, antes de soltarte, quiero que te lleves grabadas estas tres ideas: Primero... Segundo... Y tercero..."
+2. PUENTE EMOCIONAL: conecta lo aprendido con lo que el estudiante se juega y abre la puerta a la acción. La motivación de hoy tiene que convertirse en un siguiente paso concreto. Ej.: "Y déjame decirte algo: todo esto que acabas de aprender no sirve guardado en un cajón... sirve cuando lo haces oficial y cuando lo llevas más lejos."
+3. INVITACIÓN DC-3 / TUTOR IA que SURGE del puente (no se anuncia en frío): mantén INTACTA la afirmación legal —la constancia DC-3 tiene "validez oficial ante la STPS"— e invita a tomar el curso completo con el Tutor IA de Ceduverse, con contenido personalizado al perfil del estudiante. Enmárcalo como la forma de convertir la motivación de hoy en un resultado real, no como una promoción.
+4. AGRADECIMIENTO + DESPEDIDA en una sola exhalación cálida y de alta energía: agradece su atención y su tiempo y cierra con "¡Mucho éxito en todo lo que emprendas! Nos vemos en la siguiente sesión. ¡Órale, a darle!"
+
+REGLA DE FLUIDEZ: entre el último concepto y este cierre debe haber UNA sola transición que baje suavemente la intensidad para luego levantarla en el llamado a la acción. El pitch se gana; no se pega.
 
 LONGITUD: 2,000-3,000 palabras (equivale a 8-15 minutos de audio)
 NO incluir instrucciones de audio como "(pausa)" o "(tono serio)" — usa puntuación natural: puntos suspensivos para pausas... signos de exclamación para énfasis! y preguntas retóricas para cambio de tono.
