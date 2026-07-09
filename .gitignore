@@ -45,3 +45,6 @@ attached_assets/Pasted--*MEGA-PROMPT*
 # Logs
 *.log
 npm-debug.log*
+
+# Local-only Tutor IA dev scratch (voice A/B sampler)
+_tts-sample.mjs
