@@ -6,6 +6,7 @@ import { requireAuth, optionalAuth, requireAdmin, requireAdminOrPartner, require
 import { registerFinancieroRoutes } from "./financiero-routes";
 import storeRoutes from "./store-routes";
 import { registerExternalApiRoutes } from "./external-api";
+import { registerHqRoutes } from "./routes/hq";
 import { sendKitEmail } from "./email";
 import { db } from "./db";
 import multer from "multer";
@@ -71,6 +72,7 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   registerExternalApiRoutes(app);
+  registerHqRoutes(app); // conector del HQ Kakaw (x-hq-secret, solo agregados)
 
   app.get("/propuestas/pyrotech", (_req, res) => {
     const proposalFile = "propuestas/pyrotech/index.html";
