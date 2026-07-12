@@ -31,6 +31,9 @@ const ENV_VARS: EnvVar[] = [
   // Admin — separate secret for admin API endpoints. NO fallback. If unset, admin import/export endpoints are disabled.
   { name: "ADMIN_API_KEY", required: false, description: "Admin API key for migration/import endpoints. If unset, those endpoints reject all requests (no fallback)." },
 
+  // Kakaw HQ connector — shared secret for GET /api/hq/metrics. NO fallback. If unset, that endpoint returns 503.
+  { name: "HQ_METRICS_SECRET", required: false, description: "Shared secret the Kakaw HQ sends as x-hq-secret to read aggregated metrics. If unset, /api/hq/metrics is disabled." },
+
   // Email
   { name: "RESEND_API_KEY", required: false, description: "Resend email API key" },
 
