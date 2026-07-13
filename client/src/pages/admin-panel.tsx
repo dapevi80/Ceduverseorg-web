@@ -1296,8 +1296,15 @@ function UserDetailPanel({ user, onClose, onUpdated }: { user: EnhancedUserItem;
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [convertReason, setConvertReason] = useState("");
+  const [convertCommission, setConvertCommission] = useState("15");
+  const [converting, setConverting] = useState(false);
+  const [convertResult, setConvertResult] = useState<{ referralCode?: string; commission: number } | null>(null);
 
   const isSuperadmin = (authUser as { role?: string } | undefined)?.role === "superadmin";
+  // El tier "agente" (más bajo de socio comercial) es el punto de entrada desde estudiante.
+  const canConvertToPartner = !["socio_comercial", "director", "admin", "superadmin"].includes(user.role);
 
   const { data: detailData } = useAdminFetch<{
     enrollments: number; completedCourses: number; achievements: number;
@@ -1335,6 +1342,33 @@ function UserDetailPanel({ user, onClose, onUpdated }: { user: EnhancedUserItem;
       toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleConvertPartner = async () => {
+    const commissionNum = Number(convertCommission);
+    if (!Number.isInteger(commissionNum) || commissionNum < 0 || commissionNum > 100) {
+      toast({ title: "Comisión inválida", description: "Debe ser un entero entre 0 y 100.", variant: "destructive" });
+      return;
+    }
+    setConverting(true);
+    try {
+      const token = getAuthToken();
+      const res = await fetch(`/api/admin/users/${user.id}/convert-partner`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ commission: commissionNum, reason: convertReason.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error al convertir");
+      setConvertResult({ referralCode: data.referralCode, commission: data.commission });
+      toast({ title: "Convertido a socio comercial", description: `Comisión ${data.commission}% · Código ${data.referralCode || "existente"}` });
+      onUpdated();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error desconocido";
+      toast({ title: "Error", description: message, variant: "destructive" });
+    } finally {
+      setConverting(false);
     }
   };
 
@@ -1544,6 +1578,109 @@ function UserDetailPanel({ user, onClose, onUpdated }: { user: EnhancedUserItem;
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {isSuperadmin && canConvertToPartner && (
+          <div className="pt-3 border-t border-black/[0.06]">
+            <div className="rounded-xl border border-cedu-green/30 bg-cedu-green/5 p-3">
+              <div className="flex items-start gap-2">
+                <div className="w-8 h-8 rounded-lg bg-cedu-green/15 flex items-center justify-center flex-shrink-0">
+                  <Briefcase size={16} className="text-cedu-green" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-cedu-ink">Convertir a Socio Comercial</p>
+                  <p className="text-[11px] text-cedu-ink-muted leading-snug mt-0.5">
+                    Le asigna el rol de socio comercial (tier <strong>Agente</strong>) y le crea su
+                    código para referir <strong>empresas</strong>. La comisión y el bono se pagan sobre
+                    la primera aportación de la empresa referida.
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => { setConvertResult(null); setConvertReason(""); setConvertCommission("15"); setConvertOpen(true); }}
+                className="w-full mt-2.5 h-9 bg-cedu-green hover:bg-cedu-green/90"
+                data-testid="button-convert-partner"
+              >
+                <Briefcase size={14} className="mr-1.5" /> Convertir a Socio Comercial
+              </Button>
+            </div>
+
+            <Dialog open={convertOpen} onOpenChange={setConvertOpen}>
+              <DialogContent data-testid="dialog-convert-partner">
+                <DialogHeader>
+                  <DialogTitle className="font-serif text-lg">Convertir a Socio Comercial</DialogTitle>
+                  <DialogDescription className="text-sm text-cedu-ink-muted">
+                    <strong>{user.fullName || user.email}</strong> pasará de <RoleBadge role={user.role} /> a socio comercial (Agente).
+                  </DialogDescription>
+                </DialogHeader>
+
+                {convertResult ? (
+                  <div className="space-y-3 py-2 text-center" data-testid="convert-result">
+                    <div className="w-12 h-12 rounded-full bg-cedu-green/15 flex items-center justify-center mx-auto">
+                      <UserCheck size={24} className="text-cedu-green" />
+                    </div>
+                    <p className="text-sm text-cedu-ink font-semibold">¡Convertido a socio comercial!</p>
+                    <div className="bg-black/[0.03] rounded-lg p-3 text-left space-y-1.5">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-cedu-ink-muted">Comisión</span>
+                        <span className="font-semibold text-cedu-ink">{convertResult.commission}%</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-cedu-ink-muted">Código para referir empresas</span>
+                        <span className="font-mono font-semibold text-cedu-ink">{convertResult.referralCode || "—"}</span>
+                      </div>
+                    </div>
+                    <Button onClick={() => setConvertOpen(false)} className="w-full h-9" data-testid="button-convert-done">Listo</Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs">Comisión sobre fee de empresa (%)</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={convertCommission}
+                          onChange={e => setConvertCommission(e.target.value)}
+                          className="mt-1 h-9 text-sm"
+                          data-testid="input-convert-commission"
+                        />
+                        <p className="text-[10px] text-cedu-ink-muted mt-1">Por defecto 15% (tier Agente). Ajústala si aplica otro nivel.</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Razón de la conversión <span className="text-red-500">*</span></Label>
+                        <Textarea
+                          value={convertReason}
+                          onChange={e => setConvertReason(e.target.value)}
+                          placeholder="Motivo de la conversión a socio comercial..."
+                          className="mt-1 h-20 text-sm"
+                          data-testid="input-convert-reason"
+                          required
+                        />
+                        {convertReason.trim().length > 0 && convertReason.trim().length < 3 && (
+                          <p className="text-[10px] text-red-500 mt-1">Mínimo 3 caracteres</p>
+                        )}
+                      </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                      <Button variant="outline" onClick={() => setConvertOpen(false)} data-testid="button-cancel-convert">Cancelar</Button>
+                      <Button
+                        onClick={handleConvertPartner}
+                        disabled={converting || convertReason.trim().length < 3}
+                        className="bg-cedu-green hover:bg-cedu-green/90"
+                        data-testid="button-confirm-convert"
+                      >
+                        {converting ? <Loader2 size={14} className="animate-spin mr-1" /> : <Briefcase size={14} className="mr-1" />}
+                        Convertir
+                      </Button>
+                    </DialogFooter>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         )}
 

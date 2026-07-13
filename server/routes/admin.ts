@@ -412,6 +412,85 @@ export function registerAdminRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
+  // Convierte un estudiante en socio comercial en UN solo paso atómico y auditado:
+  // 1) rol -> socio_comercial, 2) asegura su código personal de cuenta,
+  // 3) crea su código comercial (referralCodes) con comisión del tier "agente"
+  //    (15% por defecto, ajustable) para referir EMPRESAS, 4) registra en roleChangeLog.
+  // Nota de negocio: la comisión y el bono de $500 por referido se pagan sobre la
+  // primera aportación de la EMPRESA referida; no hay bono por referir estudiantes.
+  app.post("/api/admin/users/:id/convert-partner", requireAuth, requireSuperadmin, async (req, res, next) => {
+    try {
+      const targetUserId = String(req.params.id as string);
+      const reason = req.body?.reason;
+      if (!reason || typeof reason !== "string" || reason.trim().length < 3) {
+        return res.status(400).json({ message: "Se requiere una razón para la conversión (mínimo 3 caracteres)" });
+      }
+      // Comisión por defecto 15% = tier "agente", el más bajo de socio comercial.
+      let commission = 15;
+      if (req.body?.commission !== undefined && req.body?.commission !== null) {
+        const n = Number(req.body.commission);
+        if (!Number.isInteger(n) || n < 0 || n > 100) {
+          return res.status(400).json({ message: "La comisión debe ser un entero entre 0 y 100" });
+        }
+        commission = n;
+      }
+
+      const user = await storage.getUser(targetUserId);
+      if (!user) return res.status(404).json({ message: "Usuario no encontrado" });
+
+      const account = await storage.getAccount(targetUserId);
+      const previousRole = account?.userRole || "socio_estudiante";
+      // Evita degradar por accidente a un rol administrativo/superior desde esta acción.
+      if (["director", "admin", "superadmin"].includes(previousRole)) {
+        return res.status(400).json({ message: `No se puede convertir a socio comercial desde el rol "${previousRole}". Usa el cambio de rol general.` });
+      }
+
+      // 1) Rol -> socio_comercial (+ código personal de cuenta si no tiene).
+      const accountUpdates: Record<string, unknown> = { userRole: "socio_comercial" };
+      if (!account?.referralCode) {
+        accountUpdates.referralCode = `SC-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      }
+      await storage.updateAccount(targetUserId, accountUpdates);
+
+      // 2) Código comercial para referir empresas — solo si no tiene uno activo.
+      const existingCodes = await db.select().from(referralCodes)
+        .where(and(eq(referralCodes.ownerId, targetUserId), eq(referralCodes.isActive, true)));
+      let commercialCode = existingCodes[0] || null;
+      if (!commercialCode) {
+        const code = `P-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+        const [created] = await db.insert(referralCodes).values({
+          code,
+          ownerId: targetUserId,
+          ownerType: "socio_comercial",
+          label: "Socio Agente",
+          commission,
+          isActive: true,
+        }).returning();
+        commercialCode = created;
+      }
+
+      // 3) Auditoría del cambio de rol.
+      const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket.remoteAddress || "";
+      await db.insert(roleChangeLog).values({
+        userId: targetUserId,
+        changedBy: req.supabaseUserId!,
+        previousRole,
+        newRole: "socio_comercial",
+        reason: reason.trim(),
+        ipAddress: ip,
+      });
+
+      res.json({
+        message: "Usuario convertido a socio comercial",
+        userId: targetUserId,
+        newRole: "socio_comercial",
+        commission,
+        referralCode: commercialCode?.code,
+        commercialCodeCreated: existingCodes.length === 0,
+      });
+    } catch (err) { next(err); }
+  });
+
   app.get("/api/admin/users", requireAuth, requireAdmin, async (_req, res, next) => {
     try {
       const allUsersRaw = await db.select()
