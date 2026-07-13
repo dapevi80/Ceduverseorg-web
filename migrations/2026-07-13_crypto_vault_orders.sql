@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS crypto_vault_orders (
   total_minor           integer NOT NULL,
   rail                  crypto_vault_rail NOT NULL,
   status                crypto_vault_order_status NOT NULL DEFAULT 'pending_payment',
+  delivery_mode         varchar(16) NOT NULL DEFAULT 'vault',
   stripe_session_id     text,
   payment_ref           text,
   title_status          text NOT NULL DEFAULT 'pendiente_acunacion',
@@ -42,6 +43,9 @@ CREATE TABLE IF NOT EXISTS crypto_vault_orders (
   created_at            timestamptz NOT NULL DEFAULT now(),
   updated_at            timestamptz
 );
+
+-- Idempotente por si la tabla ya existía sin esta columna.
+ALTER TABLE crypto_vault_orders ADD COLUMN IF NOT EXISTS delivery_mode varchar(16) NOT NULL DEFAULT 'vault';
 
 CREATE INDEX IF NOT EXISTS idx_crypto_vault_orders_user   ON crypto_vault_orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_crypto_vault_orders_status ON crypto_vault_orders(status);

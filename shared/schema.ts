@@ -2153,6 +2153,9 @@ export const cryptoVaultOrders = pgTable("crypto_vault_orders", {
   totalMinor: integer("total_minor").notNull(),
   rail: cryptoVaultRailEnum("rail").notNull(),
   status: cryptoVaultOrderStatusEnum("status").notNull().default("pending_payment"),
+  // Modo de entrega: "vault" (bóveda asignada + título, único disponible),
+  // "experience" (viaje Web3Travel — próximamente) o "import" (físico a MX — próximamente).
+  deliveryMode: varchar("delivery_mode", { length: 16 }).notNull().default("vault"),
   stripeSessionId: text("stripe_session_id"),
   paymentRef: text("payment_ref"),          // referencia de transferencia / tx cripto
   titleStatus: text("title_status").notNull().default("pendiente_acunacion"),

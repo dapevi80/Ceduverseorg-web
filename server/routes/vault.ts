@@ -7,7 +7,6 @@ import { requireAuth, requireAdmin } from "../auth";
 import { getUsdBankInfo } from "../env";
 import { getGoldSpot } from "../services/gold-spot";
 import { quoteCryptoVault, CRYPTOVAULT_EDITIONS, type EditionKey, type VaultQuoteBreakdown } from "../services/cryptovault-pricing";
-import { getCheapestRate, isEnviaConfigured, type EnviaDestination } from "../services/envia";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const BASE_URL = process.env.BASE_URL || "https://ceduverse.org";
@@ -29,53 +28,23 @@ function toMinor(major: number): number {
   return Math.round((major + Number.EPSILON) * 100);
 }
 
-// Estimaciones de gas de red (acuñar NFT título) y envío. Se cotizan al comprador y
-// se afinan al enviar/acuñar. Configurables por env; defaults conservadores.
-function estimateExtras(currency: Currency): { gas: number; shipping: number } {
+// Estimación de gas de red (acuñar el NFT título). Se cotiza al comprador.
+// Configurable por env; default conservador. En modo BÓVEDA no hay envío físico:
+// el lingote queda vaulteado (asignado) y el cliente recibe el título 1:1.
+function estimateGas(currency: Currency): number {
   const gas = Number(process.env[`VAULT_GAS_FEE_${currency}`] ?? (currency === "USD" ? 15 : 300));
-  const shipping = Number(process.env[`VAULT_SHIPPING_FEE_${currency}`] ?? (currency === "USD" ? 25 : 450));
-  return {
-    gas: Number.isFinite(gas) && gas >= 0 ? gas : 0,
-    shipping: Number.isFinite(shipping) && shipping >= 0 ? shipping : 0,
-  };
-}
-
-// Paquete físico del CryptoVault para cotizar envío: oro + tarjeta de acero + estuche.
-function vaultPackage(editionKey: EditionKey, goldValueMajor: number) {
-  const ed = CRYPTOVAULT_EDITIONS[editionKey];
-  const weightKg = Number((ed.grams / 1000 + 0.25).toFixed(3)); // oro + empaque seguro
-  return [{
-    content: `CryptoVault 24k ${ed.label}`,
-    amount: 1,
-    weight: weightKg,
-    declaredValue: Math.round(goldValueMajor),
-    dimensions: { length: 15, width: 10, height: 4 },
-  }];
+  return Number.isFinite(gas) && gas >= 0 ? gas : 0;
 }
 
 async function buildQuote(
   editionKey: EditionKey,
   currency: Currency,
-  address?: EnviaDestination,
-): Promise<{ breakdown: VaultQuoteBreakdown; spotFetchedAt: string; shippingSource: "envia" | "estimate" }> {
+): Promise<{ breakdown: VaultQuoteBreakdown; spotFetchedAt: string }> {
   const spot = await getGoldSpot();
   const spotPerGram = currency === "USD" ? spot.usdPerGram24k : spot.mxnPerGram24k;
-  const { gas, shipping: estShipping } = estimateExtras(currency);
-  const goldValueMajor = spotPerGram * CRYPTOVAULT_EDITIONS[editionKey].grams;
-
-  let shipping = estShipping;
-  let shippingSource: "envia" | "estimate" = "estimate";
-  // Envío real vía Envia solo para MXN doméstico (origen del almacén es MX).
-  // USD/internacional queda como estimado hasta validar tarifas internacionales.
-  if (address && address.zip && currency === "MXN" && isEnviaConfigured()) {
-    try {
-      const rate = await getCheapestRate(address, vaultPackage(editionKey, goldValueMajor));
-      if (rate) { shipping = rate.price; shippingSource = "envia"; }
-    } catch { /* si Envia falla, se conserva el estimado — nunca precio inventado */ }
-  }
-
-  const breakdown = quoteCryptoVault({ editionKey, spotPerGram, currency, gasFee: gas, shippingFee: shipping });
-  return { breakdown, spotFetchedAt: spot.fetchedAt, shippingSource };
+  // Modo bóveda: sin envío (shippingFee 0). La entrega física / experiencia son fases aparte.
+  const breakdown = quoteCryptoVault({ editionKey, spotPerGram, currency, gasFee: estimateGas(currency), shippingFee: 0 });
+  return { breakdown, spotFetchedAt: spot.fetchedAt };
 }
 
 function genOrderNumber(): string {
@@ -113,15 +82,14 @@ export function registerVaultRoutes(app: Express) {
       const { editionKey, currency } = req.body || {};
       if (!isEdition(editionKey)) return res.status(400).json({ message: "editionKey debe ser '100' o '200'" });
       if (!isCurrency(currency)) return res.status(400).json({ message: "currency debe ser 'MXN' o 'USD'" });
-      const { breakdown, spotFetchedAt, shippingSource } = await buildQuote(editionKey, currency);
+      const { breakdown, spotFetchedAt } = await buildQuote(editionKey, currency);
       const ed = CRYPTOVAULT_EDITIONS[editionKey];
       res.json({
         edition: { ...ed, key: editionKey },
         quote: breakdown,
         spotFetchedAt,
-        shippingSource,
         lockMinutes: QUOTE_LOCK_MINUTES,
-        note: "Precio referencial. El monto final se fija con el spot al confirmar la compra. Gas de red y envío son estimados; el envío se cotiza con tu dirección.",
+        note: "Precio referencial. El monto final se fija con el spot al confirmar la compra. Modo bóveda: tu lingote queda resguardado (asignado) y recibes el título 1:1; sin envío físico.",
       });
     } catch (err: any) {
       // Sin GOLD_API_KEY o API caída: error explícito, nunca precio simulado.
@@ -132,33 +100,20 @@ export function registerVaultRoutes(app: Express) {
     }
   });
 
-  // Cotización con envío real (Envia) según la dirección de destino. No crea pedido.
-  app.post("/api/vault/shipping-quote", async (req, res, next) => {
-    try {
-      const { editionKey, currency, destination } = req.body || {};
-      if (!isEdition(editionKey)) return res.status(400).json({ message: "editionKey debe ser '100' o '200'" });
-      if (!isCurrency(currency)) return res.status(400).json({ message: "currency debe ser 'MXN' o 'USD'" });
-      if (!destination?.zip || !destination?.city) {
-        return res.status(400).json({ message: "Se requiere al menos ciudad y código postal del destino" });
-      }
-      const { breakdown, spotFetchedAt, shippingSource } = await buildQuote(editionKey, currency, destination);
-      res.json({ quote: breakdown, spotFetchedAt, shippingSource });
-    } catch (err: any) {
-      if (String(err?.message || "").includes("GOLD_API_KEY")) {
-        return res.status(503).json({ message: "Cotización de oro no disponible (configuración pendiente)." });
-      }
-      next(err);
-    }
-  });
-
   // Crea el pedido y devuelve instrucciones de pago según el rail elegido.
   app.post("/api/vault/checkout", async (req, res, next) => {
     try {
-      const { editionKey, currency, rail, buyer, shippingAddress } = req.body || {};
+      const { editionKey, currency, rail, buyer, deliveryMode } = req.body || {};
       if (!isEdition(editionKey)) return res.status(400).json({ message: "editionKey debe ser '100' o '200'" });
       if (!isCurrency(currency)) return res.status(400).json({ message: "currency debe ser 'MXN' o 'USD'" });
       if (!["stripe", "transfer_us", "transfer_mx", "crypto"].includes(rail)) {
         return res.status(400).json({ message: "rail inválido" });
+      }
+      // Solo el modo BÓVEDA está disponible. Experiencia Web3Travel e importación física
+      // llegan en fases próximas (se bocetan aparte).
+      const mode = deliveryMode || "vault";
+      if (mode !== "vault") {
+        return res.status(400).json({ message: "Ese modo de entrega aún no está disponible. Por ahora, resguardo en bóveda + título." });
       }
       const email = String(buyer?.email || "").trim();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -166,9 +121,8 @@ export function registerVaultRoutes(app: Express) {
       }
       const buyerName = buyer?.name ? String(buyer.name).trim() : null;
 
-      // Recotiza server-side con spot fresco + envío real de la dirección:
-      // NUNCA se confía en el precio del cliente.
-      const { breakdown } = await buildQuote(editionKey, currency, shippingAddress);
+      // Recotiza server-side con spot fresco: NUNCA se confía en el precio del cliente.
+      const { breakdown } = await buildQuote(editionKey, currency);
       const lockedUntil = new Date(Date.now() + QUOTE_LOCK_MINUTES * 60 * 1000);
       const orderNumber = genOrderNumber();
 
@@ -190,7 +144,7 @@ export function registerVaultRoutes(app: Express) {
         totalMinor: toMinor(breakdown.total),
         rail,
         status: "pending_payment",
-        shippingAddress: shippingAddress || null,
+        deliveryMode: mode,
         quoteLockedUntil: lockedUntil,
       }).returning();
 
@@ -207,7 +161,7 @@ export function registerVaultRoutes(app: Express) {
               currency: currency.toLowerCase(),
               product_data: {
                 name: `CryptoVault 24k — ${ed.label} (${ed.purity})`,
-                description: `Edición ${ed.edition} · ${ed.year} · NFT título 1:1 de lingote (acuñación pendiente) · incluye 20% fee operativo, gas de red y envío`,
+                description: `Edición ${ed.edition} · ${ed.year} · NFT título 1:1 de lingote en bóveda asignada (acuñación pendiente) · incluye 20% fee operativo y gas de red`,
               },
               unit_amount: toMinor(breakdown.total),
             },

@@ -571,7 +571,6 @@ function CryptoVault24k() {
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
-  const [addr, setAddr] = useState({ name: "", phone: "", street: "", number: "", city: "", state: "", zip: "" });
   const [rail, setRail] = useState<"stripe" | "transfer_us">("stripe");
   const [submitting, setSubmitting] = useState(false);
   const [wire, setWire] = useState<any>(null);
@@ -599,30 +598,14 @@ function CryptoVault24k() {
       ? "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USD"
       : "$" + Math.round(Number(n)).toLocaleString("es-MX") + " MXN";
 
-  // Recotiza el envío real (Envia) con la dirección, para mostrar el total final.
-  const refreshShipping = async () => {
-    if (!addr.zip.trim() || !addr.city.trim()) return;
-    setLoadingQuote(true);
-    try {
-      const r = await fetch("/api/vault/shipping-quote", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ editionKey: edition, currency, destination: { ...addr, colony: "" } }),
-      });
-      const d = await r.json();
-      if (r.ok) setQuote((prev: any) => ({ ...prev, quote: d.quote, shippingSource: d.shippingSource }));
-    } catch { /* conserva la cotización previa */ }
-    finally { setLoadingQuote(false); }
-  };
-
   const handleCheckout = async () => {
     setCheckoutError(null); setWire(null);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setCheckoutError("Ingresa un correo válido para tu comprobante y título."); return; }
-    if (!addr.street.trim() || !addr.city.trim() || !addr.zip.trim()) { setCheckoutError("Completa tu dirección de envío (calle, ciudad y código postal)."); return; }
     setSubmitting(true);
     try {
       const r = await fetch("/api/vault/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ editionKey: edition, currency, rail, buyer: { email: email.trim(), name: addr.name.trim() || undefined }, shippingAddress: { ...addr, colony: "" } }),
+        body: JSON.stringify({ editionKey: edition, currency, rail, deliveryMode: "vault", buyer: { email: email.trim() } }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.message || "No se pudo iniciar el pago.");
@@ -677,13 +660,13 @@ function CryptoVault24k() {
             <div className="flex justify-between text-xs"><span className="text-cedu-ink-soft">Valor del oro (spot × {q.grams} g)</span><span className="text-cedu-ink font-semibold">{fmtMoney(q.goldValue)}</span></div>
             <div className="flex justify-between text-xs"><span className="text-cedu-ink-soft">Fee operativo (20% · terminal + acuñación)</span><span className="text-cedu-ink font-semibold">{fmtMoney(q.operationalFee)}</span></div>
             <div className="flex justify-between text-xs"><span className="text-cedu-ink-soft">Gas de red (acuñar NFT título) — estimado</span><span className="text-cedu-ink font-semibold">{fmtMoney(q.gasFee)}</span></div>
-            <div className="flex justify-between text-xs"><span className="text-cedu-ink-soft">Envío paquetería — estimado</span><span className="text-cedu-ink font-semibold">{fmtMoney(q.shippingFee)}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-cedu-ink-soft">Resguardo en bóveda asignada</span><span className="text-cedu-green font-semibold">Incluido</span></div>
             <div className="flex justify-between items-center pt-1.5 border-t border-black/[0.06]">
               <span className="text-xs font-bold text-cedu-ink">Total</span>
               <span className="text-xl font-extrabold text-amber-600" data-testid="vault-total">{fmtMoney(q.total)}</span>
             </div>
             <p className="text-[10px] text-cedu-ink-muted leading-snug pt-1">
-              Precio referencial al spot de {quote?.spotFetchedAt ? new Date(quote.spotFetchedAt).toLocaleString("es-MX") : "ahora"}. El monto final se fija con el spot al confirmar la compra; gas y envío se afinan al enviar/acuñar.
+              Precio referencial al spot de {quote?.spotFetchedAt ? new Date(quote.spotFetchedAt).toLocaleString("es-MX") : "ahora"}. El monto final se fija con el spot al confirmar. Tu lingote queda resguardado (asignado) en bóveda; recibes el título 1:1, sin envío físico.
             </p>
           </div>
         )}
@@ -692,22 +675,28 @@ function CryptoVault24k() {
       {/* Comprador + rail + acción */}
       {!wire ? (
         <div className="space-y-2.5">
+          {/* Modo de entrega */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="p-2.5 rounded-xl border-2 border-amber-500 bg-amber-100/50" data-testid="vault-mode-vault">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-sm">🏦</span>
+                <span className="text-xs font-bold text-cedu-ink">Bóveda asignada + título</span>
+                <span className="ml-auto text-[8px] font-bold text-cedu-green bg-cedu-green/10 px-1.5 py-0.5 rounded">ACTIVO</span>
+              </div>
+              <p className="text-[10px] text-cedu-ink-muted leading-snug">Tu lingote se resguarda asignado; recibes el NFT título 1:1, redimible. Sin cruzar fronteras.</p>
+            </div>
+            <div className="p-2.5 rounded-xl border border-black/[0.08] bg-white opacity-70" data-testid="vault-mode-experience">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-sm">✈️</span>
+                <span className="text-xs font-bold text-cedu-ink">Vive tu lingote — Web3Travel</span>
+                <span className="ml-auto text-[8px] font-bold text-cedu-violet bg-cedu-violet/10 px-1.5 py-0.5 rounded">PRONTO</span>
+              </div>
+              <p className="text-[10px] text-cedu-ink-muted leading-snug">Viaja al origen: tour a la mina, ve tu acuñación y recibe el título en persona. Próximamente con Web3Travel.</p>
+            </div>
+          </div>
+
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Tu correo (comprobante y título)" data-testid="vault-email"
             className="w-full h-10 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
-          <div className="grid grid-cols-2 gap-2">
-            <input placeholder="Nombre completo" value={addr.name} onChange={(e) => setAddr((a) => ({ ...a, name: e.target.value }))} data-testid="vault-addr-name" className="col-span-2 h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
-            <input placeholder="Calle" value={addr.street} onChange={(e) => setAddr((a) => ({ ...a, street: e.target.value }))} data-testid="vault-addr-street" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
-            <input placeholder="Número" value={addr.number} onChange={(e) => setAddr((a) => ({ ...a, number: e.target.value }))} data-testid="vault-addr-number" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
-            <input placeholder="Ciudad" value={addr.city} onChange={(e) => setAddr((a) => ({ ...a, city: e.target.value }))} data-testid="vault-addr-city" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
-            <input placeholder="Estado" value={addr.state} onChange={(e) => setAddr((a) => ({ ...a, state: e.target.value }))} data-testid="vault-addr-state" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
-            <input placeholder="Código postal" value={addr.zip} onChange={(e) => setAddr((a) => ({ ...a, zip: e.target.value }))} onBlur={refreshShipping} data-testid="vault-addr-zip" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
-            <input placeholder="Teléfono" value={addr.phone} onChange={(e) => setAddr((a) => ({ ...a, phone: e.target.value }))} data-testid="vault-addr-phone" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
-          </div>
-          {currency === "MXN" && (
-            <p className="text-[10px] text-cedu-ink-muted">
-              El envío se cotiza con tu código postal vía Envia.{quote?.shippingSource === "envia" ? " ✓ Tarifa real aplicada." : " (mostrando estimado hasta capturar CP)"}
-            </p>
-          )}
           <div className="flex gap-2 flex-wrap items-center">
             <span className="text-[10px] text-cedu-ink-muted uppercase font-semibold">Pago:</span>
             <button onClick={() => setRail("stripe")} data-testid="vault-rail-stripe"
