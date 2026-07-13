@@ -185,7 +185,10 @@ function ProfileStep({
     codigoPostalFiscal: "",
   });
   const savedPlan = sessionStorage.getItem("cedu_plan") || "";
-  const [referralCode, setReferralCode] = useState("");
+  // BUG 3: pre-llenar con el código de referido capturado de la URL (?ref=) en auth.tsx.
+  const [referralCode, setReferralCode] = useState(() => {
+    try { return localStorage.getItem("cedu_ref") || ""; } catch { return ""; }
+  });
   const [referralValid, setReferralValid] = useState<boolean | null>(null);
   const [referralOwner, setReferralOwner] = useState("");
 
@@ -237,6 +240,8 @@ function ProfileStep({
         accountUpdate.referredBy = referralCode.trim();
       }
       await apiRequest("PATCH", "/api/me/account", accountUpdate);
+      // BUG 3: ya usado el código capturado, se limpia para no re-aplicarlo.
+      try { localStorage.removeItem("cedu_ref"); } catch {}
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/me/profile"] });
