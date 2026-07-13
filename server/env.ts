@@ -55,6 +55,9 @@ const ENV_VARS: EnvVar[] = [
   // Shipping
   { name: "ENVIA_API_KEY", required: false, description: "Envia.com shipping API key" },
 
+  // Precio spot del oro (CryptoVault 24k). Sin esta key no se cotiza el vault (nunca precio simulado).
+  { name: "GOLD_API_KEY", required: false, description: "goldapi.io x-access-token para spot XAU (CryptoVault 24k)" },
+
   // Bank info for SAM payments
   { name: "BANK_NAME", required: false, description: "Bank name for SAM payment info" },
   { name: "BANK_CLABE", required: false, description: "CLABE interbancaria for SAM payments" },
