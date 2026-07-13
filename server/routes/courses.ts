@@ -239,8 +239,12 @@ export function registerCourseRoutes(app: Express) {
       }
       if (completed > 0) {
         const modules = await storage.getCourseModules(courseId);
-        const hasAudio = modules.some(m => !!m.audioUrl);
-        if (hasAudio) {
+        // Solo exigimos el audio cuando el cliente realmente puede rastrearlo:
+        // el reproductor STPS monta el audio del primer módulo y NO monta cuando
+        // el curso tiene video HeyGen. Si exigiéramos audio en cursos con video,
+        // listeningProgress nunca subiría y el 403 bloquearía el progreso para siempre.
+        const hasTrackedAudio = !!modules[0]?.audioUrl && !modules.some(m => !!m.heygenVideoUrl);
+        if (hasTrackedAudio) {
           const userCourses = await storage.getUserCourses(req.supabaseUserId!);
           const enrollment = userCourses.find(uc => uc.courseId === courseId);
           if (enrollment && (enrollment.listeningProgress || 0) < 95) {

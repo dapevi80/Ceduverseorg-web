@@ -1034,11 +1034,21 @@ export default function CursoVirtual() {
   };
 
   useEffect(() => {
-    if (userEnrollment && userEnrollment.completed >= 100 && modules.length > 0) {
+    if (!userEnrollment || modules.length === 0) return;
+    const serverPct = userEnrollment.completed || 0;
+    if (serverPct >= 100) {
       if (completedModules.size < modules.length) {
-        const allIndices = new Set(modules.map((_: any, i: number) => i));
-        saveCompleted(allIndices);
+        saveCompleted(new Set(modules.map((_: any, i: number) => i)));
       }
+      return;
+    }
+    // Progreso PARCIAL: reconstruimos cuántos módulos equivalen al % guardado en
+    // el servidor y solo hidratamos si va MÁS adelante que el avance local, para
+    // que al abrir el curso en otro dispositivo no se vea 0% habiendo progreso.
+    const serverCount = Math.round((serverPct / 100) * modules.length);
+    if (serverCount > completedModules.size) {
+      const hydrated = new Set(modules.map((_: any, i: number) => i).slice(0, serverCount));
+      saveCompleted(hydrated);
     }
   }, [userEnrollment?.completed, modules.length]);
 
@@ -1198,17 +1208,18 @@ export default function CursoVirtual() {
   const handleMarkSectionComplete = async (index: number) => {
     const newSet = new Set(completedModules);
     newSet.add(index);
+    // Guardamos SIEMPRE el progreso local primero: aunque el servidor rechace
+    // el sync, el usuario no pierde el avance de esta sesión.
+    saveCompleted(newSet);
     if (user && course) {
       const progressPct = Math.round((newSet.size / modules.length) * 100);
       try {
         await apiRequest("PATCH", `/api/me/courses/${course.id}`, { completed: progressPct });
-        saveCompleted(newSet);
         toast({ title: "Sección completada", description: "Tu progreso se ha guardado." });
       } catch {
-        toast({ title: "No se pudo completar", description: "Escucha el audio completo antes de marcar secciones.", variant: "destructive" });
+        toast({ title: "Guardado localmente", description: "Tu avance se guardó en este dispositivo y se sincronizará más tarde." });
       }
     } else {
-      saveCompleted(newSet);
       toast({ title: "Sección completada", description: "Tu progreso se ha guardado." });
     }
   };
