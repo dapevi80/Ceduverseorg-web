@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 import { requireAdmin } from "./auth";
+import { markVaultOrderPaid } from "./routes/vault";
 import {
   storeProducts,
   storeStock,
@@ -343,6 +344,15 @@ router.post("/webhook", async (req, res) => {
 
     const session = event.data.object as Stripe.Checkout.Session;
     const orderNumber = session.metadata?.orderNumber;
+
+    // Pedidos del CryptoVault 24k reusan este mismo webhook (marcados con kind=vault).
+    // Al pagar se reserva el título 1:1 (acuñación pendiente); no se acuña on-chain aún.
+    if (session.metadata?.kind === "vault") {
+      if (session.payment_status === "paid" && orderNumber) {
+        await markVaultOrderPaid(orderNumber, (session.payment_intent as string) || session.id);
+      }
+      return res.sendStatus(200);
+    }
 
     const [order] = await db.select().from(storeOrders)
       .where(eq(storeOrders.orderNumber, orderNumber!))
