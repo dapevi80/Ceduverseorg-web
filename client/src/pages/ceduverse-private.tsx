@@ -571,6 +571,7 @@ function CryptoVault24k() {
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
+  const [addr, setAddr] = useState({ name: "", phone: "", street: "", number: "", city: "", state: "", zip: "" });
   const [rail, setRail] = useState<"stripe" | "transfer_us">("stripe");
   const [submitting, setSubmitting] = useState(false);
   const [wire, setWire] = useState<any>(null);
@@ -598,14 +599,30 @@ function CryptoVault24k() {
       ? "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USD"
       : "$" + Math.round(Number(n)).toLocaleString("es-MX") + " MXN";
 
+  // Recotiza el envío real (Envia) con la dirección, para mostrar el total final.
+  const refreshShipping = async () => {
+    if (!addr.zip.trim() || !addr.city.trim()) return;
+    setLoadingQuote(true);
+    try {
+      const r = await fetch("/api/vault/shipping-quote", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editionKey: edition, currency, destination: { ...addr, colony: "" } }),
+      });
+      const d = await r.json();
+      if (r.ok) setQuote((prev: any) => ({ ...prev, quote: d.quote, shippingSource: d.shippingSource }));
+    } catch { /* conserva la cotización previa */ }
+    finally { setLoadingQuote(false); }
+  };
+
   const handleCheckout = async () => {
     setCheckoutError(null); setWire(null);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setCheckoutError("Ingresa un correo válido para tu comprobante y título."); return; }
+    if (!addr.street.trim() || !addr.city.trim() || !addr.zip.trim()) { setCheckoutError("Completa tu dirección de envío (calle, ciudad y código postal)."); return; }
     setSubmitting(true);
     try {
       const r = await fetch("/api/vault/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ editionKey: edition, currency, rail, buyer: { email: email.trim() } }),
+        body: JSON.stringify({ editionKey: edition, currency, rail, buyer: { email: email.trim(), name: addr.name.trim() || undefined }, shippingAddress: { ...addr, colony: "" } }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.message || "No se pudo iniciar el pago.");
@@ -677,6 +694,20 @@ function CryptoVault24k() {
         <div className="space-y-2.5">
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Tu correo (comprobante y título)" data-testid="vault-email"
             className="w-full h-10 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
+          <div className="grid grid-cols-2 gap-2">
+            <input placeholder="Nombre completo" value={addr.name} onChange={(e) => setAddr((a) => ({ ...a, name: e.target.value }))} data-testid="vault-addr-name" className="col-span-2 h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
+            <input placeholder="Calle" value={addr.street} onChange={(e) => setAddr((a) => ({ ...a, street: e.target.value }))} data-testid="vault-addr-street" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
+            <input placeholder="Número" value={addr.number} onChange={(e) => setAddr((a) => ({ ...a, number: e.target.value }))} data-testid="vault-addr-number" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
+            <input placeholder="Ciudad" value={addr.city} onChange={(e) => setAddr((a) => ({ ...a, city: e.target.value }))} data-testid="vault-addr-city" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
+            <input placeholder="Estado" value={addr.state} onChange={(e) => setAddr((a) => ({ ...a, state: e.target.value }))} data-testid="vault-addr-state" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
+            <input placeholder="Código postal" value={addr.zip} onChange={(e) => setAddr((a) => ({ ...a, zip: e.target.value }))} onBlur={refreshShipping} data-testid="vault-addr-zip" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
+            <input placeholder="Teléfono" value={addr.phone} onChange={(e) => setAddr((a) => ({ ...a, phone: e.target.value }))} data-testid="vault-addr-phone" className="h-9 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
+          </div>
+          {currency === "MXN" && (
+            <p className="text-[10px] text-cedu-ink-muted">
+              El envío se cotiza con tu código postal vía Envia.{quote?.shippingSource === "envia" ? " ✓ Tarifa real aplicada." : " (mostrando estimado hasta capturar CP)"}
+            </p>
+          )}
           <div className="flex gap-2 flex-wrap items-center">
             <span className="text-[10px] text-cedu-ink-muted uppercase font-semibold">Pago:</span>
             <button onClick={() => setRail("stripe")} data-testid="vault-rail-stripe"
