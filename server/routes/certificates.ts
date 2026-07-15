@@ -8,8 +8,43 @@ import fs from "fs";
 import { r2Storage } from "../services/r2-storage";
 import { isPaidCertType, resolveCertPriceMxn } from "@shared/cert-pricing";
 import { stripe, BASE_URL } from "../lib/stripe-client";
+import { decideCertTransition } from "../lib/cert-webhook-logic";
 
 export function registerCertificateRoutes(app: Express) {
+  // ==================== STRIPE WEBHOOK (CERTIFICATES) ====================
+
+  app.post("/api/certificates/webhook", async (req, res) => {
+    try {
+      if (!stripe) return res.sendStatus(200); // sin Stripe, nada que hacer
+      const secret = process.env.STRIPE_WEBHOOK_SECRET_CERTS;
+      if (!secret) return res.status(403).json({ message: "Webhook de certificados no configurado" });
+      const sig = req.headers["stripe-signature"] as string;
+      if (!sig) return res.status(400).json({ message: "Missing signature" });
+
+      const event = stripe.webhooks.constructEvent((req as any).rawBody as string, sig, secret);
+      if (event.type !== "checkout.session.completed") return res.sendStatus(200);
+
+      const session = event.data.object as any;
+      if (session.metadata?.kind !== "certificate") return res.sendStatus(200);
+
+      const id = session.metadata?.certRequestId;
+      const request = id ? await storage.getCertificateRequest(id) : null;
+      if (!request) return res.sendStatus(200);
+
+      if (decideCertTransition(request.status, session.payment_status) === "confirm") {
+        await storage.updateCertificateRequest(request.id, {
+          status: "solicitado",
+          stripeSessionId: session.id,
+          paidAt: new Date(),
+        });
+      }
+      return res.sendStatus(200);
+    } catch (e: any) {
+      console.error("[certs] webhook error:", e.message);
+      return res.sendStatus(400);
+    }
+  });
+
   // ==================== CERTIFICATE REQUESTS (STUDENT) ====================
 
   app.post("/api/me/certificates", requireAuth, async (req, res, next) => {
