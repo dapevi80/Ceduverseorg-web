@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { motion, useInView } from "framer-motion";
 import { useForceLightMode } from "@/components/ThemeProvider";
+import { readCeduCart } from "@/lib/cedu-cart-handoff";
 import {
   Package,
   CreditCard,
@@ -257,6 +258,14 @@ function TiendaContent() {
   const [cart, setCart] = useState({ vault: 0, tangem2: 0, tangem3: 0 });
   const [step, setStep] = useState("browse");
   const [ship, setShip] = useState<ShippingForm>({ name: "", email: "", phone: "", street: "", number: "", colony: "", city: "", state: "", zip: "" });
+
+  useEffect(() => {
+    const handed = readCeduCart();
+    if (handed && (handed.vault || handed.tangem2 || handed.tangem3)) {
+      setCart(handed);
+    }
+  }, []);
+
   const [quote, setQuote] = useState<ShippingQuote | null>(null);
   const [referral, setReferral] = useState("");
   const [referralApplied, setReferralApplied] = useState(false);

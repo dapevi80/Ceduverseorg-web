@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { useForceLightMode } from "@/components/ThemeProvider";
+import { writeCeduCart } from "@/lib/cedu-cart-handoff";
 import {
   Lock, ArrowRight, ShieldCheck, CreditCard, Wallet, ChevronDown, ChevronRight,
   Minus, Plus, Package, Check, AlertTriangle, HelpCircle, Sparkles, Link2, Award,
@@ -754,7 +755,10 @@ function DispersionSection() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-lg font-extrabold text-cedu-blue" data-testid="text-subtotal">{fmt(sub)} MXN</div>
-                <button onClick={() => alert("Checkout: " + fmt(sub) + " MXN — Redirigiendo a pago con tarjeta...")} data-testid="btn-pay"
+                <button onClick={() => {
+                  writeCeduCart({ vault: cart.vault, tangem2: cart.tangem2, tangem3: cart.tangem3 });
+                  window.location.href = "/tienda";
+                }} data-testid="btn-pay"
                   className="px-5 py-2.5 bg-cedu-blue border-none rounded-[10px] text-white text-xs font-bold cursor-pointer shadow-[0_4px_16px_rgba(27,90,223,0.25)] hover:bg-cedu-blue-dark transition-colors">
                   Pagar con tarjeta →
                 </button>
