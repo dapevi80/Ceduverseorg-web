@@ -17,6 +17,8 @@ async function getModulesForSlug(slug: string): Promise<any[] | undefined> {
   if (procadistModules[slug]) return procadistModules[slug];
   const { procadistModulesPart2 } = await import("./data/procadist-part2");
   if (procadistModulesPart2[slug]) return procadistModulesPart2[slug];
+  const { rwaOnboardingModules } = await import("./data/rwa-onboarding-courses");
+  if (rwaOnboardingModules[slug]) return rwaOnboardingModules[slug];
   return undefined;
 }
 
@@ -31,6 +33,8 @@ async function getQuizForSlug(slug: string): Promise<any | undefined> {
     const { procadistQuizzesPart2 } = await import("./data/procadist-part2");
     if (procadistQuizzesPart2 && procadistQuizzesPart2[slug]) return procadistQuizzesPart2[slug];
   } catch {}
+  const { rwaOnboardingQuizzes } = await import("./data/rwa-onboarding-quizzes");
+  if (rwaOnboardingQuizzes[slug]) return rwaOnboardingQuizzes[slug];
   return undefined;
 }
 
