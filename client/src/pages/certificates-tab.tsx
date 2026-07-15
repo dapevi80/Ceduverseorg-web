@@ -76,10 +76,10 @@ export function CertificatesTab() {
   const completedCourses = enrollments.filter((e) => e.completed >= 100);
 
   const requestMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (vars: { courseId: string; certType: string }) => {
       const res = await apiRequest("POST", "/api/me/certificates", {
-        courseId: selectedCourse,
-        certType: selectedType,
+        courseId: vars.courseId,
+        certType: vars.certType,
       });
       return res.json();
     },
@@ -167,8 +167,8 @@ export function CertificatesTab() {
                     <SelectValue placeholder="Seleccionar tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dc3">DC-3 STPS — $499 MXN</SelectItem>
-                    <SelectItem value="sep">Certificado SEP — $1,999 MXN</SelectItem>
+                    <SelectItem value="dc3">{`DC-3 STPS — $${CERT_PRICES_MXN.dc3.toLocaleString()} MXN`}</SelectItem>
+                    <SelectItem value="sep">{`Certificado SEP — $${CERT_PRICES_MXN.sep.toLocaleString()} MXN`}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -183,7 +183,7 @@ export function CertificatesTab() {
               <Button
                 className="w-full bg-cedu-blue hover:bg-cedu-blue/90 text-white"
                 disabled={!selectedCourse || !selectedType || requestMutation.isPending}
-                onClick={() => requestMutation.mutate()}
+                onClick={() => requestMutation.mutate({ courseId: selectedCourse, certType: selectedType })}
                 data-testid="button-submit-certificate-request"
               >
                 {requestMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
@@ -323,7 +323,7 @@ export function CertificatesTab() {
                             <button
                               className="ml-2 underline disabled:opacity-50 disabled:cursor-not-allowed"
                               disabled={requestMutation.isPending}
-                              onClick={() => { setSelectedCourse(cert.courseId); setSelectedType(cert.certType); requestMutation.mutate(); }}
+                              onClick={() => requestMutation.mutate({ courseId: cert.courseId, certType: cert.certType })}
                               data-testid={`btn-complete-payment-${cert.id}`}
                             >Completar pago</button>
                           </div>
