@@ -29,6 +29,15 @@ Dos superficies muestran precio pero **no cobran** (mock):
 - **Webhook de certificados:** **dedicado** `/api/certificates/webhook`, con su propio
   signing secret. No toca el webhook de tienda que ya funciona.
 
+## Capa Web3 asociada (ver master doc)
+
+Este spec cubre el **cobro digital**. La **tokenización / sello RAW on-chain** (NFT gemelo de
+certificados de aportación, sello doble Opción A, aportación capitalizada) se diseña en
+`2026-07-15-consorcio-tokenizacion-raw-seal-master.md`. Enganche: cuando se emite un certificado
+o se confirma un pago DC-3/SEP, se dispara el sello RAW doble; el evento de **aportación
+capitalizada** (que da materialidad al NFT) es un tipo de evento sellable adicional. La Fase 1
+(sello RAW) es independiente y puede implementarse después del cobro sin bloquearlo.
+
 ## Restricción de negocio
 
 Ceduverse (Ceducap S.C. de C. de RL de CV, cooperativa de consumo) cobra aportaciones
