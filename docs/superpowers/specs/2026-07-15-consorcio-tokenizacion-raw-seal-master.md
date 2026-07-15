@@ -144,7 +144,64 @@ deja `"NFT certificate pending mint"` para `vault_kit`.
   el sello RAW doble → cobro y gemelo on-chain nacen juntos. El evento de **aportación
   capitalizada** es un nuevo tipo de evento sellable a añadir a ese flujo.
 
-## 11. Datos a confirmar / gaps abiertos
+## 11. Onboarding retroactivo — CTA para usuarios existentes
+
+Los usuarios que ya tienen cuenta (antes de esta actualización) no deben quedar rezagados: hay
+que invitarlos a **minar su primer NFT / arrancar su aportación capitalizada**.
+
+- **Ceduverse:** reutilizar el sistema de versionado de términos ya existente
+  (`termsVersions` + `userTermsAcceptances` + `PendingTermsModal`, que fuerza aceptación de
+  versiones `isBlocking`). Al **bumpear la versión** de "Adhesión Cooperativa"/T&C, todo socio
+  existente ve el modal al entrar. Se añade, tras aceptar, un **CTA "Activa tu certificado
+  digital"** que lo lleva al flujo de mint (F2) / inicio de capitalización de aportación. Un
+  socio sin NFT ve un **banner persistente** hasta activarlo.
+- **BrainShield:** banner/CTA equivalente para el Socio Industrial existente: re-aceptar la
+  adhesión actualizada y minar el **gemelo registral** de su parte/participación (F2).
+- **Dependencia:** el CTA que efectivamente *mina* requiere F2 (NFT visible). El **modal de
+  términos actualizados** es inmediato (F0) y no depende de F2 — se puede lanzar primero para no
+  dejar a nadie rezagado en lo legal, con el mint habilitándose cuando F2 aterrice.
+
+## 12. Actualización de páginas legales / T&C / contratos (reflejar la realidad de las actas)
+
+Principio rector: **la copy legal solo afirma lo que las actas soportan.** Lo que hoy no
+soportan se marca como "pendiente de asamblea", no se publica como hecho.
+
+**Ceduverse** (`client/src/pages/terminos.tsx`, `privacidad.tsx`, doc "Adhesión Cooperativa" en
+`server/seed-terms.ts`):
+- Reflejar la identidad real: **Cooperativa de Consumo de RL de CV** (LGSC), escritura 6,520,
+  RPC N-2026009627, domicilio Cancún.
+- Incorporar: certificado de aportación **digital** (Art. Sexto), **1 socio = 1 voto**, modelo de
+  **aportación capitalizada** (no es gasto; es patrimonio devolvible), NFT **gemelo registral**,
+  y el **sello RAW privacy-first** (solo hash on-chain).
+- Bumpear versión → dispara re-aceptación (§11).
+
+**BrainShield** (`LegalDoc` de App.jsx: Aviso de Privacidad + T&C; `src/lib/contratoAdhesion.js`;
+FAQ línea ~1044):
+- **Distinguir los dos "socios"**: la S.C. tiene socios de registro **públicos** (Ernesto +
+  Leonardo, RPPC, Socios Capitalistas 13ª a); el **"Socio Industrial"** (cliente que deposita PI,
+  13ª b) se identifica por **alias** y su identidad se protege como **secreto industrial**.
+- Corregir cualquier copy que insinúe que la *empresa* es anónima.
+- **VERIFICADO en acta 5905 (2026-07-15):** la Cláusula **13ª b) SÍ existe** — "Socios
+  Industriales" que aportan trabajo/profesión, aceptados por Asamblea, con **voz pero sin voto**.
+  La **3ª b)** permite aportación "intelectual, de propiedad industrial... transfiriendo el
+  dominio a la sociedad", y la **3ª l)** cubre licenciar/ceder/registrar PI. → La cita del
+  `contratoAdhesion.js` es **correcta**; el modelo RWA-PI **sí está soportado por el objeto**.
+- **Anonimato — soporte real y su límite:** NO hay cláusula de anonimato en el acta (socios de
+  registro públicos en RPPC). Pero el anonimato del **Socio Industrial** se sostiene por: (i)
+  cláusula SEXTA del contrato de adhesión (obligación contractual + secreto industrial), (ii)
+  admisión de socios **por acuerdo de Asamblea** (14ª) que, **si NO se protocoliza/registra**,
+  mantiene su identidad fuera del registro público, y (iii) uso de alias en todo documento. La
+  copy puede afirmar el anonimato del Socio Industrial **con esta base**, sin afirmar que la
+  empresa/sus socios capitalistas son anónimos. Fortalecimiento opcional: Asamblea que adopte
+  cláusula estatutaria de confidencialidad (entrenchment).
+- Reflejar: la parte social como **partes sociales** (no "acciones"), NFT = espejo registral, y
+  cesión sujeta a acuerdo de Asamblea (12ª).
+
+**Regla de proceso:** los cambios de copy legal son outward-facing; se redactan en implementación
+y **se revisan con Daniel Zavala (CLO)** antes de publicar. Ninguna afirmación nueva sin respaldo
+en acta o en documento privado válido.
+
+## 13. Datos a confirmar / gaps abiertos
 
 - Reglamento Interno de Ceduverse (transmisión de certificados) — no escaneado.
 - Cómo se determina la **fracción** de consumo/comisión que capitaliza aportación (definir %).
@@ -152,7 +209,7 @@ deja `"NFT certificate pending mint"` para `vault_kit`.
 - Standard y custodia del NFT en F2 (custodial vs wallet del socio).
 - Objeto social BrainShield: ¿ampliar por reforma o basta el inciso q (blockchain/IA)?
 
-## 12. Fuera de alcance (YAGNI ahora)
+## 14. Fuera de alcance (YAGNI ahora)
 
 - Mercado secundario / transferibilidad libre de NFTs (choca con régimen societario).
 - Emisión de token fungible (BRAIN/KAKAW) — separado, ver memorias de tokenomics.
