@@ -21,8 +21,12 @@ Decisiones del brainstorming (2026-07-15):
 
 - **Audiencia:** mixta — los tres roles (público/empresa/socio comercial).
 - **Estructura:** 3 cursos separados, cada uno con su quiz.
-- **Producción:** texto rico (HTML) + **audio TTS** (voz `onyx`) + quiz. **SIN avatar
-  HeyGen** — esa función está desactivada y NO se toca ni se confunde.
+- **Producción:** texto rico (HTML) + quiz. El "audio" es el **"Leer en voz alta"**
+  (lector de texto del navegador) que los cursos Studio/Tutor IA ya traen integrado
+  (`studio-course.tsx`) — sale gratis con solo tener `contentHtml`, sin generar MP3.
+  El pipeline de MP3/TTS (`generatedContent` + `audio-cache` + `generate-ted-audio.ts`)
+  es exclusivo del **Aula Virtual** y NO se toca. **SIN avatar HeyGen** — desactivado,
+  no se toca ni se confunde.
 - **Acceso:** los 3 gratis, onboarding, gateados por rol (ver tabla).
 - **Recompensa:** como todo curso, al completar dispara el logro (`achievement`) + el
   certificado digital de Ceduverse (diploma gratuito, `dc3Available=false`, NO STPS).
@@ -109,16 +113,9 @@ de sembrar en producción. Los módulos legales (disclaimers) los valida Daniel/
 
 ## Cambios técnicos
 
-### Migración de base de datos
-
-`studio_modules` hoy no tiene campo de audio (solo `video_url`). Se agrega:
-
-```sql
-ALTER TABLE studio_modules ADD COLUMN audio_url text;
-```
-
-Más el campo correspondiente en el schema Drizzle (`shared/schema.ts`, tabla
-`studioModules`) y en el insert schema si aplica.
+No requiere migración de base de datos ni cambios de schema: los cursos usan el modelo
+`studioCourses`/`studioModules`/`studioQuizzes` tal como está, y el audio es el lector
+"Leer en voz alta" ya integrado en `studio-course.tsx` (no MP3, no columna nueva).
 
 ### Archivos semilla nuevos
 
@@ -133,15 +130,14 @@ Más el campo correspondiente en el schema Drizzle (`shared/schema.ts`, tabla
 
 ### Seed
 
-Extender `server/seed-studio.ts` para sembrar los 3 cursos RWA de forma idempotente
-(upsert por slug), incluyendo módulos y quiz.
+Extender `server/seed-studio.ts` para que sus lookups (`getModulesForSlug` y
+`getQuizForSlug`) también consulten los archivos RWA nuevos, sembrando los 3 cursos de
+forma idempotente (upsert por slug), incluyendo módulos y quiz.
 
-### Audio (TTS)
+### Audio
 
-Extender `server/generate-ted-audio.ts` para incluir los módulos RWA: strip HTML →
-chunk → TTS `onyx` (OpenAI) → concat con ffmpeg → subir a R2 → poblar `audio_url` de
-cada módulo. Requiere `OPENAI_API_KEY`. Los MP3 quedan pre-generados en R2 (como los
-cursos existentes), no se generan en runtime.
+Ninguno. El "Leer en voz alta" del reproductor Studio ya lee el `contentHtml` en el
+navegador. No se genera MP3 ni se toca el pipeline del Aula Virtual.
 
 ## Guardrails legales (requisito)
 
@@ -163,7 +159,7 @@ sembrar en producción.
 - Seed idempotente: correr el seed dos veces no duplica cursos/módulos/quiz.
 - Gateo por rol: verificar que un usuario sin login solo ve el Curso 1; un rol empresa
   ve Curso 1 + 2; un socio comercial ve Curso 1 + 3; admin ve los tres.
-- Audio: cada módulo con `audio_url` poblado y el MP3 accesible en R2.
+- Audio: el botón "Leer en voz alta" del reproductor Studio lee el contenido del módulo.
 - Completar un curso dispara el logro + certificado digital estándar.
 - Quiz: `passingScore` respetado; preguntas/opciones/explicaciones bien formadas.
 - El Tutor IA responde en contexto usando los módulos RWA.
