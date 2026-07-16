@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import { useForceLightMode } from "@/components/ThemeProvider";
 import { writeCeduCart } from "@/lib/cedu-cart-handoff";
@@ -565,6 +565,178 @@ function PlanesSection() {
   );
 }
 
+function CryptoVault24k() {
+  const [edition, setEdition] = useState<"100" | "200">("100");
+  const [currency, setCurrency] = useState<"MXN" | "USD">("MXN");
+  const [quote, setQuote] = useState<any>(null);
+  const [loadingQuote, setLoadingQuote] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [rail, setRail] = useState<"stripe" | "transfer_us">("stripe");
+  const [submitting, setSubmitting] = useState(false);
+  const [wire, setWire] = useState<any>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  // La transferencia USD requiere moneda USD; si cambias a MXN, vuelve a tarjeta.
+  useEffect(() => { if (currency === "MXN" && rail === "transfer_us") setRail("stripe"); }, [currency, rail]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingQuote(true); setQuoteError(null);
+    fetch("/api/vault/quote", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ editionKey: edition, currency }),
+    })
+      .then(async (r) => { const d = await r.json(); if (!r.ok) throw new Error(d.message || "No se pudo cotizar"); return d; })
+      .then((d) => { if (!cancelled) setQuote(d); })
+      .catch((e) => { if (!cancelled) { setQuoteError(e.message); setQuote(null); } })
+      .finally(() => { if (!cancelled) setLoadingQuote(false); });
+    return () => { cancelled = true; };
+  }, [edition, currency]);
+
+  const fmtMoney = (n: number) =>
+    currency === "USD"
+      ? "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USD"
+      : "$" + Math.round(Number(n)).toLocaleString("es-MX") + " MXN";
+
+  const handleCheckout = async () => {
+    setCheckoutError(null); setWire(null);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setCheckoutError("Ingresa un correo válido para tu comprobante y título."); return; }
+    setSubmitting(true);
+    try {
+      const r = await fetch("/api/vault/checkout", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editionKey: edition, currency, rail, deliveryMode: "vault", buyer: { email: email.trim() } }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.message || "No se pudo iniciar el pago.");
+      if (d.checkout_url) { window.location.href = d.checkout_url; return; }
+      if (d.instructions) { setWire(d.instructions); return; }
+      setCheckoutError("Respuesta inesperada del servidor.");
+    } catch (e: any) { setCheckoutError(e.message); }
+    finally { setSubmitting(false); }
+  };
+
+  const q = quote?.quote;
+  const ed = quote?.edition;
+
+  return (
+    <HoverCard className="mb-5 !border-2 !border-amber-400/40 !bg-gradient-to-br !from-amber-50/60 !to-white">
+      <InlineBadge color="orange">Kakaw · Oro físico + NFT</InlineBadge>
+      <h2 className="text-2xl font-serif text-cedu-ink mt-2.5 mb-1.5">🏆 CryptoVault <em className="text-amber-600 italic">24k</em></h2>
+      <p className="text-[13px] text-cedu-ink-soft leading-[1.7] mb-3">
+        Lingote de oro <strong className="text-amber-700">Au 999.9</strong> con las <strong className="text-cedu-ink">24 palabras</strong> de tu frase semilla grabadas al reverso. Cada pieza incluye un <strong className="text-cedu-ink">NFT que es el título 1:1 de un lingote específico</strong>, redimible por entrega física. Es un producto respaldado por oro real — no un instrumento de inversión.
+      </p>
+
+      {/* Selector de edición */}
+      <div className="flex gap-2 flex-wrap mb-2.5">
+        {(["100", "200"] as const).map((k) => (
+          <button key={k} onClick={() => setEdition(k)} data-testid={`vault-edition-${k}`}
+            className={`flex-1 min-w-[130px] p-3 rounded-xl border text-left transition-all ${edition === k ? "border-amber-500 bg-amber-100/60 shadow-sm" : "border-black/[0.08] bg-white hover:border-amber-300"}`}>
+            <div className="text-base font-extrabold text-cedu-ink">{k} g <span className="text-[10px] font-normal text-cedu-ink-muted">de oro 24k</span></div>
+            <div className="text-[10px] text-cedu-ink-muted">{k === "100" ? "≈ 3.215 oz troy" : "≈ 6.430 oz troy"} · Edición 1/320 · 2026</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Selector de moneda */}
+      <div className="flex gap-2 items-center mb-3">
+        <span className="text-[10px] text-cedu-ink-muted uppercase font-semibold">Moneda:</span>
+        {(["MXN", "USD"] as const).map((c) => (
+          <button key={c} onClick={() => setCurrency(c)} data-testid={`vault-currency-${c}`}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${currency === c ? "bg-cedu-ink text-white" : "bg-white text-cedu-ink-muted border border-black/[0.08]"}`}>
+            {c}
+          </button>
+        ))}
+      </div>
+
+      {/* Desglose de precio en vivo */}
+      <div className="p-3 px-4 bg-white rounded-xl border border-amber-400/20 mb-3">
+        {loadingQuote && <div className="text-xs text-cedu-ink-muted py-2">Cotizando spot de oro…</div>}
+        {quoteError && !loadingQuote && (
+          <div className="text-xs text-red-600 py-2">No se pudo cotizar en este momento. Intenta más tarde.</div>
+        )}
+        {q && !loadingQuote && !quoteError && (
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs"><span className="text-cedu-ink-soft">Valor del oro (spot × {q.grams} g)</span><span className="text-cedu-ink font-semibold">{fmtMoney(q.goldValue)}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-cedu-ink-soft">Fee operativo (20% · terminal + acuñación)</span><span className="text-cedu-ink font-semibold">{fmtMoney(q.operationalFee)}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-cedu-ink-soft">Gas de red (acuñar NFT título) — estimado</span><span className="text-cedu-ink font-semibold">{fmtMoney(q.gasFee)}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-cedu-ink-soft">Resguardo en bóveda asignada</span><span className="text-cedu-green font-semibold">Incluido</span></div>
+            <div className="flex justify-between items-center pt-1.5 border-t border-black/[0.06]">
+              <span className="text-xs font-bold text-cedu-ink">Total</span>
+              <span className="text-xl font-extrabold text-amber-600" data-testid="vault-total">{fmtMoney(q.total)}</span>
+            </div>
+            <p className="text-[10px] text-cedu-ink-muted leading-snug pt-1">
+              Precio referencial al spot de {quote?.spotFetchedAt ? new Date(quote.spotFetchedAt).toLocaleString("es-MX") : "ahora"}. El monto final se fija con el spot al confirmar. Tu lingote queda resguardado (asignado) en bóveda; recibes el título 1:1, sin envío físico.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Comprador + rail + acción */}
+      {!wire ? (
+        <div className="space-y-2.5">
+          {/* Modo de entrega */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="p-2.5 rounded-xl border-2 border-amber-500 bg-amber-100/50" data-testid="vault-mode-vault">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-sm">🏦</span>
+                <span className="text-xs font-bold text-cedu-ink">Bóveda asignada + título</span>
+                <span className="ml-auto text-[8px] font-bold text-cedu-green bg-cedu-green/10 px-1.5 py-0.5 rounded">ACTIVO</span>
+              </div>
+              <p className="text-[10px] text-cedu-ink-muted leading-snug">Tu lingote se resguarda asignado; recibes el NFT título 1:1, redimible. Sin cruzar fronteras.</p>
+            </div>
+            <div className="p-2.5 rounded-xl border border-black/[0.08] bg-white opacity-70" data-testid="vault-mode-experience">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-sm">✈️</span>
+                <span className="text-xs font-bold text-cedu-ink">Vive tu lingote — Web3Travel</span>
+                <span className="ml-auto text-[8px] font-bold text-cedu-violet bg-cedu-violet/10 px-1.5 py-0.5 rounded">PRONTO</span>
+              </div>
+              <p className="text-[10px] text-cedu-ink-muted leading-snug">Viaja al origen: tour a la mina, ve tu acuñación y recibe el título en persona. Próximamente con Web3Travel.</p>
+            </div>
+          </div>
+
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Tu correo (comprobante y título)" data-testid="vault-email"
+            className="w-full h-10 px-3 rounded-lg border border-black/[0.1] text-sm bg-white" />
+          <div className="flex gap-2 flex-wrap items-center">
+            <span className="text-[10px] text-cedu-ink-muted uppercase font-semibold">Pago:</span>
+            <button onClick={() => setRail("stripe")} data-testid="vault-rail-stripe"
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${rail === "stripe" ? "bg-cedu-blue text-white" : "bg-white text-cedu-ink-muted border border-black/[0.08]"}`}>💳 Tarjeta</button>
+            {currency === "USD" && (
+              <button onClick={() => setRail("transfer_us")} data-testid="vault-rail-transfer"
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${rail === "transfer_us" ? "bg-cedu-blue text-white" : "bg-white text-cedu-ink-muted border border-black/[0.08]"}`}>🏦 Transferencia USD</button>
+            )}
+            <span className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-black/[0.03] text-cedu-ink-muted/60">Cripto · próximamente</span>
+          </div>
+          {checkoutError && <div className="text-xs text-red-600">{checkoutError}</div>}
+          <button onClick={handleCheckout} disabled={submitting || !q || loadingQuote} data-testid="vault-checkout"
+            className="w-full h-11 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 border-none rounded-xl text-white text-sm font-bold cursor-pointer shadow-[0_4px_16px_rgba(245,158,11,0.3)] transition-colors">
+            {submitting ? "Procesando…" : rail === "stripe" ? `Pagar con tarjeta — ${q ? fmtMoney(q.total) : ""} →` : `Ver datos de transferencia →`}
+          </button>
+          <p className="text-[10px] text-cedu-ink-muted leading-snug">
+            Al pagar, tu <strong>título 1:1 se reserva</strong> con estado "acuñación pendiente"; el NFT se acuña on-chain al desplegar los contratos Kakaw. Nada se simula.
+          </p>
+        </div>
+      ) : (
+        <div className="p-3 px-4 bg-cedu-blue-light rounded-xl border border-cedu-blue/20 space-y-1.5" data-testid="vault-wire">
+          <p className="text-sm font-bold text-cedu-ink">{wire.title}</p>
+          <p className="text-xs text-cedu-ink-soft">Monto: <strong>{fmtMoney(wire.amount)}</strong> · Referencia: <strong className="font-mono">{wire.reference}</strong></p>
+          {wire.bank && (
+            <div className="text-[11px] text-cedu-ink font-mono bg-white rounded-lg p-2.5 space-y-0.5">
+              <div>Banco: {wire.bank.bank}</div>
+              <div>Routing (ABA): {wire.bank.routing}</div>
+              <div>Cuenta: {wire.bank.account}</div>
+              {wire.bank.swift && <div>SWIFT: {wire.bank.swift}</div>}
+              <div>Beneficiario: {wire.bank.beneficiary}</div>
+            </div>
+          )}
+          <p className="text-[10px] text-cedu-ink-muted">{wire.note}</p>
+        </div>
+      )}
+    </HoverCard>
+  );
+}
+
 function DispersionSection() {
   const [cart, setCart] = useState({ vault: 0, tangem2: 0, tangem3: 0 });
   const sub = cart.vault * PRICES.vault + cart.tangem2 * PRICES.tangem2 + cart.tangem3 * PRICES.tangem3;
@@ -760,7 +932,7 @@ function DispersionSection() {
                   window.location.href = "/tienda";
                 }} data-testid="btn-pay"
                   className="px-5 py-2.5 bg-cedu-blue border-none rounded-[10px] text-white text-xs font-bold cursor-pointer shadow-[0_4px_16px_rgba(27,90,223,0.25)] hover:bg-cedu-blue-dark transition-colors">
-                  Pagar con tarjeta →
+                  Comprar en la tienda →
                 </button>
               </div>
             </div>
@@ -772,6 +944,8 @@ function DispersionSection() {
           ))}
         </div>
       </HoverCard>
+
+      <CryptoVault24k />
 
       <HoverCard className="mb-7 !bg-cedu-orange-light !border-cedu-orange/[0.15]">
         <h4 className="text-[15px] font-bold text-cedu-orange mb-2">🔑 Regla #1: Separar pago de custodia</h4>

@@ -56,10 +56,30 @@ const ENV_VARS: EnvVar[] = [
   // Shipping
   { name: "ENVIA_API_KEY", required: false, description: "Envia.com shipping API key" },
 
+  // Precio spot del oro (CryptoVault 24k). Sin esta key no se cotiza el vault (nunca precio simulado).
+  { name: "GOLD_API_KEY", required: false, description: "goldapi.io x-access-token para spot XAU (CryptoVault 24k)" },
+
   // Bank info for SAM payments
   { name: "BANK_NAME", required: false, description: "Bank name for SAM payment info" },
   { name: "BANK_CLABE", required: false, description: "CLABE interbancaria for SAM payments" },
   { name: "BANK_BENEFICIARY", required: false, description: "Beneficiary name for SAM payments" },
+
+  // Cuenta USD (MeCorrieron LLC / Mercury) para el rail de transferencia del CryptoVault.
+  // NUNCA hardcodear estos valores en el repo; se configuran solo en el entorno (Render).
+  { name: "USD_BANK_NAME", required: false, description: "USD receiving bank name (CryptoVault transfer rail)" },
+  { name: "USD_BANK_ROUTING", required: false, description: "USD ABA routing number" },
+  { name: "USD_BANK_ACCOUNT", required: false, description: "USD account number" },
+  { name: "USD_BANK_SWIFT", required: false, description: "USD SWIFT/BIC for international wires" },
+  { name: "USD_BANK_BENEFICIARY", required: false, description: "USD beneficiary name" },
+  { name: "USD_BANK_BENEFICIARY_ADDRESS", required: false, description: "USD beneficiary address" },
+  { name: "USD_BANK_ADDRESS", required: false, description: "USD receiving bank address" },
+
+  // Estimaciones (unidades mayores de la moneda) de gas de red y envío del CryptoVault.
+  // Se cotizan al comprador; se afinan al momento del envío/acuñación.
+  { name: "VAULT_GAS_FEE_MXN", required: false, description: "Estimado gas de red (acuñar NFT) en MXN" },
+  { name: "VAULT_GAS_FEE_USD", required: false, description: "Estimado gas de red (acuñar NFT) en USD" },
+  { name: "VAULT_SHIPPING_FEE_MXN", required: false, description: "Estimado envío CryptoVault en MXN" },
+  { name: "VAULT_SHIPPING_FEE_USD", required: false, description: "Estimado envío CryptoVault en USD" },
 
   // Superadmin
   { name: "SUPERADMIN_PASSWORD", required: false, description: "Initial superadmin password" },
@@ -114,5 +134,27 @@ export function getBankInfo() {
     type: "Cuenta Empresarial",
     clabe: process.env.BANK_CLABE || "",
     beneficiary: process.env.BANK_BENEFICIARY || "Ceduverse S.C.",
+  };
+}
+
+/**
+ * Datos de la cuenta USD (MeCorrieron LLC / Mercury) para el rail de transferencia.
+ * Devuelve null si no está configurada (rail no disponible) — nunca datos inventados.
+ */
+export function getUsdBankInfo(): {
+  bank: string; routing: string; account: string; swift: string;
+  beneficiary: string; beneficiaryAddress: string; bankAddress: string;
+} | null {
+  const account = process.env.USD_BANK_ACCOUNT;
+  const routing = process.env.USD_BANK_ROUTING;
+  if (!account || !routing) return null;
+  return {
+    bank: process.env.USD_BANK_NAME || "",
+    routing,
+    account,
+    swift: process.env.USD_BANK_SWIFT || "",
+    beneficiary: process.env.USD_BANK_BENEFICIARY || "",
+    beneficiaryAddress: process.env.USD_BANK_BENEFICIARY_ADDRESS || "",
+    bankAddress: process.env.USD_BANK_ADDRESS || "",
   };
 }
