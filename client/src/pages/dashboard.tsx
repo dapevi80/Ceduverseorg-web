@@ -1685,20 +1685,27 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
-  const { data: roleDefinition } = useQuery<{ sidebarConfig: any; displayName: string }>({
-    queryKey: ["/api/role-definition", account?.userRole],
-    enabled: !!account?.userRole,
-  });
-
   // "Ver como ROL": todo el nav/paneles de abajo debe reflejar el rol
   // EFECTIVO (lo que un superadmin/admin real está previsualizando), NUNCA
   // el rol real directo — así previsualizar p.ej. socio_estudiante oculta
-  // el link de Panel Admin como debe ser. `realIsSuperadmin` es la única
-  // excepción: se deriva del rol REAL y gatea el switcher/banner global
-  // (ver ViewAsSwitcher, montado en App.tsx), para que el camino de vuelta
-  // a superadmin nunca desaparezca mientras se previsualiza otro rol.
-  // (Hook llamado antes de cualquier return condicional, como todos los de arriba.)
+  // el link de Panel Admin como debe ser. `realIsSuperadmin` (más abajo) es
+  // la única excepción: se deriva del rol REAL y gatea el switcher/banner
+  // global (ver ViewAsSwitcher, montado en App.tsx), para que el camino de
+  // vuelta a superadmin nunca desaparezca mientras se previsualiza otro rol.
+  // (Hook llamado antes de cualquier return condicional, como todos los de
+  // arriba — debe estar antes de la query de roleDefinition para que su
+  // queryKey/enabled puedan usar effectiveRole.)
   const { viewAsRole } = useViewAs();
+  const effectiveRole = viewAsRole ?? account?.userRole;
+
+  // El sidebar configurable en BD también debe seguir el rol EFECTIVO: si
+  // no, un superadmin previsualizando "empresa" seguiría viendo el sidebar
+  // de superadmin en dynamicItems (solo los flags booleanos de abajo
+  // reaccionarían a la previsualización).
+  const { data: roleDefinition } = useQuery<{ sidebarConfig: any; displayName: string }>({
+    queryKey: ["/api/role-definition", effectiveRole],
+    enabled: !!effectiveRole,
+  });
 
   useEffect(() => {
     if (!authLoading && !user) setLocation("/auth");
@@ -1706,7 +1713,6 @@ export default function Dashboard() {
 
   if (!authLoading && !user) return null;
 
-  const effectiveRole = viewAsRole ?? account?.userRole;
   const realIsSuperadmin = account?.userRole === "superadmin";
 
   const isOrgAdmin = userTeams.some(t => t.role === "admin") || effectiveRole === "empresa" || effectiveRole === "empresa_rh";
