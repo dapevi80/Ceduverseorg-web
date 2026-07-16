@@ -2117,3 +2117,60 @@ export const otpCodes = pgTable("otp_codes", {
   index("idx_otp_codes_email").on(table.email),
   index("idx_otp_codes_expires").on(table.expiresAt),
 ]);
+
+// ==================== CRYPTOVAULT 24k (Kakaw) ====================
+// Pedidos del CryptoVault 24k vendido en /ceduverse. Precio dinámico basado en
+// spot de oro (ver server/services/*). El NFT título 1:1 del lingote se RESERVA
+// al pagar y se acuña cuando los contratos Kakaw estén desplegados (sin mock on-chain).
+export const cryptoVaultOrderStatusEnum = pgEnum("crypto_vault_order_status", [
+  "pending_payment", // esperando pago (transferencia) o checkout Stripe abierto
+  "paid",            // pago confirmado
+  "title_reserved",  // título 1:1 reservado, acuñación pendiente
+  "minted",          // NFT acuñado on-chain (fase futura)
+  "cancelled",
+]);
+export const cryptoVaultRailEnum = pgEnum("crypto_vault_rail", [
+  "stripe",       // tarjeta fiat
+  "transfer_us",  // transferencia USD (MeCorrieron LLC)
+  "transfer_mx",  // transferencia MXN (Ceduverse) — pendiente de cuenta
+  "crypto",       // pago cripto — fase futura
+]);
+
+export const cryptoVaultOrders = pgTable("crypto_vault_orders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orderNumber: varchar("order_number", { length: 30 }).notNull().unique(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  buyerEmail: text("buyer_email").notNull(),
+  buyerName: text("buyer_name"),
+  editionKey: varchar("edition_key", { length: 8 }).notNull(), // "100" | "200"
+  grams: integer("grams").notNull(),
+  currency: varchar("currency", { length: 3 }).notNull(),      // "MXN" | "USD"
+  // Spot 24k por gramo lockeado al cotizar (registro histórico exacto).
+  spotPerGram: numeric("spot_per_gram", { precision: 14, scale: 4 }).notNull(),
+  operationalFeePct: numeric("operational_fee_pct", { precision: 5, scale: 4 }).notNull(),
+  // Montos en unidades MENORES (centavos) de `currency`, compatibles con Stripe.
+  goldValueMinor: integer("gold_value_minor").notNull(),
+  operationalFeeMinor: integer("operational_fee_minor").notNull(),
+  subtotalMinor: integer("subtotal_minor").notNull(),
+  gasFeeMinor: integer("gas_fee_minor").notNull().default(0),
+  shippingFeeMinor: integer("shipping_fee_minor").notNull().default(0),
+  totalMinor: integer("total_minor").notNull(),
+  rail: cryptoVaultRailEnum("rail").notNull(),
+  status: cryptoVaultOrderStatusEnum("status").notNull().default("pending_payment"),
+  // Modo de entrega: "vault" (bóveda asignada + título, único disponible),
+  // "experience" (viaje Web3Travel — próximamente) o "import" (físico a MX — próximamente).
+  deliveryMode: varchar("delivery_mode", { length: 16 }).notNull().default("vault"),
+  stripeSessionId: text("stripe_session_id"),
+  paymentRef: text("payment_ref"),          // referencia de transferencia / tx cripto
+  titleStatus: text("title_status").notNull().default("pendiente_acunacion"),
+  barSerial: text("bar_serial"),            // serie del lingote asignado al reservar
+  assayCertHash: text("assay_cert_hash"),   // hash del certificado de ensaye (placeholder)
+  shippingAddress: jsonb("shipping_address"),
+  quoteLockedUntil: timestamp("quote_locked_until", { withTimezone: true }),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+}, (table) => [
+  index("idx_crypto_vault_orders_user").on(table.userId),
+  index("idx_crypto_vault_orders_status").on(table.status),
+]);

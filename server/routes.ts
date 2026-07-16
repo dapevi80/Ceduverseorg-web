@@ -61,6 +61,7 @@ import { registerCrmRoutes } from "./routes/crm";
 import { registerGoogleMeetRoutes } from "./routes/google-meet";
 import { registerMembershipRoutes } from "./routes/membership";
 import { registerCertificateRoutes } from "./routes/certificates";
+import { registerVaultRoutes } from "./routes/vault";
 import { registerHeygenRoutes } from "./routes/heygen";
 import { registerApiKeyRoutes } from "./routes/api-keys";
 import { registerEmpresaRoutes } from "./routes/empresa";
@@ -404,6 +405,7 @@ export async function registerRoutes(
   // ==================== Route Modules ====================
   registerCourseRoutes(app);
   registerCertificateRoutes(app);
+  registerVaultRoutes(app);
   registerAdminRoutes(app);
 
   // ==================== PARTNER ROUTES ====================

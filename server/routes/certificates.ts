@@ -65,6 +65,13 @@ export function registerCertificateRoutes(app: Express) {
       if (certType === "dc3" && !course.dc3Disponible) {
         return res.status(400).json({ message: "Este curso no ofrece constancia DC-3" });
       }
+      // El certificado exige haber terminado el curso: sin este check un cliente
+      // podía solicitarlo vía API con 0% de avance (la UI lo ocultaba, la API no).
+      const userCourses = await storage.getUserCourses(userId);
+      const enrollment = userCourses.find(uc => uc.courseId === courseId);
+      if (!enrollment || (enrollment.completed || 0) < 100) {
+        return res.status(400).json({ message: "Debes completar el 100% del curso antes de solicitar un certificado" });
+      }
       const quiz = await storage.getQuizByCourse(courseId);
       if (quiz) {
         const attempts = await storage.getQuizAttempts(userId, quiz.id);

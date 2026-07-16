@@ -48,3 +48,6 @@ npm-debug.log*
 
 # Local-only Tutor IA dev scratch (voice A/B sampler)
 _tts-sample.mjs
+
+# Auditorías internas (no van al repo)
+AUDITORIA-*.md

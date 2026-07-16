@@ -239,8 +239,12 @@ export function registerCourseRoutes(app: Express) {
       }
       if (completed > 0) {
         const modules = await storage.getCourseModules(courseId);
-        const hasAudio = modules.some(m => !!m.audioUrl);
-        if (hasAudio) {
+        // Solo exigimos el audio cuando el cliente realmente puede rastrearlo:
+        // el reproductor STPS monta el audio del primer módulo y NO monta cuando
+        // el curso tiene video HeyGen. Si exigiéramos audio en cursos con video,
+        // listeningProgress nunca subiría y el 403 bloquearía el progreso para siempre.
+        const hasTrackedAudio = !!modules[0]?.audioUrl && !modules.some(m => !!m.heygenVideoUrl);
+        if (hasTrackedAudio) {
           const userCourses = await storage.getUserCourses(req.supabaseUserId!);
           const enrollment = userCourses.find(uc => uc.courseId === courseId);
           if (enrollment && (enrollment.listeningProgress || 0) < 95) {
@@ -498,27 +502,41 @@ export function registerCourseRoutes(app: Express) {
 
   app.patch("/api/me/account", requireAuth, async (req, res, next) => {
     try {
-      const updates: Record<string, any> = {};
+      // Actualización crítica del onboarding: se aplica SIEMPRE, aislada del
+      // referido. Antes, referredBy y accountSetup iban en el mismo UPDATE; si el
+      // referido violaba el FK heredado (accounts.referred_by -> accounts.
+      // referral_code, que apunta a la tabla equivocada), el 500 tumbaba también
+      // el accountSetup y ATRAPABA al usuario en el onboarding.
+      const coreUpdates: Record<string, any> = {};
       if (req.body.accountSetup !== undefined) {
-        updates.accountSetup = req.body.accountSetup;
+        coreUpdates.accountSetup = req.body.accountSetup;
       }
-      if (req.body.referredBy && typeof req.body.referredBy === "string") {
-        const existingAccount = await db.select().from(accounts).where(eq(accounts.id, req.supabaseUserId!));
-        const alreadyReferred = existingAccount.length > 0 && existingAccount[0].referredBy;
-        if (!alreadyReferred) {
+      let account = await storage.updateAccount(req.supabaseUserId!, coreUpdates);
+      if (!account) return res.status(404).json({ message: "Cuenta no encontrada" });
+
+      // Atribución de referido: best-effort y aislada. Si falla, se registra en
+      // el log pero NUNCA bloquea el onboarding. (Al corregir el FK en la BD,
+      // esta misma ruta empezará a atribuir sin cambio de código.)
+      if (req.body.referredBy && typeof req.body.referredBy === "string" && !account.referredBy) {
+        try {
           const [ref] = await db.select().from(referralCodes).where(
             and(eq(referralCodes.code, req.body.referredBy), eq(referralCodes.isActive, true))
           );
           if (ref) {
-            updates.referredBy = req.body.referredBy;
-            await db.update(referralCodes)
-              .set({ usageCount: ref.usageCount + 1 })
-              .where(eq(referralCodes.id, ref.id));
+            const updated = await storage.updateAccount(req.supabaseUserId!, { referredBy: req.body.referredBy });
+            if (updated) {
+              account = updated;
+              // El contador solo sube si la atribución SÍ se persistió (antes se
+              // inflaba en cada reintento fallido). Incremento atómico.
+              await db.update(referralCodes)
+                .set({ usageCount: sql`${referralCodes.usageCount} + 1` })
+                .where(eq(referralCodes.id, ref.id));
+            }
           }
+        } catch (refErr) {
+          console.error("Atribución de referido falló (no bloquea el onboarding):", refErr);
         }
       }
-      const account = await storage.updateAccount(req.supabaseUserId!, updates);
-      if (!account) return res.status(404).json({ message: "Cuenta no encontrada" });
       res.json(account);
     } catch (err) { next(err); }
   });
