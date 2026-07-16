@@ -6,8 +6,46 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { r2Storage } from "../services/r2-storage";
+import { isPaidCertType, resolveCertPriceMxn } from "@shared/cert-pricing";
+import { isBlockingDuplicateStatus } from "@shared/cert-duplicate";
+import { stripe, BASE_URL } from "../lib/stripe-client";
+import { decideCertTransition } from "../lib/cert-webhook-logic";
 
 export function registerCertificateRoutes(app: Express) {
+  // ==================== STRIPE WEBHOOK (CERTIFICATES) ====================
+
+  app.post("/api/certificates/webhook", async (req, res) => {
+    try {
+      if (!stripe) return res.sendStatus(200); // sin Stripe, nada que hacer
+      const secret = process.env.STRIPE_WEBHOOK_SECRET_CERTS;
+      if (!secret) return res.status(403).json({ message: "Webhook de certificados no configurado" });
+      const sig = req.headers["stripe-signature"] as string;
+      if (!sig) return res.status(400).json({ message: "Missing signature" });
+
+      const event = stripe.webhooks.constructEvent((req as any).rawBody as string, sig, secret);
+      if (event.type !== "checkout.session.completed") return res.sendStatus(200);
+
+      const session = event.data.object as any;
+      if (session.metadata?.kind !== "certificate") return res.sendStatus(200);
+
+      const id = session.metadata?.certRequestId;
+      const request = id ? await storage.getCertificateRequest(id) : null;
+      if (!request) return res.sendStatus(200);
+
+      if (decideCertTransition(request.status, session.payment_status) === "confirm") {
+        await storage.updateCertificateRequest(request.id, {
+          status: "solicitado",
+          stripeSessionId: session.id,
+          paidAt: new Date(),
+        });
+      }
+      return res.sendStatus(200);
+    } catch (e: any) {
+      console.error("[certs] webhook error:", e.message);
+      return res.sendStatus(400);
+    }
+  });
+
   // ==================== CERTIFICATE REQUESTS (STUDENT) ====================
 
   app.post("/api/me/certificates", requireAuth, async (req, res, next) => {
@@ -44,20 +82,55 @@ export function registerCertificateRoutes(app: Express) {
       }
       const existing = await storage.getCertificateRequestsByUser(userId);
       const duplicate = existing.find(r => r.courseId === courseId && r.certType === certType);
-      if (duplicate) {
-        if (duplicate.status === "rechazado") {
+      if (duplicate && isBlockingDuplicateStatus(duplicate.status)) {
+        return res.status(409).json({ message: "Ya tienes una solicitud para este certificado", request: duplicate });
+      }
+
+      // Diploma es gratis: comportamiento actual (incluye reuso de un rechazado).
+      if (!isPaidCertType(certType)) {
+        if (duplicate) {
           const updated = await storage.updateCertificateRequest(duplicate.id, { status: "solicitado", rejectReason: null });
           return res.status(200).json(updated);
         }
-        return res.status(409).json({ message: "Ya tienes una solicitud para este certificado", request: duplicate });
+        const request = await storage.createCertificateRequest({
+          userId,
+          courseId,
+          certType,
+          status: "solicitado",
+        });
+        return res.status(201).json(request);
       }
-      const request = await storage.createCertificateRequest({
-        userId,
-        courseId,
-        certType,
-        status: "solicitado",
+
+      // dc3 / sep: pay-first. El monto se resuelve SIEMPRE en el servidor, nunca desde el body.
+      if (!stripe) {
+        return res.status(503).json({ message: "Pagos no disponibles: STRIPE_SECRET_KEY no configurada." });
+      }
+      const amount = resolveCertPriceMxn(certType);
+      const request = duplicate
+        ? await storage.updateCertificateRequest(duplicate.id, { status: "pending_payment", amountMxn: amount, rejectReason: null })
+        : await storage.createCertificateRequest({ userId, courseId, certType, status: "pending_payment", amountMxn: amount });
+      if (!request) {
+        return res.status(500).json({ message: "No se pudo crear la solicitud de certificado" });
+      }
+      const label = certType === "dc3" ? "Servicio de certificación DC-3 STPS" : "Constancia SEP";
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        customer_email: (await storage.getUser(userId))?.email || undefined,
+        line_items: [{
+          price_data: {
+            currency: "mxn",
+            product_data: { name: `${label} — ${course.title}` },
+            unit_amount: amount * 100,
+          },
+          quantity: 1,
+        }],
+        metadata: { kind: "certificate", certRequestId: String(request.id) },
+        success_url: `${BASE_URL}/?cert=paid&view=certificates`,
+        cancel_url: `${BASE_URL}/?cert=cancelled&view=certificates`,
       });
-      res.status(201).json(request);
+      await storage.updateCertificateRequest(request.id, { stripeSessionId: session.id });
+      return res.status(200).json({ checkout_url: session.url });
     } catch (err) { next(err); }
   });
 

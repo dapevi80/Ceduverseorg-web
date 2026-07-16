@@ -47,7 +47,8 @@ const ENV_VARS: EnvVar[] = [
 
   // Payments
   { name: "STRIPE_SECRET_KEY", required: false, description: "Stripe secret key for payments" },
-  { name: "STRIPE_WEBHOOK_SECRET", required: false, description: "Stripe webhook signing secret" },
+  { name: "STRIPE_WEBHOOK_SECRET", required: false, description: "Stripe webhook signing secret (store)" },
+  { name: "STRIPE_WEBHOOK_SECRET_CERTS", required: false, description: "Stripe webhook signing secret (certificates)" },
 
   // Invoicing
   { name: "FACTURAPI_API_KEY", required: false, description: "FacturAPI invoicing key" },

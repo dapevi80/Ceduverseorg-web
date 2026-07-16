@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { CERT_PRICES_MXN } from "@shared/cert-pricing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +47,7 @@ type CourseEnrollment = {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   solicitado: { label: "Solicitado", color: "bg-amber-100 text-amber-800", icon: Clock },
+  pending_payment: { label: "Pago pendiente", color: "bg-amber-100 text-amber-800", icon: Clock },
   en_proceso: { label: "En proceso", color: "bg-blue-100 text-blue-800", icon: Loader2 },
   emitido: { label: "Emitido", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
   rechazado: { label: "Rechazado", color: "bg-red-100 text-red-800", icon: XCircle },
@@ -53,8 +55,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
 
 const TYPE_CONFIG: Record<string, { label: string; badge: string; price: string }> = {
   diploma: { label: "Diploma NFT", badge: "bg-cedu-green/10 text-cedu-green", price: "Gratis" },
-  dc3: { label: "DC-3 STPS", badge: "bg-amber-100 text-amber-800", price: "$499 MXN" },
-  sep: { label: "Certificado SEP", badge: "bg-cedu-blue/10 text-cedu-blue", price: "$1,999 MXN" },
+  dc3: { label: "DC-3 STPS", badge: "bg-amber-100 text-amber-800", price: `$${CERT_PRICES_MXN.dc3.toLocaleString()} MXN` },
+  sep: { label: "Certificado SEP", badge: "bg-cedu-blue/10 text-cedu-blue", price: `$${CERT_PRICES_MXN.sep.toLocaleString()} MXN` },
 };
 
 export function CertificatesTab() {
@@ -74,12 +76,18 @@ export function CertificatesTab() {
   const completedCourses = enrollments.filter((e) => e.completed >= 100);
 
   const requestMutation = useMutation({
-    mutationFn: () =>
-      apiRequest("POST", "/api/me/certificates", {
-        courseId: selectedCourse,
-        certType: selectedType,
-      }),
-    onSuccess: () => {
+    mutationFn: async (vars: { courseId: string; certType: string }) => {
+      const res = await apiRequest("POST", "/api/me/certificates", {
+        courseId: vars.courseId,
+        certType: vars.certType,
+      });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url; // certificado de pago -> Stripe
+        return;
+      }
       toast({ title: "Solicitud enviada", description: "Tu certificado ha sido solicitado exitosamente." });
       queryClient.invalidateQueries({ queryKey: ["/api/me/certificates"] });
       setDialogOpen(false);
@@ -96,6 +104,7 @@ export function CertificatesTab() {
   });
 
   const solicited = certificates.filter((c) => c.status === "solicitado");
+  const pendingPayment = certificates.filter((c) => c.status === "pending_payment");
   const inProcess = certificates.filter((c) => c.status === "en_proceso");
   const emitted = certificates.filter((c) => c.status === "emitido");
   const rejected = certificates.filter((c) => c.status === "rechazado");
@@ -158,8 +167,8 @@ export function CertificatesTab() {
                     <SelectValue placeholder="Seleccionar tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dc3">DC-3 STPS — $499 MXN</SelectItem>
-                    <SelectItem value="sep">Certificado SEP — $1,999 MXN</SelectItem>
+                    <SelectItem value="dc3">{`DC-3 STPS — $${CERT_PRICES_MXN.dc3.toLocaleString()} MXN`}</SelectItem>
+                    <SelectItem value="sep">{`Certificado SEP — $${CERT_PRICES_MXN.sep.toLocaleString()} MXN`}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -174,7 +183,7 @@ export function CertificatesTab() {
               <Button
                 className="w-full bg-cedu-blue hover:bg-cedu-blue/90 text-white"
                 disabled={!selectedCourse || !selectedType || requestMutation.isPending}
-                onClick={() => requestMutation.mutate()}
+                onClick={() => requestMutation.mutate({ courseId: selectedCourse, certType: selectedType })}
                 data-testid="button-submit-certificate-request"
               >
                 {requestMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
@@ -206,7 +215,7 @@ export function CertificatesTab() {
                 <Clock className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold font-serif">{solicited.length + inProcess.length}</p>
+                <p className="text-2xl font-bold font-serif">{solicited.length + pendingPayment.length + inProcess.length}</p>
                 <p className="text-xs text-muted-foreground">En proceso</p>
               </div>
             </div>
@@ -253,7 +262,7 @@ export function CertificatesTab() {
       ) : (
         <div className="space-y-3">
           {[
-            { title: "Pendientes", items: [...solicited, ...inProcess], icon: Clock, color: "text-amber-500" },
+            { title: "Pendientes", items: [...solicited, ...pendingPayment, ...inProcess], icon: Clock, color: "text-amber-500" },
             { title: "Emitidos", items: emitted, icon: CheckCircle2, color: "text-green-600" },
             { title: "Rechazados", items: rejected, icon: XCircle, color: "text-red-500" },
           ]
@@ -306,6 +315,17 @@ export function CertificatesTab() {
                             <p className="text-xs text-red-600">
                               Motivo: {cert.rejectReason}
                             </p>
+                          </div>
+                        )}
+                        {cert.status === "pending_payment" && (
+                          <div className="mt-2 text-xs text-amber-700">
+                            Pago pendiente.
+                            <button
+                              className="ml-2 underline disabled:opacity-50 disabled:cursor-not-allowed"
+                              disabled={requestMutation.isPending}
+                              onClick={() => requestMutation.mutate({ courseId: cert.courseId, certType: cert.certType })}
+                              data-testid={`btn-complete-payment-${cert.id}`}
+                            >Completar pago</button>
                           </div>
                         )}
                       </CardContent>

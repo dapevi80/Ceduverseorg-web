@@ -36,6 +36,7 @@ export const certTypeEnum = pgEnum("cert_type", [
 ]);
 
 export const certRequestStatusEnum = pgEnum("cert_request_status", [
+  "pending_payment",
   "solicitado",
   "en_proceso",
   "emitido",
@@ -285,6 +286,9 @@ export const certificateRequests = pgTable("certificate_requests", {
   status: certRequestStatusEnum("status").notNull().default("solicitado"),
   rejectReason: text("reject_reason"),
   pdfUrl: text("pdf_url"),
+  amountMxn: integer("amount_mxn"),
+  stripeSessionId: text("stripe_session_id"),
+  paidAt: timestamp("paid_at", { withTimezone: true }),
   achievementUserId: uuid("achievement_user_id").references(() => achievementUsers.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
