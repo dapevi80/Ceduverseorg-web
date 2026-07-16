@@ -134,4 +134,66 @@ export const rwaOnboardingQuizzes: Record<string, RwaQuiz> = {
     ],
   },
 
+  "cryptovault-24k": {
+    title: "Evaluación: CryptoVault 24k",
+    passingScore: 70,
+    questions: [
+      {
+        question: "¿Qué es CryptoVault 24k?",
+        options: [
+          "Un token especulativo sin respaldo físico",
+          "Oro físico Au 999.9, en dos ediciones (100 g y 200 g), serie limitada 1/320 · 2026",
+          "Un fondo de inversión en metales preciosos",
+          "Una acción de la empresa Kakaw",
+        ],
+        correctIndex: 1,
+        explanation: "CryptoVault 24k es oro físico de 24 kilates (Au 999.9), disponible en presentaciones de 100 g y 200 g, dentro de una serie limitada marcada 1/320 · 2026.",
+      },
+      {
+        question: "¿Qué son las 24 palabras grabadas en el reverso de la pieza?",
+        options: [
+          "El certificado de ensaye del oro",
+          "Tu propia frase de recuperación (autocustodia), un asunto distinto al título de la pieza",
+          "El código de la garantía de devolución",
+          "El número de serie de la edición",
+        ],
+        correctIndex: 1,
+        explanation: "Las 24 palabras son la frase de recuperación de tu propia wallet, protegida por autocustodia. Es una capa distinta del título digital que identifica a la pieza física.",
+      },
+      {
+        question: "¿Cómo se calcula el precio de una pieza al cotizarla?",
+        options: [
+          "Un precio fijo decidido internamente, sin relación con el mercado",
+          "Spot del oro por gramo × gramos de la edición, más un fee operativo del 20% y el gas de red estimado",
+          "El precio de Bitcoin del día",
+          "Una subasta entre compradores",
+        ],
+        correctIndex: 1,
+        explanation: "El precio parte del spot de oro 24k (fuente externa de mercado) por los gramos de la edición, más un 20% de fee operativo (acuñación + terminal) y el gas de red estimado, cotizado en vivo y bloqueado unos minutos.",
+      },
+      {
+        question: "Cuando pagas tu pieza, tu título queda en estado 'acuñación pendiente'. ¿Qué significa esto?",
+        options: [
+          "Que el NFT ya fue acuñado on-chain y solo falta entregarlo",
+          "Que tu pedido y tu pieza quedan reservados y documentados; la acuñación on-chain ocurre cuando se despliegan los contratos de Kakaw",
+          "Que la compra fue rechazada",
+          "Que necesitas pagar de nuevo",
+        ],
+        correctIndex: 1,
+        explanation: "Tu pieza y tu título quedan reservados desde el pago, pero la acuñación on-chain propiamente dicha es un paso posterior, atado al despliegue de los contratos del consorcio. Nada se simula en el camino.",
+      },
+      {
+        question: "¿Cuál de los siguientes es un guardrail correcto sobre CryptoVault 24k?",
+        options: [
+          "Es una oferta de valores con rendimiento garantizado",
+          "No es un instrumento de inversión ni asesoría financiera: su valor depende únicamente del precio de mercado del oro",
+          "Es un producto exclusivo para inversionistas acreditados",
+          "Garantiza una revalorización anual fija",
+        ],
+        correctIndex: 1,
+        explanation: "CryptoVault 24k es un producto respaldado por oro físico real, no una oferta de valores ni una promesa de rendimiento. Su valor sigue el precio de mercado del oro, sin garantías de retorno.",
+      },
+    ],
+  },
+
 };

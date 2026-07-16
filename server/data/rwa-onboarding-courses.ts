@@ -332,4 +332,151 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
     },
   ],
 
+  "cryptovault-24k": [
+    {
+      title: "Qué es CryptoVault 24k",
+      description: "Oro físico Au 999.9 en dos ediciones (100 g y 200 g), serie limitada marcada 1/320 · 2026. Qué es exactamente esta pieza y por qué el oro es la puerta de entrada más fácil de entender a los RWA.",
+      durationMinutes: 12,
+      contentHtml: `
+<p>Bienvenido a Academia RWA. Este curso es distinto a los anteriores en un sentido importante: no vamos a hablar de teoría ni de marcos de verificación, vamos a hablar de un producto concreto que existe hoy dentro del consorcio Kakaw, que puedes ver, cotizar y comprar en este momento. Se llama <strong>CryptoVault 24k</strong>, y en este primer módulo vamos a describir exactamente qué es, sin adornos ni promesas — solo lo que realmente es.</p>
+
+<p>CryptoVault 24k es una pieza de <strong>oro físico de 24 kilates</strong>, con pureza <strong>Au 999.9</strong> — es decir, oro prácticamente puro, sin las aleaciones que se usan en la joyería para dar dureza. Está disponible en dos presentaciones: una de <strong>100 gramos</strong> (equivalente a aproximadamente 3.215 onzas troy, la unidad estándar con la que se cotiza el oro en los mercados internacionales) y otra de <strong>200 gramos</strong> (aproximadamente 6.430 onzas troy). Ambas presentaciones pertenecen a la misma serie: una edición limitada marcada <strong>1/320 · 2026</strong>, lo que significa que forman parte de un lote acotado de piezas producidas para este año, no de una línea abierta que se siga fabricando indefinidamente.</p>
+
+<h3>Por qué el oro, y por qué ahora</h3>
+<p>Si tomaste el Curso 1 de esta academia, recuerdas que ahí usamos precisamente el oro como ejemplo pedagógico de lo que es un RWA: un lingote guardado en una bóveda certificada, con su peso exacto, es de los activos más fáciles de entender para cualquier persona, tenga o no experiencia con inversiones o con tecnología. No hace falta explicar contratos de arrendamiento, proyecciones de regalías, ni el funcionamiento de una patente. El oro se entiende de forma casi instintiva: es escaso, es tangible, y su valor ha sido reconocido por prácticamente todas las civilizaciones humanas durante miles de años.</p>
+
+<p>CryptoVault 24k toma esa intuición y la convierte en un producto concreto del consorcio Kakaw: en vez de hablarte en abstracto de "qué es un RWA de oro", te ofrece una pieza real, numerada, con un peso y una pureza específicos, que puedes cotizar en vivo con el precio de mercado del oro en el momento exacto de tu compra.</p>
+
+<h3>Qué NO es CryptoVault 24k</h3>
+<p>Antes de seguir, vale la pena decir con toda claridad lo que este producto no es, porque es la misma honestidad que hemos mantenido en cada curso de esta academia: CryptoVault 24k <strong>no es un instrumento de inversión</strong>, no es una promesa de rendimiento, y no es una oferta de valores. Es, en su forma más simple, un producto respaldado por oro real. Su valor depende del precio del oro en el mercado —que puede subir o bajar como cualquier materia prima— y no de ninguna proyección, promesa o garantía de ganancia futura que el consorcio pueda ofrecerte. Vamos a volver sobre este punto con más detalle en el último módulo del curso, dedicado enteramente a los guardrails que debes tener siempre presentes.</p>
+
+<h3>Las dos presentaciones, lado a lado</h3>
+<p>La diferencia entre las dos ediciones es, sencillamente, el tamaño de la pieza. La de 100 gramos es la presentación de entrada: más accesible en términos de precio total, porque contiene menos gramos de oro. La de 200 gramos duplica el contenido metálico y, con ello, duplica aproximadamente el componente de valor de oro dentro del precio total (el componente de fees, que veremos en el módulo 4, se calcula como un porcentaje sobre ese valor, así que también escala con el tamaño). Ninguna de las dos presentaciones es "mejor" que la otra en términos absolutos — la elección depende de cuánto oro físico quieres poseer y del presupuesto con el que cuentas.</p>
+
+<p>Ambas comparten exactamente la misma pureza (Au 999.9) y pertenecen a la misma serie limitada marcada 1/320 · 2026. Es decir, no hay una edición "premium" y otra "estándar" — son el mismo producto en dos tamaños distintos, producidos dentro del mismo lote acotado del año.</p>
+
+<h3>Un producto con dos capas: lo físico y lo digital</h3>
+<p>Lo que hace a CryptoVault 24k particularmente interesante dentro del ecosistema Kakaw es que no es solamente una pieza de oro. Cada pieza está pensada para tener, además del metal físico, una capa digital asociada: un título que identifica de forma específica a esa pieza y no a otra, y —grabada físicamente en el reverso de la pieza— una frase de recuperación de 24 palabras que cumple una función completamente distinta, relacionada con la autocustodia de activos digitales propios de quien la posee.</p>
+
+<p>Estas dos capas digitales —el título asociado a la pieza y la frase grabada en el reverso— son justamente los temas de los siguientes dos módulos. En el módulo 2 vamos a hablar del título 1:1 de la pieza: qué existe hoy, qué está diseñado para existir más adelante, y por qué es importante no confundir ambas cosas. En el módulo 3 vamos a hablar específicamente de las 24 palabras grabadas al reverso, qué son, y por qué separar el pago de una pieza de la custodia de tus propios activos es un principio de seguridad que te conviene entender bien, uses o no CryptoVault 24k. Sigamos.</p>
+      `,
+      references: ["cryptovault-pricing.ts / CRYPTOVAULT_EDITIONS", "ceduverse-private.tsx (sección CryptoVault24k)"],
+    },
+    {
+      title: "El título 1:1 del lingote: gemelo digital, con cuidado",
+      description: "Qué significa un título 1:1 asociado a cada pieza, qué existe hoy (reserva de título, estado 'acuñación pendiente') y qué es todavía diseño (el NFT gemelo sellado, el modelo no-custodio).",
+      durationMinutes: 13,
+      contentHtml: `
+<p>En el módulo anterior conociste CryptoVault 24k como pieza física: oro Au 999.9, dos presentaciones, serie limitada 1/320 · 2026. En este módulo vamos a hablar de la capa digital que acompaña a esa pieza: lo que dentro del consorcio Kakaw se conoce como el <strong>título 1:1</strong> del lingote. Y vamos a hacerlo con el mismo cuidado con el que hemos tratado cada tema técnico en esta academia: separando con toda claridad lo que ya existe hoy de lo que todavía es diseño en construcción.</p>
+
+<h3>La idea central: un título que apunta a una pieza específica</h3>
+<p>La idea de fondo es sencilla de entender aunque la tecnología detrás no lo sea: cada pieza física de CryptoVault 24k —identificada por su número de serie dentro de la edición 1/320— tiene asociado un <strong>título digital</strong> que representa, de forma 1:1, esa pieza y ninguna otra. No es un token genérico que representa "oro en general" — es un título que apunta a un lingote específico, con su propio número de serie. Cuando el consorcio habla de un "gemelo digital" del producto físico, se refiere exactamente a esto: una representación digital que refleja, uno a uno, una pieza concreta del mundo físico.</p>
+
+<p>Esta idea es, en el fondo, la misma que aprendiste en los cursos anteriores de esta academia si los tomaste: la representación digital solo tiene sentido si refleja algo real y específico. Un título que no apuntara a ninguna pieza en particular sería, otra vez, un espejo apuntando al vacío.</p>
+
+<h3>Qué ocurre hoy, exactamente, cuando compras una pieza</h3>
+<p>Aquí es donde queremos ser muy precisos, porque es fácil confundir "diseño" con "ya construido y funcionando". Hoy, cuando completas la compra de una pieza de CryptoVault 24k, tu pedido se registra con un número de serie asignado y tu título queda en un estado que el sistema llama, literalmente, <strong>"acuñación pendiente"</strong>. Esto significa que tu compra y tu derecho sobre esa pieza específica quedan asegurados y documentados desde el momento del pago — pero la acuñación del título como un registro on-chain propiamente dicho ocurre después, cuando el consorcio despliega los contratos correspondientes de Kakaw. Nada se simula ni se finge en el camino: el sistema no te muestra un token que no existe todavía disfrazado de uno real. Simplemente refleja, con honestidad, que tu pieza y tu título están reservados, y que el paso final de acuñación llegará en su momento.</p>
+
+<p>Este orden —primero la sustancia real (tu pago, tu pieza asignada, tu número de serie), después el sello digital final— es exactamente el mismo principio que ya viste en los cursos anteriores sobre BrainShield: la sustancia siempre antes que el sello. Aquí se aplica igual, solo que con un producto físico de por medio en lugar de un dictamen de valuación.</p>
+
+<h3>Lo que es diseño, todavía no operación diaria: el "gemelo digital sellado" y el modelo no-custodio</h3>
+<p>Dentro de la visión del consorcio existe un diseño más amplio para este tipo de productos físicos: que cada pieza —tarjeta metálica o lingote— obtenga un <strong>NFT gemelo con doble sello</strong>, que atestigüe su autenticidad, y que el compromiso de tu frase de recuperación (que veremos en el módulo 3) quede representado únicamente por su huella digital, nunca por la frase completa. Este diseño ya está aprobado dentro de la arquitectura del consorcio, pero te lo presentamos exactamente como lo que es: un diseño aprobado para construirse, no una función que hoy operes de punta a punta dentro de la compra de tu pieza.</p>
+
+<p>Algo parecido ocurre con la idea de un <strong>modelo no-custodio</strong>: la visión de que el título digital de tu pieza viva en una wallet que tú mismo controlas —no en una cuenta custodiada por un tercero— de la misma manera en que hoy existen exchanges de criptomonedas que sí custodian tus activos en tu nombre, y wallets propias donde solo tú tienes la llave. Este es el rumbo hacia el que apunta el diseño del producto. Lo que puedes verificar hoy, con certeza, es esto: tu pieza física queda resguardada en una <strong>bóveda asignada</strong> —este es, de hecho, el único modo de entrega actualmente activo— y tu título queda reservado a tu nombre bajo el estado que ya describimos. La experiencia de recibir la pieza en persona, o de vivir un modelo plenamente no-custodio de principio a fin, forma parte de fases próximas del producto, incluyendo una experiencia conectada con Web3Travel que hoy está marcada como "próximamente".</p>
+
+<h3>Por qué te lo explicamos con este nivel de detalle</h3>
+<p>Podríamos habernos ahorrado esta distinción y simplemente decirte "cada pieza tiene un NFT título 1:1". Pero eso sería exactamente el tipo de exageración que hemos criticado en los cursos anteriores de esta academia: hablar de la tecnología como si ya estuviera completamente desplegada cuando en realidad una parte importante todavía está en fase de diseño o construcción. Preferimos que sepas, con toda precisión, qué puedes verificar hoy (tu pedido, tu número de serie, el estado de tu título) y qué es la dirección hacia la que camina el producto (el gemelo digital con doble sello, el modelo no-custodio completo). Esa misma pregunta —¿qué existe hoy y qué es todavía visión?— es la que te recomendamos hacerte siempre frente a cualquier producto que combine algo físico con algo digital.</p>
+
+<p>En el siguiente módulo vamos a hablar de la otra capa digital de tu pieza: las 24 palabras grabadas físicamente en el reverso, qué son realmente, y por qué separar el pago de tu pieza de la custodia de tus propios activos digitales es un principio que te conviene entender bien.</p>
+      `,
+      references: ["server/routes/vault.ts (markVaultOrderPaid, titleStatus)", "shared/schema.ts (crypto_vault_orders)", "Master RAW seal / tokenización 2026-07-15 (§7 Gemelo digital de productos físicos)"],
+    },
+    {
+      title: "La seed en el reverso: tu propia autocustodia",
+      description: "Las 24 palabras grabadas en el reverso de la pieza, la lógica de autocustodia detrás de un respaldo físico, y por qué conviene separar mentalmente el pago de una pieza de la custodia de tus propios activos.",
+      durationMinutes: 12,
+      contentHtml: `
+<p>En los dos módulos anteriores hablamos del oro físico y del título digital asociado a cada pieza de CryptoVault 24k. En este módulo vamos a hablar de un elemento distinto, grabado literalmente en el reverso de la pieza: <strong>24 palabras</strong>. Vamos a explicar qué son, para qué sirven, y por qué este pequeño detalle físico encierra una de las ideas más importantes de todo el mundo cripto: la autocustodia.</p>
+
+<h3>Qué son esas 24 palabras</h3>
+<p>Si alguna vez has usado una wallet de criptomonedas —MetaMask, Trust Wallet, Ledger, o cualquier otra— sabes que, al crearla, se te entrega una <strong>frase de recuperación</strong>: una secuencia de palabras en inglés (normalmente 12 o 24, dependiendo del nivel de seguridad) que funciona como la llave maestra de esa wallet. Quien tenga esas palabras, tiene control total sobre lo que esa wallet contiene. Por eso la recomendación universal en el mundo cripto es: nunca compartas tu frase de recuperación con nadie, y guárdala en un lugar seguro, preferiblemente fuera de cualquier dispositivo conectado a internet.</p>
+
+<p>El problema práctico es que un papel con 24 palabras escritas a mano se puede quemar, mojar, perder o deteriorarse con el tiempo. Por eso ha surgido toda una categoría de productos de "respaldo físico indestructible" de la frase de recuperación —placas de metal, tarjetas de acero— pensadas para sobrevivir a un incendio, una inundación o simplemente el paso de los años, algo que el papel no garantiza. CryptoVault 24k lleva esta idea un paso más allá: en vez de una placa de acero cualquiera, tu frase de recuperación queda grabada en el reverso de una pieza de <strong>oro de 24 kilates</strong> — un material que, además de prácticamente indestructible, tiene valor propio independientemente de su función como respaldo.</p>
+
+<h3>Dos funciones distintas en un mismo objeto</h3>
+<p>Aquí conviene detenerse, porque hay dos cosas distintas ocurriendo en la misma pieza, y es fácil confundirlas si no se explican por separado. Por un lado, como viste en el módulo 2, la pieza tiene un <strong>título digital</strong> asociado que identifica esa pieza específica dentro de la serie 1/320 · 2026 — eso es la representación de la pieza misma como activo. Por otro lado, las 24 palabras grabadas en el reverso son <strong>tu propia frase de recuperación</strong> — la llave de tu wallet personal, un asunto que le pertenece a ti como persona, no a la pieza de oro como activo. Son dos capas que conviven en el mismo objeto físico, pero que cumplen funciones completamente distintas: una identifica al lingote, la otra te identifica —o más bien, protege— a ti como dueño de tus propios activos digitales.</p>
+
+<h3>Separar el pago de la custodia</h3>
+<p>Esto nos lleva a un principio que vale la pena que te quede muy claro, y que aplica mucho más allá de CryptoVault 24k: <strong>quién procesa tu pago no es lo mismo que quién custodia tus activos</strong>. Cuando compras una pieza, el pago puede procesarse mediante una pasarela de tarjeta o mediante una transferencia bancaria —mecanismos que hablaremos con detalle en el módulo 4—. Ese proceso de pago es un trámite financiero tradicional, regulado, con su propio rastro. La custodia de tu frase de recuperación, en cambio, es un asunto completamente distinto: nadie más que tú debería conocer esas 24 palabras, ni siquiera quien procesó tu pago.</p>
+
+<p>Esta separación no es un detalle menor. Es, de hecho, el mismo principio de fondo que aprendiste en el Curso 1 al distinguir entre atestación (una prueba de integridad) y pago (un movimiento de valor): son operaciones distintas, y confundirlas —o dejar que una entidad controle ambas sin que tú lo sepas— es exactamente el tipo de opacidad que un RWA bien construido busca evitar. Aplicado a CryptoVault 24k, el principio se traduce así: quien te vende la pieza y procesa tu pago no necesita ni debería tener acceso a tu frase de recuperación personal. Esa frase es tuya, se graba físicamente para que la conserves tú, y su seguridad depende enteramente de que la resguardes bien —lejos de fotografías, de la nube, de cualquier persona en la que no confíes plenamente.</p>
+
+<h3>Qué hacer y qué no hacer con tus 24 palabras</h3>
+<p>Si terminas con una pieza de CryptoVault 24k en tus manos, o si ya usas cualquier otra wallet de criptomonedas con su propia frase de recuperación, las reglas son las mismas de siempre en este espacio: nunca fotografíes tu frase de recuperación, nunca la escribas en un documento digital ni la envíes por correo o mensaje, nunca se la compartas a nadie que te la pida —ni soporte técnico, ni un vendedor, ni una persona de confianza, nadie tiene una razón legítima para pedírtela—, y guárdala en un lugar físico seguro, idealmente distinto de donde guardas la pieza misma o cualquier documento que la identifique como tuya.</p>
+
+<p>Con esto ya entiendes las dos capas digitales de CryptoVault 24k: el título que identifica a la pieza física, y la frase de recuperación que te protege a ti como dueño de tus propios activos. En el siguiente módulo vamos a bajar a lo más práctico: cómo se cotiza el precio de una pieza en tiempo real, qué medios de pago existen hoy, y cuáles todavía están en camino.</p>
+      `,
+      references: ["ceduverse-private.tsx (Ceduverse Vault Card / CryptoVault24k)", "Master RAW seal / tokenización 2026-07-15 (§7)"],
+    },
+    {
+      title: "Cómo se compra: cotización en vivo y medios de pago",
+      description: "El precio se cotiza en tiempo real con el spot del oro (nunca un número inventado): valor del oro + 20% de fee operativo + gas de red estimado. Medios de pago disponibles hoy y los que llegan en próximas fases.",
+      durationMinutes: 13,
+      contentHtml: `
+<p>Ya conoces la pieza física, su título digital y la frase de recuperación grabada en el reverso. En este módulo vamos a lo más práctico: ¿cómo se calcula el precio de una pieza de CryptoVault 24k, y cómo se paga? Vamos a describirlo exactamente como funciona hoy, sin adelantar medios de pago que todavía no están disponibles.</p>
+
+<h3>El precio nunca se inventa: el spot del oro como base</h3>
+<p>Lo primero que hay que entender es de dónde sale el número que ves al cotizar una pieza. El sistema de CryptoVault 24k consulta, en el momento en que abres la cotización, el <strong>precio spot del oro de 24 kilates por gramo</strong>, obtenido de un proveedor externo especializado en precios de metales preciosos. Este es un punto en el que el consorcio es particularmente estricto: si por cualquier razón esa fuente de precio no está disponible, el sistema no te muestra un número aproximado, ni un precio de respaldo inventado internamente — simplemente te informa que la cotización no está disponible en ese momento y te pide intentar más tarde. Ningún precio de oro simulado llega jamás a mostrarse como si fuera real. Esto es exactamente el mismo criterio de honestidad que ya viste aplicado a la valuación de activos en los cursos anteriores: si no hay sustancia real y verificable detrás de un número, no se muestra ese número.</p>
+
+<h3>El desglose exacto del precio</h3>
+<p>Con ese precio spot como base, el precio total de tu pieza se construye en capas, todas visibles para ti antes de pagar:</p>
+
+<p>Primero, el <strong>valor del oro</strong>: el precio spot por gramo multiplicado por los gramos de la edición que elegiste (100 o 200). Segundo, un <strong>fee operativo del 20%</strong> sobre ese valor del oro, que cubre el proceso de acuñación y la operación de la terminal — este porcentaje no es una comisión oculta ni un margen de especulación sobre el precio del metal: se muestra de forma explícita, línea por línea, como un concepto separado del valor del oro mismo. Tercero, un <strong>gas de red estimado</strong> —el costo de registrar el título de tu pieza en la blockchain correspondiente cuando llegue el momento de la acuñación— que también corre por cuenta del comprador y se muestra por separado. Hoy, además, el modo de entrega disponible es exclusivamente el de <strong>bóveda asignada</strong> (tu pieza queda resguardada, sin costo adicional de envío), por lo que no se suma ningún cargo de paquetería a tu cotización.</p>
+
+<p>La suma de estas tres partes —valor del oro, fee operativo y gas de red— es el total que pagas. Este desglose se te muestra completo antes de que decidas pagar, y el precio queda fijo por un periodo breve (unos quince minutos) para darte tiempo de completar tu pago sin que el spot del oro se mueva de forma significativa mientras decides. Si ese periodo vence, el sistema vuelve a calcular el precio con el spot más reciente al momento de tu pago — nunca confía en un precio antiguo que le hayas enviado desde tu navegador, precisamente para evitar que alguien intente manipular el monto final.</p>
+
+<h3>Medios de pago disponibles hoy</h3>
+<p>Actualmente puedes pagar tu pieza de dos maneras. La primera es <strong>con tarjeta</strong>, mediante una pasarela de pago que acepta pesos mexicanos o dólares estadounidenses, según la moneda que elijas para tu cotización — este es el medio de pago principal y el que está disponible sin restricciones para ambas monedas. La segunda es mediante <strong>transferencia bancaria en dólares</strong>, dirigida a una cuenta bancaria en Estados Unidos operada por una de las entidades del consorcio; este medio solo está disponible si cotizaste tu pieza en dólares, y tu título se reserva una vez que el pago se confirma manualmente, lo cual toma típicamente uno o dos días hábiles.</p>
+
+<h3>Lo que todavía no está disponible</h3>
+<p>Con la misma honestidad que hemos mantenido en todo el curso, te decimos también lo que hoy <strong>no</strong> puedes hacer: no existe todavía una cuenta bancaria en pesos mexicanos habilitada para recibir el pago de una pieza por transferencia directa, y el pago con criptomonedas —que en algún momento formará parte de las opciones disponibles— hoy sigue marcado como "próximamente" dentro del propio flujo de compra. Si intentas usar cualquiera de estos dos medios en este momento, el sistema te lo indica de forma explícita, en lugar de simular una operación que en realidad no puede completarse.</p>
+
+<p>Esta manera de presentarte las cosas —lo que funciona hoy, claramente separado de lo que llega después— es deliberada. Preferimos que sepas exactamente con qué medios puedes pagar en este momento, en vez de que descubras a mitad de una compra que una opción anunciada en realidad no está lista.</p>
+
+<h3>Tu comprobante y el seguimiento de tu pedido</h3>
+<p>Cada compra genera un número de pedido único, y puedes consultar en cualquier momento el estado de ese pedido: si sigue pendiente de pago, si el pago ya fue confirmado y tu título quedó reservado, o si ya avanzó a una etapa posterior. Este seguimiento —tener un número concreto que puedes verificar, en vez de depender de la palabra de alguien— es, otra vez, la misma lógica de trazabilidad que ya conoces de los cursos anteriores de esta academia, aplicada ahora a un producto físico y no solo a un expediente documental.</p>
+
+<p>En el último módulo de este curso vamos a cerrar con los guardrails que debes tener siempre presentes al considerar CryptoVault 24k: qué garantías sí puedes verificar por ti mismo, y qué es importante que nunca esperes de este producto.</p>
+      `,
+      references: ["server/services/cryptovault-pricing.ts", "server/services/gold-spot.ts (goldapi.io, sin precios simulados)", "server/routes/vault.ts (/api/vault/quote, /api/vault/checkout)"],
+    },
+    {
+      title: "Guardrails: qué sí puedes verificar, qué nunca esperar",
+      description: "CryptoVault 24k no es una oferta de valores ni asesoría de inversión. Qué garantías son verificables hoy, y cierre del curso con invitación a reservar tu pieza o conocer más del ecosistema Kakaw.",
+      durationMinutes: 11,
+      contentHtml: `
+<p>Llegamos al último módulo de este curso. Ya conoces la pieza física de CryptoVault 24k, su título digital, la frase de recuperación grabada en el reverso, y la mecánica completa de cotización y pago. En este cierre vamos a hablar de los guardrails: los límites claros que debes tener siempre presentes al considerar este producto, y las garantías que sí puedes verificar por ti mismo.</p>
+
+<h3>Lo que CryptoVault 24k no es</h3>
+<p>Empecemos por lo más importante, y lo repetimos con toda intención porque es el guardrail central de todo este curso: <strong>CryptoVault 24k no es un instrumento de inversión, no es una oferta de valores, y no constituye asesoría financiera de ningún tipo</strong>. Es, en su definición más simple y honesta, un producto respaldado por oro físico real. Nadie dentro del consorcio Kakaw te va a prometer un rendimiento, una fecha de retorno, ni una revalorización garantizada. El valor de tu pieza está atado al precio de mercado del oro —que se mueve como cualquier materia prima, hacia arriba y hacia abajo— y a nada más.</p>
+
+<p>Si en algún momento alguien te presenta CryptoVault 24k, o cualquier producto similar dentro de este espacio, como una oportunidad de inversión con retorno prometido, esa afirmación no representa lo que el producto realmente es. Compara siempre lo que te dicen con lo que puedes verificar tú mismo — que es precisamente el tema de la siguiente sección.</p>
+
+<h3>Lo que sí puedes verificar por ti mismo</h3>
+<p>A diferencia de una promesa que tienes que creer por la palabra de alguien, hay varias cosas en CryptoVault 24k que puedes comprobar de forma objetiva. Puedes verificar que el precio que se te cotiza parte de un precio spot de oro obtenido de una fuente de mercado externa, no de un número decidido internamente — y que, si esa fuente no está disponible, el sistema te lo dice en vez de mostrarte un precio inventado. Puedes verificar la pureza declarada de la pieza (Au 999.9) y su peso exacto según la edición elegida (100 o 200 gramos). Puedes verificar, con tu número de pedido, el estado exacto en el que se encuentra tu compra en cualquier momento. Y, como viste en el módulo 2, puedes verificar con precisión qué parte de la capa digital de tu pieza ya existe hoy —tu pedido registrado, tu número de serie asignado, tu título en estado de "acuñación pendiente"— y qué parte todavía es un diseño hacia el que camina el producto.</p>
+
+<h3>Lo que todavía está en construcción</h3>
+<p>Como ya explicamos en los módulos anteriores, hay piezas del producto que forman parte del diseño aprobado del consorcio pero que todavía no operan de punta a punta: la acuñación efectiva del título on-chain (que ocurre cuando se despliegan los contratos de Kakaw), el gemelo digital con doble sello pensado para atestiguar autenticidad, el modelo plenamente no-custodio, y la experiencia de recibir tu pieza en persona o vivirla junto con Web3Travel. Ninguna de estas piezas está simulada ni fingida en el camino — simplemente todavía no están activas, y preferimos decírtelo así de claro a dejar que lo asumas por tu cuenta.</p>
+
+<h3>Un producto dentro de un ecosistema más grande</h3>
+<p>Si tomaste los cursos anteriores de esta academia, ya sabes que CryptoVault 24k no vive aislado: es uno de los productos del consorcio al que también pertenece BrainShield, el originador de RWA tangibles e intangibles que conociste en el Curso 2, y el marketplace de RWA donde se presentan activos ya verificados. El oro tiene, dentro de este ecosistema, un papel particular: es el activo más fácil de entender de todos, la puerta de entrada natural para quien apenas empieza a familiarizarse con la idea de un Real World Asset.</p>
+
+<p>Con esto cerramos el Curso 3 de Academia RWA. Ya sabes qué es CryptoVault 24k, cómo funciona su título digital hoy y hacia dónde camina su diseño, qué protege realmente la frase de recuperación grabada en el reverso, cómo se cotiza y se paga una pieza, y —lo más importante— qué guardrails debes tener siempre presentes: no es inversión, no hay promesa de rendimiento, y todo lo que puedes verificar por ti mismo vale más que cualquier promesa que alguien te haga.</p>
+
+<p>Tu siguiente paso es tuyo: <strong>puedes reservar tu propia pieza</strong> si ya te sientes cómodo con todo lo que aprendiste en este curso, o puedes <strong>conocer más sobre el resto del ecosistema Kakaw y BrainShield</strong> antes de tomar cualquier decisión. No hay prisa. La transparencia, como ya sabes si tomaste los cursos anteriores, no es un adorno en este ecosistema — es el fundamento sobre el que se construye todo lo demás.</p>
+      `,
+      references: ["ceduverse-private.tsx (\"no un instrumento de inversión\")", "server/services/gold-spot.ts (regla no-mock)", "Master RAW seal / tokenización 2026-07-15"],
+    },
+  ],
+
 };
