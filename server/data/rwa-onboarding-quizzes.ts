@@ -72,4 +72,66 @@ export const rwaOnboardingQuizzes: Record<string, RwaQuiz> = {
     ],
   },
 
+  "brainshield-boveda-pi": {
+    title: "Evaluación: BrainShield y la bóveda de PI",
+    passingScore: 70,
+    questions: [
+      {
+        question: "¿Qué tipo de empresa es BrainShield?",
+        options: [
+          "Una DAO anónima sin registro legal",
+          "Una Sociedad Civil mexicana, originador de RWA tangibles e intangibles",
+          "Un banco regulado por la CNBV",
+          "Una criptomoneda",
+        ],
+        correctIndex: 1,
+        explanation: "BrainShield es una Sociedad Civil (S.C.) mexicana constituida legalmente, que origina RWA tanto tangibles (inmuebles) como intangibles (propiedad intelectual).",
+      },
+      {
+        question: "¿Qué puedes depositar en la bóveda de PI de BrainShield?",
+        options: [
+          "Solo criptomonedas",
+          "Patentes, marcas y secretos industriales",
+          "Acciones de bolsa",
+          "Únicamente bienes inmuebles",
+        ],
+        correctIndex: 1,
+        explanation: "La bóveda de PI está pensada para las tres grandes categorías de propiedad intelectual: patentes, marcas y secretos industriales.",
+      },
+      {
+        question: "¿Qué es el modelo 80/20 de BrainShield?",
+        options: [
+          "El reparto de partes sociales entre los socios legales",
+          "El reparto de la regalía generada al licenciar la PI: 80% para el dueño original, 20% para BrainShield",
+          "Un descuento en el plan anual",
+          "El porcentaje de aportación de un socio cooperativista",
+        ],
+        correctIndex: 1,
+        explanation: "Cuando la PI depositada se licencia y genera regalía, el 80% se destina al dueño original del activo y el 20% se queda con BrainShield por administrar la estructura.",
+      },
+      {
+        question: "¿Quién valúa los activos dentro de BrainShield, y bajo qué condición?",
+        options: [
+          "El propio dueño del activo",
+          "Un corredor público titulado, bajo NIF C-8 y con 0% de margen, para eliminar conflicto de interés",
+          "Un algoritmo de IA sin supervisión",
+          "Cualquier usuario de la plataforma",
+        ],
+        correctIndex: 1,
+        explanation: "La valuación la hace un corredor público titulado, siguiendo la NIF C-8, sin cobrar margen sobre el resultado, precisamente para que no tenga incentivo de inflar el número.",
+      },
+      {
+        question: "¿Qué es el token BRAIN?",
+        options: [
+          "Una criptomoneda volátil para especular",
+          "Un token pegado 1:1 a USDC/USDT, sin volatilidad, para representar valor de operaciones ya verificadas",
+          "Una parte social de BrainShield S.C.",
+          "KakawCoin con otro nombre",
+        ],
+        correctIndex: 1,
+        explanation: "BRAIN está diseñado para no tener volatilidad: pegado 1:1 a stablecoins. No debe confundirse con KakawChain/KakawCoin, que aún no existen como producto.",
+      },
+    ],
+  },
+
 };
