@@ -483,4 +483,229 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
     },
   ],
 
+  "bono-bienvenida": [
+    {
+      title: "La aportación NO es un gasto",
+      description: "El reencuadre central: tu aportación a la cooperativa no es dinero que se va, es patrimonio tuyo, devolvible. Qué dice la LGSC y por qué esto cambia la conversación completa.",
+      durationMinutes: 12,
+      contentHtml: `
+<p>Bienvenido al Curso 4 de Academia RWA. Este curso, y los dos que le siguen, están dirigidos exclusivamente a quienes participan en la parte comercial de Ceduverse: socios comerciales, empresas aliadas y directores. La razón es sencilla: aquí entramos a la capa legal y fiscal del modelo cooperativo, con un nivel de detalle que un estudiante que solo quiere tomar un curso de capacitación no necesita — pero que tú, si vas a explicar este modelo a otras personas, sí necesitas dominar por completo.</p>
+
+<p>Y vamos a empezar por el punto que, en nuestra experiencia, más se malentiende de todo el modelo. Cuando alguien escucha "tienes que aportar $150 pesos para ser socio de la cooperativa," su cerebro hace automáticamente una traducción: <em>me van a cobrar $150 pesos</em>. Lo procesa como un costo, como una cuota de inscripción, como dinero que sale de su bolsillo y no vuelve. Esa traducción es incorrecta, y corregirla es el trabajo de este primer módulo.</p>
+
+<h3>Qué es realmente un certificado de aportación</h3>
+<p>Ceduverse es una <strong>sociedad cooperativa de consumo</strong>, constituida legalmente ante notario público. No es una empresa que te vende un servicio y se queda con tu dinero. Es una figura distinta, regulada en México por la <strong>Ley General de Sociedades Cooperativas (LGSC)</strong>, en la que las personas que participan no son "clientes" — son <strong>socios</strong>, y ser socio significa, literalmente, ser copropietario de la sociedad.</p>
+
+<p>¿Y cómo se documenta esa copropiedad? A través de un instrumento que se llama <strong>certificado de aportación</strong>. En Ceduverse, cada certificado tiene un <strong>valor nominal de $150 pesos</strong>. Cuando tú aportas esos $150, no estás pagando una cuota: estás <strong>fondeando tu propio certificado</strong>, y ese certificado queda registrado a tu nombre en el Libro de Registro de Certificados de Aportación de la cooperativa. Es tuyo. Aparece en el capital social de la sociedad — la parte del capital que te corresponde a ti.</p>
+
+<p>La diferencia contable es profunda y no es un tecnicismo. Cuando le pagas $150 a una empresa por un servicio, ese dinero entra al <em>ingreso</em> de la empresa: es de ella, se acabó, tú recibiste el servicio y la relación se cerró. Cuando aportas $150 a una cooperativa, ese dinero entra al <strong>capital social</strong>: no es ingreso de la cooperativa, es patrimonio tuyo depositado dentro de ella. Por eso mismo, la aportación no genera un CFDI de ingreso — genera una <strong>constancia de aportación</strong>, que es un documento de naturaleza completamente distinta. Uno documenta una venta; el otro documenta que una parte del capital de la sociedad ahora te pertenece.</p>
+
+<h3>Devolvible: la prueba de que es tuyo</h3>
+<p>Si todavía te queda duda de que la aportación es patrimonio y no gasto, aquí está la prueba definitiva: <strong>es devolvible</strong>. Los artículos 49 al 51 de la LGSC establecen el régimen de las aportaciones de los socios, y uno de sus principios centrales es que cuando un socio se separa de la cooperativa, tiene derecho al reembolso de sus aportaciones conforme a lo que establezcan la ley y las bases constitutivas de la sociedad.</p>
+
+<p>Piénsalo con cuidado, porque esta es la frase que quiero que se te quede: <strong>un gasto no se te devuelve nunca; una aportación sí</strong>. Si mañana decides que Ceduverse ya no es para ti y te separas de la cooperativa, tus certificados no se evaporan — se te reembolsan conforme al procedimiento estatutario. El dinero que aportaste no dejó de ser tuyo en ningún momento: cambió de forma, pasó de estar en tu bolsillo a estar representado en un certificado a tu nombre dentro del capital de la sociedad. Pero siguió siendo tuyo todo el tiempo.</p>
+
+<p>Esto no significa que sea una cuenta de ahorro ni un instrumento líquido: la transmisión de certificados está restringida por los estatutos, el reembolso sigue un procedimiento formal, y su valor se determina conforme a las reglas de la cooperativa, no conforme a un mercado. Un certificado de aportación no se compra y se vende como una acción de bolsa. Pero es, en el sentido más literal de la palabra, tuyo.</p>
+
+<h3>Un aviso legal que vamos a repetir en todo el curso</h3>
+<p>Y aquí hacemos la primera de varias pausas obligatorias, porque este curso toca terreno legal y fiscal y queremos ser absolutamente inequívocos. Nada de lo que se dice en este curso constituye una <strong>oferta de valores</strong>: un certificado de aportación cooperativa no es una acción, no es un bono, no es un instrumento financiero colocado en el mercado, y no está registrado como tal ante ninguna autoridad bursátil — porque no lo es ni pretende serlo. Nada de lo que se dice en este curso constituye <strong>asesoría de inversión</strong>: no estamos recomendándote que hagas nada con tu dinero, y si tienes dudas sobre tu situación patrimonial o fiscal particular, consulta a tu propio asesor. Y de forma tajante: en este modelo <strong>no hay rendimientos garantizados</strong> de ningún tipo. Ni un porcentaje, ni una fecha, ni una promesa. Ser copropietario de una cooperativa no es lo mismo que invertir esperando un retorno — y cualquiera que te lo presente así, dentro o fuera de Ceduverse, te está describiendo algo que este modelo no es.</p>
+
+<h3>Por qué este reencuadre importa tanto para ti</h3>
+<p>Si tú vas a explicar Ceduverse a otras personas, este módulo es tu cimiento. La objeción más común que vas a enfrentar —"¿o sea que me van a cobrar por entrar?"— se desarma completamente cuando entiendes y transmites esta distinción: no te cobran, <strong>fundas tu patrimonio</strong>. El dinero no se va: cambia de forma y se queda contigo, representado en un certificado a tu nombre.</p>
+
+<p>Y ahora viene la parte interesante, la que probablemente te trajo a este curso. Porque hay un mecanismo diseñado para que ese primer certificado ni siquiera tenga que salir de tu bolsillo: el <strong>bono de bienvenida</strong>. En el siguiente módulo vamos a desarmarlo peso por peso — literalmente, los $170 pesos que lo componen — para que entiendas exactamente qué es cada parte y por qué está diseñado así.</p>
+      `,
+      references: ["LGSC arts. 49-51 (régimen de aportaciones)", "Acta constitutiva 6520, Notaría 110 QR (Ceduverse S.C. de C. de R.L. de C.V.)", "Master RAW seal / tokenización 2026-07-15 (§5 Aportación capitalizada)"],
+    },
+    {
+      title: "El bono de bienvenida: $170 desarmado peso por peso",
+      description: "Los $170 del bono = $150 que fundan tu primer certificado de aportación + $20 de saldo para tu primer certificado DC-3/SEP. Dos naturalezas distintas en un solo bono, y por qué se separan.",
+      durationMinutes: 13,
+      contentHtml: `
+<p>En el módulo anterior establecimos el reencuadre central: la aportación no es un gasto, es patrimonio tuyo, devolvible, respaldado por la LGSC. Ahora vamos al mecanismo concreto que hace que ese patrimonio pueda empezar a existir sin que tengas que sacar dinero de tu bolsillo: el <strong>bono de bienvenida</strong>.</p>
+
+<h3>La cifra exacta: $170 pesos</h3>
+<p>El bono de bienvenida de Ceduverse es de <strong>$170 pesos mexicanos</strong>. No es una cifra redonda por casualidad ni un número de marketing: es la suma exacta de dos componentes con naturalezas jurídicas y contables completamente distintas, y entender esa separación es todo el punto de este módulo.</p>
+
+<p>El bono se descompone así: <strong>$150 pesos que fundan tu primer certificado de aportación</strong>, más <strong>$20 pesos de saldo destinados a tu primer certificado DC-3/SEP</strong>. Ciento cincuenta más veinte: ciento setenta. Simple de sumar, pero no simple de entender — porque esos dos montos, aunque lleguen juntos en un solo bono, viven en dos mundos distintos.</p>
+
+<h3>Los $150: capital, no consumo</h3>
+<p>Los primeros $150 pesos van directo al valor nominal de tu primer certificado de aportación. Como ya sabes del módulo anterior, un certificado de Ceduverse vale exactamente $150 pesos, y con esos $150 el certificado queda <strong>totalmente exhibido</strong> — es decir, completamente pagado, sin saldo pendiente. Desde ese momento eres socio con un certificado a tu nombre, registrado en el Libro de Registro de Certificados de Aportación de la cooperativa.</p>
+
+<p>Estos $150 son <strong>capital social</strong>. No son un descuento, no son un cupón, no son un regalo que puedas gastar. Son la fundación de tu patrimonio dentro de la cooperativa. Y como capital que son, siguen la lógica que ya conoces: generan una <strong>constancia de aportación</strong>, no un CFDI de ingreso, porque la cooperativa no te vendió nada — recibió una aportación a su capital, y esa aportación es tuya y es devolvible.</p>
+
+<h3>Los $20: saldo para un servicio real</h3>
+<p>Los otros $20 pesos tienen una naturaleza completamente opuesta. Son <strong>saldo</strong> — poder de compra dentro de la plataforma — destinado específicamente a tu <strong>primer certificado DC-3/SEP</strong>. Y aquí sí estamos hablando de un servicio: la emisión de una constancia DC-3 (la constancia de competencias o de habilidades laborales que reconoce la Secretaría del Trabajo y Previsión Social) o de un certificado con reconocimiento SEP es un servicio que Ceduverse presta, y por lo tanto <strong>sí genera un CFDI de ingreso</strong>, con su IVA correspondiente si aplica.</p>
+
+<p>Esta es la distinción que quiero que domines, porque es la que separa a alguien que entendió el modelo de alguien que solo memorizó una cifra: <strong>$150 son capital (constancia de aportación, no es venta) y $20 son consumo (CFDI de ingreso, sí es venta)</strong>. Van en el mismo bono, llegan al mismo tiempo, pero contablemente y fiscalmente son animales distintos, y por eso el bono los presenta separados en vez de anunciar "$170 de bienvenida" como si fuera un solo monto indiferenciado.</p>
+
+<h3>Por qué el bono está diseñado así</h3>
+<p>Podrías preguntarte: ¿por qué no simplemente dar $170 de saldo, o $170 de aportación, y ya? La respuesta revela la intención completa del diseño. El bono está construido para resolver <strong>dos fricciones distintas al mismo tiempo</strong>, y cada componente resuelve una.</p>
+
+<p>Los $150 resuelven la fricción de la <strong>entrada al patrimonio</strong>: convertirte en copropietario de la cooperativa sin tener que desembolsar dinero para hacerlo. Los $20 resuelven la fricción del <strong>primer uso real</strong>: que no te quedes con un certificado bonito y ninguna experiencia concreta de lo que la cooperativa hace. Con esos $20 puedes empezar a caminar hacia tu primer certificado DC-3/SEP, que es el producto tangible por el que la gente llega a Ceduverse en primer lugar.</p>
+
+<p>Dicho de otra forma: el bono te da a la vez <strong>la propiedad y el uso</strong>. Sin los $150 serías un usuario más. Sin los $20 serías un copropietario sin nada que hacer. Con los dos, eres un socio que además ya está usando lo que es suyo — que es, precisamente, la definición operativa de una cooperativa de consumo: una sociedad cuyos socios son las mismas personas que consumen sus servicios.</p>
+
+<h3>Los certificados digitales: el acta ya lo permite</h3>
+<p>Un detalle que vale la pena que conozcas, porque es lo que hace viable todo esto de forma ágil: el <strong>Artículo Sexto del acta constitutiva 6520</strong> de Ceduverse <strong>autoriza expresamente que los certificados de aportación sean digitales</strong>. Esto no es una interpretación creativa ni un vacío legal que estemos aprovechando: está escrito en el acta constitutiva, pasada ante notario. Los certificados pueden ser digitales, nominativos e indivisibles.</p>
+
+<p>Esto importa porque significa que tu certificado de $150 no depende de que alguien imprima un papel, lo firme y te lo mande por paquetería. Puede existir de forma digital desde el primer momento, con todo el respaldo jurídico de un certificado tradicional. En el Curso 5 vamos a profundizar en esto y en su representación como gemelo registral — por ahora quédate con que el acta ya lo permite.</p>
+
+<h3>Los tres avisos, otra vez</h3>
+<p>Repetimos los guardrails, y los vamos a seguir repitiendo, porque en un curso que habla de capital y de patrimonio no pueden aparecer una sola vez y darse por dichos. <strong>Esto no es una oferta de valores</strong>: el certificado de aportación no es un título colocable en un mercado. <strong>Esto no es asesoría de inversión</strong>: nada aquí es una recomendación sobre qué hacer con tu dinero. <strong>No hay rendimientos garantizados</strong>: el bono no promete que tu certificado vaya a valer más, ni que vayas a recibir ningún retorno por tenerlo. El bono te hace copropietario; no te promete ganancias.</p>
+
+<p>Ahora bien — hay una pregunta obvia que probablemente ya te estás haciendo, y es la pregunta correcta: si el bono te regala $170 y tú no los pagas, <strong>¿de dónde salen?</strong> Alguien tiene que poner ese valor. Y la respuesta a esa pregunta es el corazón intelectual de este curso, y el tema del siguiente módulo.</p>
+      `,
+      references: ["Acta constitutiva 6520, Art. Sexto (certificados digitales, nominativos, indivisibles)", "Memoria ceduverse-cobros-web3 (§ bono de bienvenida)", "Reglamento Interno Ceduverse DRAFT, Art. 14 Bis"],
+    },
+    {
+      title: "De dónde sale el valor: el origen EXTERNO",
+      description: "El valor del bono viene de fuera del capital cooperativo: un token respaldado 1:1 (diseño) o una beca de empresa (canal B2B). Nunca del propio capital social. Por qué un token sin reserva 1:1 sería capital simulado.",
+      durationMinutes: 14,
+      contentHtml: `
+<p>Terminamos el módulo anterior con la pregunta correcta: si el bono de bienvenida entrega $170 pesos de valor y el socio no los paga de su bolsillo, <strong>¿de dónde salen esos $170?</strong> Este módulo responde esa pregunta, y es el módulo más importante de todo el curso. Si solo pudieras quedarte con uno, quédate con este.</p>
+
+<h3>La regla que no se negocia: el valor viene de FUERA</h3>
+<p>Empecemos por la regla, porque todo lo demás se deriva de ella: <strong>el valor del bono de bienvenida proviene de una fuente EXTERNA al capital cooperativo. Nunca sale del propio capital social de Ceduverse.</strong></p>
+
+<p>Esto tiene un nombre: <strong>financiamiento híbrido</strong>. Híbrido porque la cooperativa se fondea de dos maneras distintas y separadas — por un lado, las aportaciones genuinas de sus socios; por otro, valor que entra desde fuera de la estructura cooperativa para hacer posible el bono. Y "separadas" es la palabra clave: son dos canales que jamás se cruzan.</p>
+
+<p>¿Por qué esta regla es tan rígida? Porque si el bono saliera del propio capital social, estaríamos ante algo grotesco y muy fácil de describir: la cooperativa tomaría dinero del capital aportado por unos socios para fabricar la aportación de otros socios. El capital social crecería en el papel sin que hubiera entrado un solo peso nuevo al sistema. Sería <strong>capital circular</strong>: dinero dando vueltas sobre sí mismo, inflando una cifra sin sustancia detrás. Es exactamente el mismo defecto que en el Curso 1 llamamos "un espejo apuntando al vacío," aplicado ahora al capital de una sociedad. Y en el mundo real tiene consecuencias reales: un capital social inflado con aportaciones fabricadas desde adentro no resiste una auditoría, no resiste una revisión fiscal, y no resiste la primera pregunta seria de cualquier persona informada.</p>
+
+<h3>Los dos canales de origen externo</h3>
+<p>El diseño contempla dos canales por los cuales puede entrar ese valor externo. Son distintos entre sí y están en etapas de madurez muy diferentes, así que vamos a ser precisos con cada uno.</p>
+
+<p><strong>Canal B2B — la beca de empresa.</strong> Una empresa aliada financia los bonos de bienvenida de las personas que quiere incorporar a la cooperativa: sus trabajadores, sus prospectos de capacitación, su red. El valor entra desde el presupuesto de esa empresa — que es, por definición, dinero externo a la cooperativa. La empresa paga, el trabajador recibe su bono, funda su certificado y empieza a capacitarse. Este canal es directo, comprensible y no depende de ninguna pieza tecnológica: es una relación comercial entre una empresa y la cooperativa, documentada como tal.</p>
+
+<p><strong>Canal directo — el token respaldado 1:1.</strong> Aquí el diseño contempla que el valor del bono provenga de un token respaldado uno a uno por una reserva real. Y ahora tenemos que ser extremadamente cuidadosos con lo que decimos, porque este es el punto donde un curso descuidado mentiría sin darse cuenta.</p>
+
+<h3>Alto: ningún token está desplegado</h3>
+<p>Vamos a decirlo con todas sus letras y sin ambigüedad alguna: <strong>a la fecha de este curso, ninguno de los tokens del consorcio está desplegado. Todos son diseño e intención.</strong> No existe uno solo que tú, como socio, puedas usar hoy.</p>
+
+<p>Dentro del consorcio hay tres tokens diseñados, cada uno perteneciente a una entidad distinta y con una paridad distinta. <strong>CEDU</strong> es el token de Ceduverse, diseñado <strong>1:1 al peso mexicano (MXN)</strong>. <strong>BRAIN</strong> es el de BrainShield, diseñado <strong>1:1 a USDC/USDT</strong>. <strong>KAKAW</strong> es el de Kakaw, diseñado <strong>1:1 al oro</strong>. Los tres son diseño. Ninguno está desplegado ni en operación. Y para cerrar cualquier duda: KakawChain y KakawCoin, de los que quizá hayas escuchado, tampoco existen como producto.</p>
+
+<p>De lo que describimos en este módulo, <strong>lo único que existe y opera hoy es la red Base y el mecanismo de atestación por hash SHA-256</strong> — el sello del que hablaremos en el módulo 5. Todo lo demás relacionado con tokens es arquitectura sobre papel.</p>
+
+<h3>Cuál token es el que importa aquí: CEDU, no BRAIN</h3>
+<p>Si el canal de token llegara a operar para el bono, el token relevante sería <strong>CEDU</strong>, el de Ceduverse — no BRAIN. La razón es puramente práctica y bastante elegante: la aportación de $150 está denominada <strong>en pesos mexicanos</strong>, y CEDU está diseñado 1:1 al peso mexicano. Eso significa <strong>cero riesgo cambiario</strong>: no hay que convertir de dólares a pesos, no hay que absorber una fluctuación del tipo de cambio entre el momento en que se financia el bono y el momento en que se acredita la aportación. Peso contra peso, sin FX de por medio.</p>
+
+<p>BRAIN, al estar diseñado 1:1 a USDC/USDT, introduciría exactamente ese riesgo cambiario que no tenemos por qué asumir para fondear un certificado que vale $150 pesos. Cada token pertenece a su entidad y sirve a su propósito; confundirlos no es un error menor de nomenclatura, es un error de arquitectura.</p>
+
+<h3>Por qué un token sin reserva 1:1 sería capital simulado</h3>
+<p>Y ahora llegamos al fondo del asunto — el corazón intelectual de este curso.</p>
+
+<p>Imagina por un momento el atajo tentador: emitir un NFT o un token, entregárselo al socio como su "bono," y dar por acreditada la aportación. Rápido, barato, tecnológicamente vistoso. En algún punto del diseño de este modelo, esa opción estuvo sobre la mesa. Y fue <strong>explícitamente rechazada</strong>.</p>
+
+<p>La razón es demoledora en su simplicidad. Un token sin una reserva real que lo respalde uno a uno <strong>no tiene valor propio</strong>. Es una entrada en una base de datos. Emitirlo no crea valor; solo crea un registro. Si la cooperativa acreditara aportaciones contra un token así, estaría diciendo: "tu certificado de $150 está pagado con este objeto digital que yo mismo creé de la nada y al que yo mismo le asigné el valor de $150." El capital social crecería $150 pesos sin que hubieran entrado $150 pesos. Eso es <strong>capital simulado</strong>, y es funcionalmente idéntico al capital circular que describimos al inicio del módulo: el sistema se financia a sí mismo con su propia promesa.</p>
+
+<p>Y no es un problema abstracto. Un capital social sostenido por tokens sin reserva se desmorona ante la primera pregunta seria: <em>enséñame el dinero</em>. No hay dinero que enseñar. Hay un token, y detrás del token hay otro token, y detrás no hay nada. Es exactamente el patrón que en el Curso 1 aprendiste a detectar en los proyectos "RWA" que fingen la sustancia off-chain — solo que aquí el daño sería peor, porque no estaríamos hablando del precio de un activo especulativo, sino del <strong>capital social de una sociedad cooperativa real</strong>, con socios reales cuyo patrimonio depende de que esa cifra sea verdadera.</p>
+
+<p>Por eso el diseño exige que, si el bono se fondea con CEDU, exista antes una <strong>reserva 1:1 real en tesorería</strong>: por cada peso de CEDU emitido, un peso de verdad guardado. Sin esa reserva, el canal de token no se activa. Punto. Y ese es exactamente el tema del siguiente módulo.</p>
+
+<h3>Los tres avisos</h3>
+<p>Como en cada módulo de este curso: <strong>nada de esto es una oferta de valores</strong> — ni el certificado de aportación, ni el bono, ni un token que todavía no existe. <strong>Nada de esto es asesoría de inversión</strong>. Y <strong>no hay rendimientos garantizados</strong> de ninguna clase. Describimos un diseño de financiamiento del capital de una cooperativa, no un producto de inversión.</p>
+      `,
+      references: ["Master RAW seal / tokenización 2026-07-15 (§5, §6, §8 fases F1/F2)", "Memoria ceduverse-cobros-web3 (§ bono / origen externo)", "Memoria brainshield-rwa-pivot (tokens 1:1, estado de despliegue)"],
+    },
+    {
+      title: "La reserva 1:1: sin ella no se emite",
+      description: "La tesorería que respalda el bono. Qué significa 1:1 en la práctica, la dependencia explícita (constituir la reserva ANTES de emitir), y la capitalización del 5% con tope de 20 certificados ($3,000).",
+      durationMinutes: 13,
+      contentHtml: `
+<p>En el módulo anterior llegamos a una conclusión inevitable: un token sin respaldo real es capital simulado, y el capital simulado no sostiene a una cooperativa de verdad. La solución a ese problema tiene nombre propio y es el tema de este módulo: la <strong>reserva 1:1</strong>.</p>
+
+<h3>Qué significa 1:1, sin poesía</h3>
+<p>Una reserva 1:1 significa exactamente lo que dice, y su belleza está en que no admite interpretaciones: <strong>por cada peso de CEDU que exista, hay un peso mexicano real guardado en tesorería</strong>. No 1:0.8. No "respaldado por activos diversos cuyo valor estimado equivale aproximadamente a." No una canasta de cosas que suman más o menos. Uno a uno, peso contra peso, verificable.</p>
+
+<p>Fíjate en lo que esta definición logra. Si existen $100,000 pesos de CEDU en circulación, entonces hay $100,000 pesos mexicanos reales en la tesorería que los respalda. Eso significa que el token deja de ser una promesa y se convierte en un <strong>recibo</strong>: no es un objeto digital al que alguien le asignó un valor por decreto, es la representación de dinero que efectivamente existe en otro lugar. Y cuando un bono de $170 se financia con ese CEDU, no está financiado con aire — está financiado con los $170 pesos reales que están sentados en la reserva respaldando esa porción de token.</p>
+
+<p>Aquí está el puente conceptual con todo lo que aprendiste en los cursos anteriores de esta academia: la reserva 1:1 es, para un token, exactamente lo que las <strong>4 patas</strong> son para un RWA. Es la sustancia real que vive fuera de la pantalla y que le da sentido a la representación digital. Sin ella, el token es el espejo apuntando al vacío; con ella, el token refleja algo que de verdad está ahí.</p>
+
+<h3>La dependencia explícita, en orden estricto</h3>
+<p>De todo este módulo, esta es la frase que no puedes olvidar ni al explicarlo ni al operarlo: <strong>hay que constituir la reserva 1:1 en tesorería ANTES de emitir bonos financiados por token.</strong> Antes. No en paralelo, no "mientras tanto arrancamos y luego la fondeamos," no "ya casi." Antes.</p>
+
+<p>El orden no es una recomendación de prudencia — es la única secuencia que evita que el modelo se convierta justo en lo que rechazó. Si se emitieran bonos primero y se prometiera constituir la reserva después, el sistema estaría operando, durante todo ese intervalo, con capital simulado. Los certificados de esos socios estarían acreditados contra nada. Y el hecho de que la reserva llegara meses después no repararía retroactivamente el momento en el que el capital social creció sin sustancia.</p>
+
+<p>Por eso, en términos prácticos y presentes: <strong>el canal de bono financiado por token no está disponible hoy</strong>. No porque falte escribir el código —eso es lo de menos— sino porque la reserva 1:1 en tesorería todavía no está constituida, y esa es la condición que manda. Cuando exista la reserva, el canal se podrá activar. Mientras no exista, no. El canal B2B de beca de empresa, en cambio, no depende de ninguna de estas piezas: ese sí es un mecanismo comercial ordinario y directo.</p>
+
+<p>Si eres socio comercial, esto tiene una consecuencia muy concreta en tu trabajo: <strong>nunca le describas a un prospecto el bono financiado por token como algo que puede usar hoy</strong>. Es diseño. Explícalo como diseño. La honestidad sobre lo que existe y lo que no es, en sí misma, la mejor demostración de que el modelo tiene sustancia — porque quien no tiene nada que esconder no necesita adornar los tiempos.</p>
+
+<h3>La capitalización del 5%: cómo tu aportación crece con tu actividad</h3>
+<p>Hasta aquí hemos hablado de cómo <em>nace</em> tu primer certificado. Ahora hablemos de cómo tu patrimonio en la cooperativa puede <em>crecer</em> — y la respuesta, otra vez, no es que pongas más dinero de tu bolsillo.</p>
+
+<p>El mecanismo se llama <strong>capitalización</strong> y funciona así: el <strong>5% de cada consumo o comisión del socio se convierte en su propio capital</strong>. Cada vez que consumes un servicio de la cooperativa, o cada vez que ganas una comisión como socio comercial, un 5% de ese valor no se queda en la cooperativa como ingreso: se acredita como aportación tuya, fondeando certificados a tu nombre.</p>
+
+<p>Nota que la capitalización se alimenta de dos fuentes distintas, y ambas son actividad tuya que ya ocurre de todas formas: tu <strong>consumo</strong> de los servicios de la cooperativa, y tus <strong>comisiones</strong> como socio comercial, cuya tasa base es del <strong>15%</strong>. No es dinero adicional que pongas — es una fracción del valor que tú ya generaste, reencauzada hacia tu propio patrimonio. El esquema completo de comisiones lo veremos en el Curso 6; aquí solo nos interesa que entiendas de dónde sale la base sobre la que se calcula ese 5%.</p>
+
+<p>Veámoslo con la cifra más grande del catálogo, para que la mecánica quede clara. La <strong>certificación RVOE Academy por experiencias laborales cuesta $49,900 pesos</strong>. El 5% de $49,900 son <strong>$2,495 pesos</strong>. Divididos entre el valor nominal de $150 por certificado, eso equivale aproximadamente a <strong>16 certificados</strong> acreditados a tu nombre a partir de una sola operación. Dieciséis certificados de patrimonio tuyo, generados por una actividad que de todas formas ibas a realizar.</p>
+
+<p>Y aquí entra el límite, que es tan importante como el mecanismo: <strong>la capitalización tiene un tope de 20 certificados, es decir, $3,000 pesos</strong> (20 × $150 = $3,000). Al llegar a ese tope, la capitalización deja de acreditar certificados adicionales. Tu actividad puede seguir; tu capital acumulado por esta vía se detiene ahí.</p>
+
+<h3>Por qué existe el tope (y por qué es una buena noticia)</h3>
+<p>El tope de 20 certificados podría parecer una limitación arbitraria, pero es todo lo contrario: es una <strong>salvaguarda de la naturaleza cooperativa</strong>. Sin él, alguien con mucho volumen de actividad podría acumular cientos de certificados y concentrar una porción desproporcionada del capital social, y la cooperativa empezaría a parecerse a una sociedad mercantil donde manda quien más tiene.</p>
+
+<p>Y aquí conviene aclarar algo que se malinterpreta constantemente, aunque lo veremos a fondo en el Curso 5: en una cooperativa, <strong>1 socio = 1 voto</strong>. Así lo establece la LGSC, y así opera Ceduverse. Tengas 1 certificado o tengas 20, tu voto en la asamblea vale exactamente lo mismo que el de cualquier otro socio. Los certificados representan tu patrimonio, no tu poder de decisión. Una cooperativa es una sociedad <strong>de personas</strong>, no de capitales — y esa frase, que suena a eslogan, es en realidad la diferencia jurídica de fondo entre esta figura y una sociedad anónima.</p>
+
+<p>El tope de $3,000 protege esa naturaleza. Y de paso te dice algo honesto sobre el modelo: <strong>este no es un vehículo para acumular capital</strong>. No está diseñado para que "inviertas" y acumules. Está diseñado para que las personas que usan la cooperativa sean copropietarias de ella, en una proporción sana y acotada.</p>
+
+<h3>Los tres avisos, una vez más</h3>
+<p>Y precisamente por lo que acabamos de decir, los guardrails caen aquí con todo su peso. <strong>Esto no es una oferta de valores</strong>: los certificados no son títulos negociables ni instrumentos de mercado. <strong>Esto no es asesoría de inversión</strong>: nada aquí es una recomendación patrimonial para tu caso particular. <strong>No hay rendimientos garantizados</strong>: la capitalización del 5% no es un rendimiento — es la conversión de una fracción de tu propia actividad en tu propio capital. No es dinero que la cooperativa te promete; es valor que tú generaste, reencauzado hacia tu patrimonio, con un tope explícito y sin promesa alguna de que crezca más allá de eso.</p>
+
+<p>Nos falta la última pieza: ya sabemos que el valor viene de fuera y que la reserva debe existir antes. Pero, ¿cómo se <strong>prueba</strong> todo esto? ¿Cómo sabes tú, o un auditor, o el SAT, que tu aportación efectivamente existió y fue cubierta? Ese es el módulo final.</p>
+      `,
+      references: ["Master RAW seal / tokenización 2026-07-15 (§5 capitalización, §8 F1/F2)", "Reglamento Interno Ceduverse DRAFT, Art. 14 Bis (política de capitalización)", "LGSC (1 socio = 1 voto)", "Memoria ceduverse-cobros-web3 (§ capitalización 5%, tope 20 certificados)"],
+    },
+    {
+      title: "Materialidad y trazabilidad: la prueba de que tu aportación existe",
+      description: "El comprobante sellado on-chain da respaldo real al certificado. Hash SHA-256 en Base, el NFT como gemelo registral (no título negociable), el Libro como fuente de verdad, y la defensa de materialidad ante el 69-B. Cierre del curso.",
+      durationMinutes: 12,
+      contentHtml: `
+<p>Llegamos al último módulo del Curso 4. Ya sabes que tu aportación es patrimonio y no gasto; que el bono son $170 exactos, partidos en $150 de capital y $20 de saldo; que el valor viene de una fuente externa —beca de empresa hoy, token CEDU cuando exista la reserva—; y que sin reserva 1:1 constituida antes, no se emite. Falta la pregunta que todo lo amarra: <strong>¿cómo se prueba?</strong></p>
+
+<h3>Materialidad: la palabra que le importa al SAT</h3>
+<p>En el derecho fiscal mexicano hay un concepto que domina cualquier revisión seria: la <strong>materialidad</strong>. Materialidad significa que una operación no solo está documentada en un papel — significa que <strong>efectivamente ocurrió</strong>, y que puedes demostrarlo con evidencia dura y verificable.</p>
+
+<p>El <strong>artículo 69-B del Código Fiscal de la Federación</strong> es la herramienta con la que el SAT identifica operaciones simuladas: operaciones que existen en el papel pero no en los hechos. Y una aportación de capital es exactamente el tipo de operación que un revisor va a querer verificar, porque el capital social es una de las cifras más fáciles de inflar de forma ficticia y, por lo mismo, una de las más escrutadas.</p>
+
+<p>Aquí es donde todo el diseño que has estudiado en este curso encaja en una sola pieza coherente. ¿Por qué insistimos tanto en que el valor del bono viene de FUERA? ¿Por qué la reserva 1:1 es innegociable? ¿Por qué se rechazó el NFT sin respaldo? <strong>Porque cada una de esas decisiones es una decisión de materialidad.</strong> Un bono financiado con dinero externo real deja rastro: hay una transferencia, hay un origen identificable, hay un pagador. Un bono financiado con un token creado de la nada no deja rastro de nada, porque no ocurrió nada. La sustancia no es un adorno ético del modelo — es la condición para que el modelo sea defendible.</p>
+
+<h3>El sello: hash SHA-256 anclado en Base</h3>
+<p>El mecanismo concreto de prueba ya lo conoces si tomaste los cursos anteriores, y aquí lo aplicamos a tu aportación. Cuando ocurre un evento de aportación —el alta de tu certificado, o la acreditación de una fracción capitalizada— se genera un <strong>recibo o constancia de aportación</strong>. De ese documento se calcula un <strong>hash SHA-256</strong>: una huella digital única que cambia por completo si el documento se altera en un solo carácter, y que permanece idéntica si el documento no se toca. Esa huella se <strong>ancla en la red Base</strong>.</p>
+
+<p>A partir de ese momento existe una prueba pública, con fecha, imposible de alterar retroactivamente, de que ese comprobante existía en esa forma exacta en ese momento exacto. No es la palabra de la cooperativa contra la de nadie: es verificable por cualquiera, sin pedir permiso.</p>
+
+<p>Y aquí está la conexión que quiero que veas con claridad: <strong>el sello no crea el valor de tu aportación — prueba que la aportación ocurrió</strong>. El valor viene del dinero externo real que la fondeó. El sello es el testigo, no la fuente. Un sello sobre una aportación simulada seguiría siendo, como dijimos en el Curso 2, evidencia de una mentira sellada con mucha tecnología. Primero la sustancia; después el sello. Nunca al revés.</p>
+
+<p>Vale la pena recordar el estado real de las cosas, con la honestidad que hemos mantenido en todo el curso: de toda la arquitectura digital que hemos descrito, <strong>lo que existe y opera hoy es la red Base y el mecanismo de atestación por hash SHA-256</strong>. Los tokens del consorcio —CEDU incluido— siguen siendo diseño.</p>
+
+<h3>El NFT es un gemelo registral, no un título negociable</h3>
+<p>Ahora una precisión jurídica que es probablemente la más importante de este módulo, y que en el Curso 5 desarrollaremos a fondo.</p>
+
+<p>El diseño contempla que tu certificado de aportación tenga una representación digital: un <strong>NFT gemelo registral</strong>. Lee bien las dos palabras: <strong>gemelo</strong> y <strong>registral</strong>. Es un gemelo porque es el reflejo de algo que ya existe en otro lado. Es registral porque su función es documentar un registro, no ser el registro mismo.</p>
+
+<p>La <strong>fuente de verdad es el Libro de Registro de Certificados de Aportación</strong> de la cooperativa. Ese libro, y no el NFT, es donde vive jurídicamente tu condición de socio y tu titularidad. El NFT es su espejo por hash: refleja lo que el libro dice, con una prueba de integridad pública encima.</p>
+
+<p>Y por eso mismo — dilo así siempre, sin matices: <strong>el NFT NO es un título negociable</strong>. No es un valor. No es un instrumento que puedas vender en un mercado secundario, listar en un exchange, o transferir libremente a quien quieras. La transmisión de certificados de aportación está restringida por los estatutos de la cooperativa y sigue el procedimiento formal que la ley y las bases constitutivas establecen. El NFT documenta esa titularidad; no la transmite ni la libera. Si alguien alguna vez te presenta un certificado de aportación de Ceduverse como algo que se puede comprar y vender en un mercado, está describiendo algo que este instrumento no es y no puede ser.</p>
+
+<p>Un detalle adicional que protege tu privacidad: lo que se ancla on-chain son <strong>hashes</strong>, no datos personales. El registro incluye el hash del titular, no tu nombre; el hash del comprobante, no el comprobante. La red pública prueba integridad sin exponer quién eres — la misma lógica de anonimato que ya viste en BrainShield, aplicada a tu certificado.</p>
+
+<h3>Cerrando el círculo del curso</h3>
+<p>Mira el recorrido completo, porque ahora todas las piezas embonan. Tu aportación no es un gasto: es patrimonio devolvible, respaldado por la LGSC. El bono de bienvenida de <strong>$170</strong> te da <strong>$150</strong> que fundan tu primer certificado como capital y <strong>$20</strong> de saldo para tu primer certificado DC-3/SEP como consumo. Ese valor viene de FUERA —beca de empresa hoy; token CEDU 1:1 MXN cuando exista la reserva—, nunca del capital social. La reserva 1:1 debe constituirse ANTES de emitir cualquier bono por token, porque sin ella el capital sería simulado. Tu patrimonio puede crecer con la capitalización del <strong>5%</strong> de tu consumo o comisión, hasta un tope de <strong>20 certificados ($3,000)</strong>. Y todo el proceso queda sellado con hash SHA-256 en Base, dándole materialidad verificable a cada evento — con el NFT como gemelo registral del Libro, jamás como título negociable.</p>
+
+<p>Cada pieza de este diseño existe para que la respuesta a la pregunta <em>"enséñame el dinero"</em> sea siempre: <strong>aquí está</strong>.</p>
+
+<h3>Los tres avisos, por última vez</h3>
+<p>Y cerramos donde empezamos, porque estos avisos no son letra chica — son la descripción exacta de lo que este modelo es y no es. <strong>Nada en este curso constituye una oferta de valores.</strong> Un certificado de aportación cooperativa no es una acción, ni un bono, ni un título negociable, ni está registrado ante autoridad bursátil alguna. <strong>Nada en este curso constituye asesoría de inversión.</strong> Si tienes dudas sobre tu situación patrimonial o fiscal, consulta a tu propio asesor profesional. <strong>No hay rendimientos garantizados</strong>, de ningún tipo, en ninguna parte de este modelo. Ser copropietario de una cooperativa de consumo no es invertir esperando un retorno: es participar en una sociedad de personas cuyos servicios tú mismo consumes.</p>
+
+<p>Si vas a explicar esto a alguien más, hazlo con estos mismos límites. Un modelo que necesita exagerarse para venderse es un modelo débil. Este no lo necesita.</p>
+
+<h3>Tu siguiente paso</h3>
+<p><strong>Activa tu certificado de aportación.</strong> Ya sabes exactamente qué es —tu patrimonio, no un gasto—, de dónde viene el valor que lo funda, por qué la reserva 1:1 no se negocia, y cómo se prueba que existe. Ese es, precisamente, el conocimiento con el que se toma una decisión informada.</p>
+
+<p>Y cuando quieras profundizar en el instrumento mismo —el certificado, el NFT gemelo registral, el principio de 1 socio = 1 voto, y las reglas de transmisión y reembolso— te esperamos en el Curso 5 de Academia RWA.</p>
+      `,
+      references: ["Master RAW seal / tokenización 2026-07-15 (§4 sello RAW, §5 materialidad, §6 tokenización por entidad)", "CFF art. 69-B (operaciones simuladas / materialidad)", "Acta constitutiva 6520, Art. Sexto", "Reglamento Interno Ceduverse DRAFT, Art. 14 Bis"],
+    },
+  ],
+
 };

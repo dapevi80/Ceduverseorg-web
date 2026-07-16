@@ -196,4 +196,66 @@ export const rwaOnboardingQuizzes: Record<string, RwaQuiz> = {
     ],
   },
 
+  "bono-bienvenida": {
+    title: "Evaluación: Bono de bienvenida (cómo te vuelves copropietario)",
+    passingScore: 70,
+    questions: [
+      {
+        question: "¿Cómo se descompone el bono de bienvenida de $170 MXN?",
+        options: [
+          "$170 de saldo para comprar cursos",
+          "$150 que fundan tu primer certificado de aportación + $20 de saldo para tu primer certificado DC-3/SEP",
+          "$170 de aportación al capital social",
+          "$85 de aportación + $85 de descuento en la tienda",
+        ],
+        correctIndex: 1,
+        explanation: "El bono son $170 exactos: $150 fondean el valor nominal de tu primer certificado de aportación (capital, genera constancia de aportación) y $20 son saldo para tu primer certificado DC-3/SEP (consumo, sí genera CFDI de ingreso). Son dos naturalezas distintas en un solo bono.",
+      },
+      {
+        question: "¿De dónde proviene el valor del bono de bienvenida?",
+        options: [
+          "Del propio capital social de la cooperativa",
+          "De una fuente EXTERNA al capital cooperativo: una beca de empresa (canal B2B) o, en el diseño, un token respaldado 1:1",
+          "De las cuotas mensuales de los demás socios",
+          "De un préstamo bancario a nombre del socio",
+        ],
+        correctIndex: 1,
+        explanation: "El financiamiento es híbrido y el valor SIEMPRE viene de fuera del capital cooperativo. Si saliera del propio capital social sería capital circular: la cooperativa fabricaría aportaciones con dinero de otros socios, inflando el capital sin que entre un peso nuevo al sistema.",
+      },
+      {
+        question: "¿Cuál es el estado real de los tokens del consorcio (CEDU, BRAIN, KAKAW) a la fecha de este curso?",
+        options: [
+          "Los tres están desplegados y el socio puede usarlos hoy",
+          "Todos son diseño e intención: ninguno está desplegado. Lo único que existe y opera hoy es la red Base y la atestación por hash SHA-256",
+          "Solo CEDU está desplegado y en operación",
+          "KakawChain ya opera y los otros dos siguen su estándar",
+        ],
+        correctIndex: 1,
+        explanation: "CEDU (1:1 MXN), BRAIN (1:1 USDC/USDT) y KAKAW (1:1 oro) son diseño; ninguno está desplegado. KakawChain/KakawCoin no existen como producto. Hoy solo operan la red Base y el mecanismo de atestación SHA-256. Para el bono de Ceduverse el token relevante sería CEDU —no BRAIN— porque la aportación está en pesos y CEDU está diseñado 1:1 MXN: cero riesgo cambiario.",
+      },
+      {
+        question: "¿Por qué un NFT o token sin reserva 1:1 fue rechazado como forma de acreditar aportaciones?",
+        options: [
+          "Porque la tecnología aún no está madura",
+          "Porque sería capital simulado: el token no tiene valor propio, así que el capital social crecería sin que entrara dinero real — y no resistiría una auditoría ni una revisión fiscal",
+          "Porque los NFTs son ilegales en México",
+          "Porque el costo de gas en Base es demasiado alto",
+        ],
+        correctIndex: 1,
+        explanation: "Un token sin respaldo real es solo una entrada en una base de datos: emitirlo no crea valor. Acreditar aportaciones contra él sería capital simulado/circular — el sistema financiándose con su propia promesa. Por eso la dependencia es explícita: hay que constituir la reserva 1:1 en tesorería ANTES de emitir bonos por token; mientras no exista, ese canal no se activa.",
+      },
+      {
+        question: "Sobre la capitalización, el voto y el NFT en Ceduverse, ¿cuál afirmación es correcta?",
+        options: [
+          "Capitaliza el 5% del consumo/comisión con tope de 20 certificados ($3,000); 1 socio = 1 voto sin importar cuántos certificados tenga; y el NFT es un gemelo registral, NO un título negociable",
+          "Capitaliza el 15% sin tope y cada certificado da un voto adicional",
+          "El NFT es un título negociable que puedes vender en un mercado secundario",
+          "La capitalización garantiza un rendimiento anual sobre tu aportación",
+        ],
+        correctIndex: 0,
+        explanation: "Se capitaliza el 5% de cada consumo/comisión del socio (ej.: certificación RVOE Academy de $49,900 → $2,495 ≈ 16 certificados de $150), con tope de 20 certificados = $3,000, que protege la naturaleza cooperativa. El voto es per-socio (LGSC): 1 socio = 1 voto. El NFT es espejo por hash del Libro de Registro —la fuente de verdad— y no es título negociable. Nada de esto es oferta de valores ni asesoría de inversión, y no hay rendimientos garantizados: la capitalización no es un rendimiento, es tu propia actividad reencauzada a tu patrimonio.",
+      },
+    ],
+  },
+
 };
