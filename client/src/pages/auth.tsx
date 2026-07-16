@@ -94,6 +94,10 @@ function AuthPageContent() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const invite = params.get("invite");
+    // BUG 3: capturar el código de referido de la URL (?ref=) y persistirlo para
+    // el onboarding. Antes solo se leía 'invite' y los links de referido morían.
+    const ref = params.get("ref");
+    if (ref) { try { localStorage.setItem("cedu_ref", ref.trim()); } catch {} }
     if (invite) {
       setInviteToken(invite);
       fetch(`/api/invitations/validate/${invite}`)

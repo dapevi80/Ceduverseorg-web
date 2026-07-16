@@ -7,6 +7,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { sendOtpEmail } from "./email";
+import { getEffectiveRole } from "./lib/effective-role";
 
 // Cap how many OTP requests/verifications a single IP can make. Belt-and-suspenders
 // alongside the existing 30s send cooldown and progressive verify lockout in this file.
@@ -669,7 +670,8 @@ export const requirePartner: RequestHandler = async (req: Request, res: Response
     req.supabaseUserId = session.userId;
 
     const account = await storage.getAccount(session.userId);
-    if (!account || (account.userRole !== "socio_comercial" && account.userRole !== "partner" && account.userRole !== "director" && account.userRole !== "superadmin")) {
+    const effectiveRole = getEffectiveRole(req, account);
+    if (!account || (effectiveRole !== "socio_comercial" && effectiveRole !== "partner" && effectiveRole !== "director" && effectiveRole !== "superadmin")) {
       return res.status(403).json({ message: "Acceso denegado — se requiere rol de socio comercial" });
     }
 
@@ -692,7 +694,8 @@ export const requireOrgAdmin = (teamIdParam: string = "id"): RequestHandler => {
       }
 
       const account = await storage.getAccount(req.supabaseUserId);
-      if (account?.userRole === "superadmin") {
+      const effectiveRole = getEffectiveRole(req, account);
+      if (effectiveRole === "superadmin") {
         return next();
       }
 
@@ -748,7 +751,8 @@ export const requireInstructor: RequestHandler = async (req: Request, res: Respo
     req.supabaseUserId = session.userId;
 
     const account = await storage.getAccount(session.userId);
-    if (!account || (!account.isInstructor && account.userRole !== "socio_instructor" && !["admin", "superadmin"].includes(account.userRole))) {
+    const effectiveRole = getEffectiveRole(req, account);
+    if (!account || (!account.isInstructor && effectiveRole !== "socio_instructor" && !["admin", "superadmin"].includes(effectiveRole))) {
       return res.status(403).json({ message: "Acceso denegado — se requiere rol de instructor" });
     }
 
@@ -813,6 +817,12 @@ export const checkPendingTerms: RequestHandler = async (req: Request, res: Respo
 
     const account = await storage.getAccount(req.supabaseUserId);
     const userRole = account?.userRole || "socio_estudiante";
+
+    // Staff accounts (admin/superadmin) are exempt from the blocking-terms gate.
+    // IMPORTANT: this must key off the REAL account role, never the effective
+    // "Ver como" role — otherwise a superadmin previewing a non-staff role would
+    // get re-locked out of their own admin tooling by this same gate.
+    if (userRole === "admin" || userRole === "superadmin") return next();
 
     const activeVersions = await db.select().from(termsVersions)
       .where(and(eq(termsVersions.isActive, true), eq(termsVersions.isBlocking, true)));
