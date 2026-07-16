@@ -818,6 +818,12 @@ export const checkPendingTerms: RequestHandler = async (req: Request, res: Respo
     const account = await storage.getAccount(req.supabaseUserId);
     const userRole = account?.userRole || "socio_estudiante";
 
+    // Staff accounts (admin/superadmin) are exempt from the blocking-terms gate.
+    // IMPORTANT: this must key off the REAL account role, never the effective
+    // "Ver como" role — otherwise a superadmin previewing a non-staff role would
+    // get re-locked out of their own admin tooling by this same gate.
+    if (userRole === "admin" || userRole === "superadmin") return next();
+
     const activeVersions = await db.select().from(termsVersions)
       .where(and(eq(termsVersions.isActive, true), eq(termsVersions.isBlocking, true)));
 
