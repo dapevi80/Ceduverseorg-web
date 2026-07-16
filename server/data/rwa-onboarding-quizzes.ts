@@ -48,15 +48,15 @@ export const rwaOnboardingQuizzes: Record<string, RwaQuiz> = {
         explanation: "La atestación ancla un hash inalterable en Base como prueba de integridad. El pago sigue siendo fiat/SPEI; no es un pago on-chain.",
       },
       {
-        question: "El token BRAIN está diseñado para:",
+        question: "El token CEDU de Ceduverse está diseñado para:",
         options: [
           "Especular con alta volatilidad",
-          "Estar pegado 1:1 a USDC/USDT (estable, sin volatilidad)",
+          "Estar pegado 1:1 al peso mexicano (MXN) — un diseño, aún no desplegado",
           "Reemplazar al peso mexicano",
           "Pagar comisiones de Bitcoin",
         ],
         correctIndex: 1,
-        explanation: "BRAIN es un token de valor pegado 1:1 a stablecoins (USDC/USDT) para evitar volatilidad.",
+        explanation: "CEDU es el token que Ceduverse ha diseñado, pensado 1:1 al peso mexicano (MXN) para evitar volatilidad. A la fecha de este curso es diseño: todavía no está desplegado ni en operación.",
       },
       {
         question: "¿Por qué muchos proyectos 'RWA' del mercado son débiles?",
@@ -124,12 +124,12 @@ export const rwaOnboardingQuizzes: Record<string, RwaQuiz> = {
         question: "¿Qué es el token BRAIN?",
         options: [
           "Una criptomoneda volátil para especular",
-          "Un token pegado 1:1 a USDC/USDT, sin volatilidad, para representar valor de operaciones ya verificadas",
+          "Un token diseñado para estar pegado 1:1 a USDC/USDT, sin volatilidad — a la fecha, un diseño aún no desplegado",
           "Una parte social de BrainShield S.C.",
           "KakawCoin con otro nombre",
         ],
         correctIndex: 1,
-        explanation: "BRAIN está diseñado para no tener volatilidad: pegado 1:1 a stablecoins. No debe confundirse con KakawChain/KakawCoin, que aún no existen como producto.",
+        explanation: "BRAIN está diseñado para no tener volatilidad (pegado 1:1 a stablecoins), pero es un diseño: todavía no está desplegado ni en operación. No debe confundirse con KakawChain/KakawCoin, que tampoco existen como producto.",
       },
     ],
   },
