@@ -362,7 +362,9 @@ export class DatabaseStorage implements IStorage {
   async updateCourseProgress(userId: string, courseId: string, completed: number): Promise<CourseUser | undefined> {
     const [record] = await db
       .update(courseUsers)
-      .set({ completed, updatedAt: new Date() })
+      // El progreso nunca debe retroceder: si otro dispositivo ya guardó un
+      // porcentaje mayor, lo conservamos (GREATEST) en lugar de sobrescribirlo.
+      .set({ completed: sql`GREATEST(${courseUsers.completed}, ${completed})`, updatedAt: new Date() })
       .where(and(eq(courseUsers.userId, userId), eq(courseUsers.courseId, courseId)))
       .returning();
     return record;

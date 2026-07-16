@@ -323,7 +323,9 @@ function OverviewTab({ profile, account, enrollments, allCourses, userAchievemen
 
   const achievementLookup = new Map(allAchievements.map(a => [a.id, a]));
   const courseLookup = new Map(allCourses.map(c => [c.id, c]));
-  const lastCourse = enrollments.length > 0 ? enrollments[0] : null;
+  // "Continuar aprendiendo" debe apuntar al primer curso EN CURSO, no a uno ya
+  // terminado; si todos están completos, caemos al primero como referencia.
+  const lastCourse = enrollments.find(e => e.completed < 100) ?? (enrollments.length > 0 ? enrollments[0] : null);
   const lastCourseInfo = lastCourse ? courseLookup.get(lastCourse.courseId) : null;
 
   const recentAchievements = userAchievements
@@ -740,12 +742,15 @@ function CoursesTab({ enrollments, allCourses }: {
   const stpsCount = unifiedCourses.filter(c => c.type === "stps").length;
   const tutorIaCount = unifiedCourses.filter(c => c.type === "tutor-ia").length;
 
+  // Orden: primero los que estás cursando, luego los que no has empezado, y al
+  // final los completados — para que se distinga de un vistazo qué sigue pendiente.
+  const statusRank = (p: number) => (p >= 100 ? 2 : p > 0 ? 0 : 1);
   const filteredCourses = unifiedCourses.filter(c => {
     if (sourceFilter !== "all" && c.type !== sourceFilter) return false;
     if (statusFilter === "in-progress") return c.progress > 0 && c.progress < 100;
     if (statusFilter === "completed") return c.progress === 100;
     return true;
-  });
+  }).sort((a, b) => statusRank(a.progress) - statusRank(b.progress));
 
   const totalCourses = unifiedCourses.length;
   const completedCount = unifiedCourses.filter(c => c.progress === 100).length;

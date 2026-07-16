@@ -10,7 +10,7 @@ import {
   prospects,
   monthlyContributions,
 } from "@shared/schema";
-import { and, count, countDistinct, gte, isNotNull, isNull, sum } from "drizzle-orm";
+import { and, count, countDistinct, eq, gte, isNotNull, isNull, sum } from "drizzle-orm";
 
 // Conector del HQ Kakaw (fase HQ-1). Contrato:
 //   GET /api/hq/metrics
@@ -80,7 +80,7 @@ export function registerHqRoutes(app: Express): void {
         db
           .select({ c: count() })
           .from(certificateRequests)
-          .where(isNotNull(certificateRequests.pdfUrl)),
+          .where(eq(certificateRequests.status, "emitido")),
         db.select({ c: count() }).from(courseUsers),
         db
           .select({ c: count() })
