@@ -1,5 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { getAuthToken } from "@/lib/auth-token";
+import { getStoredViewAsRole, VIEW_AS_HEADER } from "@/lib/view-as";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -13,6 +14,15 @@ function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {};
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
+  }
+  // "Ver como ROL": si un superadmin/admin real dejó un rol previsualizado en
+  // sessionStorage, lo mandamos en todas las requests (queries Y mutations,
+  // ambas pasan por acá). El backend ignora este header para cualquier
+  // cuenta que no sea superadmin/admin real, así que es seguro mandarlo
+  // siempre que exista.
+  const viewAsRole = getStoredViewAsRole();
+  if (viewAsRole) {
+    headers[VIEW_AS_HEADER] = viewAsRole;
   }
   return headers;
 }

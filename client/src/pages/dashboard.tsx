@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
+import { useViewAs } from "@/hooks/use-view-as";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -1689,17 +1690,30 @@ export default function Dashboard() {
     enabled: !!account?.userRole,
   });
 
+  // "Ver como ROL": todo el nav/paneles de abajo debe reflejar el rol
+  // EFECTIVO (lo que un superadmin/admin real está previsualizando), NUNCA
+  // el rol real directo — así previsualizar p.ej. socio_estudiante oculta
+  // el link de Panel Admin como debe ser. `realIsSuperadmin` es la única
+  // excepción: se deriva del rol REAL y gatea el switcher/banner global
+  // (ver ViewAsSwitcher, montado en App.tsx), para que el camino de vuelta
+  // a superadmin nunca desaparezca mientras se previsualiza otro rol.
+  // (Hook llamado antes de cualquier return condicional, como todos los de arriba.)
+  const { viewAsRole } = useViewAs();
+
   useEffect(() => {
     if (!authLoading && !user) setLocation("/auth");
   }, [authLoading, user]);
 
   if (!authLoading && !user) return null;
 
-  const isOrgAdmin = userTeams.some(t => t.role === "admin") || account?.userRole === "empresa" || account?.userRole === "empresa_rh";
-  const isPartner = account?.userRole === "socio_comercial" || account?.userRole === "partner" || account?.userRole === "director";
-  const isSuperadmin = account?.userRole === "superadmin";
-  const isAdmin = account?.userRole === "admin" || isSuperadmin;
-  const isInstructor = account?.isInstructor === true || account?.userRole === "socio_instructor";
+  const effectiveRole = viewAsRole ?? account?.userRole;
+  const realIsSuperadmin = account?.userRole === "superadmin";
+
+  const isOrgAdmin = userTeams.some(t => t.role === "admin") || effectiveRole === "empresa" || effectiveRole === "empresa_rh";
+  const isPartner = effectiveRole === "socio_comercial" || effectiveRole === "partner" || effectiveRole === "director";
+  const isSuperadmin = effectiveRole === "superadmin";
+  const isAdmin = effectiveRole === "admin" || isSuperadmin;
+  const isInstructor = account?.isInstructor === true || effectiveRole === "socio_instructor";
 
   if (authLoading || accountLoading || profileLoading) {
     return (
