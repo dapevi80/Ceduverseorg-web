@@ -4,8 +4,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ViewAsProvider } from "@/hooks/use-view-as";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import ViewAsSwitcher from "@/components/ViewAsSwitcher";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Empresas from "@/pages/empresas";
@@ -102,13 +104,16 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <AuthProvider>
-            <TooltipProvider>
-              <Toaster />
-              <PendingTermsModal />
-              <ErrorBoundary>
-                <Router />
-              </ErrorBoundary>
-            </TooltipProvider>
+            <ViewAsProvider>
+              <TooltipProvider>
+                <Toaster />
+                <PendingTermsModal />
+                <ViewAsSwitcher />
+                <ErrorBoundary>
+                  <Router />
+                </ErrorBoundary>
+              </TooltipProvider>
+            </ViewAsProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>

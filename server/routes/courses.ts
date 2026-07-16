@@ -26,6 +26,7 @@ import {
 import { eq, and, sql, count, desc } from "drizzle-orm";
 import { sendKitEmail } from "../email";
 import { getInitialsFromName } from "./helpers";
+import { getEffectiveRole } from "../lib/effective-role";
 
 // Public lead form — anonymous, low-volume in legitimate use.
 // 5 leads / IP / hour is generous for a real prospect (typically 1) and blocks scrapers.
@@ -925,7 +926,7 @@ export function registerCourseRoutes(app: Express) {
 
         if (userId) {
           const account = await storage.getAccount(userId);
-          const role = account?.userRole || "socio_estudiante";
+          const role = getEffectiveRole(req, account);
 
           if (role === "admin" || role === "superadmin") {
             allowedSubcategories = ["Para Todos", "Empresas", "Socios"];
