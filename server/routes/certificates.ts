@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import { r2Storage } from "../services/r2-storage";
 import { isPaidCertType, resolveCertPriceMxn } from "@shared/cert-pricing";
+import { isBlockingDuplicateStatus } from "@shared/cert-duplicate";
 import { stripe, BASE_URL } from "../lib/stripe-client";
 import { decideCertTransition } from "../lib/cert-webhook-logic";
 
@@ -74,7 +75,7 @@ export function registerCertificateRoutes(app: Express) {
       }
       const existing = await storage.getCertificateRequestsByUser(userId);
       const duplicate = existing.find(r => r.courseId === courseId && r.certType === certType);
-      if (duplicate && duplicate.status !== "rechazado") {
+      if (duplicate && isBlockingDuplicateStatus(duplicate.status)) {
         return res.status(409).json({ message: "Ya tienes una solicitud para este certificado", request: duplicate });
       }
 
