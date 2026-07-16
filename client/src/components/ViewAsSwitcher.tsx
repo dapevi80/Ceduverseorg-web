@@ -3,11 +3,9 @@ import { Eye, ArrowLeftCircle } from "lucide-react";
 import {
   Select,
   SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useViewAs } from "@/hooks/use-view-as";
 import { VIEWABLE_ROLES, type ViewableRole } from "@/lib/view-as";
@@ -16,10 +14,12 @@ import { getRoleLabel } from "@/components/RoleBadge";
 const SELF_VALUE = "__self__";
 
 /**
- * Barra "Ver como ROL", montada globalmente (ver App.tsx) para que sea
- * visible en TODAS las páginas, no solo el dashboard.
+ * Pestaña compacta "Ver como ROL", montada globalmente (ver App.tsx) para que
+ * sea visible en TODAS las páginas, no solo el dashboard. Va `fixed` colgando
+ * del borde superior (fuera de flujo, para no empujar ni tapar el header) y se
+ * pinta de ámbar mientras se previsualiza, como señal de que no eres tú.
  *
- * CRÍTICO: esta barra (dropdown + estado "Viendo como...") se gatea sobre el
+ * CRÍTICO: esta pestaña (dropdown + estado "Viendo como...") se gatea sobre el
  * rol REAL (`account.userRole === "superadmin"`, vía `/api/me/account`, que
  * siempre refleja el rol real de la cuenta sin importar el header
  * `X-View-As`). Esto es intencional: mientras se previsualiza cualquier rol
@@ -38,15 +38,16 @@ export default function ViewAsSwitcher() {
 
   if (account?.userRole !== "superadmin") return null;
 
+  const previewing = !!viewAsRole;
+
   return (
     <div
-      className="sticky top-0 z-[9997] flex flex-wrap items-center justify-center gap-3 bg-cedu-ink px-4 py-2 text-sm text-white shadow-md"
+      className={`fixed left-1/2 top-0 z-[9997] flex -translate-x-1/2 items-center gap-1 rounded-b-lg px-2 py-0.5 text-[11px] shadow-md backdrop-blur-sm ${
+        previewing ? "bg-amber-500 text-black" : "bg-cedu-ink/90 text-white"
+      }`}
       data-testid="bar-view-as"
     >
-      <Eye size={14} className="shrink-0" />
-      <span className="font-semibold" data-testid="text-view-as-status">
-        {viewAsRole ? `Viendo como: ${getRoleLabel(viewAsRole)}` : "Modo Superadmin"}
-      </span>
+      <Eye size={12} className="shrink-0 opacity-80" />
 
       <Select
         value={viewAsRole ?? SELF_VALUE}
@@ -55,10 +56,12 @@ export default function ViewAsSwitcher() {
         }
       >
         <SelectTrigger
-          className="h-8 w-56 border-white/20 bg-white/10 text-xs text-white"
+          className="h-6 w-auto gap-1 border-0 bg-transparent px-1 text-[11px] font-medium shadow-none focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3"
           data-testid="select-view-as-role"
         >
-          <SelectValue placeholder="Ver como..." />
+          <span data-testid="text-view-as-status">
+            {previewing ? `Viendo como: ${getRoleLabel(viewAsRole!)}` : "Ver como"}
+          </span>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={SELF_VALUE} data-testid="option-view-as-self">
@@ -72,17 +75,17 @@ export default function ViewAsSwitcher() {
         </SelectContent>
       </Select>
 
-      {viewAsRole && (
-        <Button
-          size="sm"
-          variant="secondary"
-          className="h-8 text-xs"
+      {previewing && (
+        <button
+          type="button"
           onClick={() => setViewAsRole(null)}
+          className="ml-0.5 flex shrink-0 items-center rounded p-0.5 hover:bg-black/10"
+          title="Volver a Superadmin"
+          aria-label="Volver a Superadmin"
           data-testid="button-back-to-superadmin"
         >
-          <ArrowLeftCircle size={14} className="mr-1" />
-          Volver a Superadmin
-        </Button>
+          <ArrowLeftCircle size={13} />
+        </button>
       )}
     </div>
   );
