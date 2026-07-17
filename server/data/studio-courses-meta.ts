@@ -27,6 +27,17 @@ export interface StudioCourseMeta {
    *
    * Para publicarlos: quitar la bandera SOLO cuando la Asamblea haya aprobado
    * el Reglamento y el CLO haya firmado el copy legal.
+   *
+   * ⚠️ ANTES DE QUITAR LA BANDERA, ARREGLA ESTO O EL GATEO POR ROL NO SIRVE:
+   * `GET /api/studio/courses/:slug` y `/:slug/modules/:index` (server/routes/courses.ts,
+   * ~961 y ~972) NO tienen auth ni filtro de `allowedSubcategories`: sirven curso,
+   * módulos y quiz a cualquiera que sepa el slug. Hoy es inocuo porque esta compuerta
+   * impide que las filas existan. En cuanto se siembren, la capa legal-fiscal queda
+   * legible por URL para cualquier visitante, saltándose el gateo de subcategoría.
+   * Las dos compuertas son load-bearing EN SERIE.
+   *
+   * Nota: esta compuerta es create-only. No retrae lo ya sembrado: volver a poner la
+   * bandera NO despublica un curso que ya entró a la BD.
    */
   pendingLegalSignoff?: boolean;
 }
