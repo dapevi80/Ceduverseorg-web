@@ -42,7 +42,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Por ahora, quédate con esta idea simple y poderosa: <strong>un RWA es un activo real con una representación digital honesta de ese activo</strong>. El valor vive en el mundo, no en la pantalla. Todo lo que aprenderás de aquí en adelante es, en el fondo, la manera correcta —y la manera incorrecta— de construir ese puente entre ambos mundos. Sigamos al módulo 2 para entender exactamente qué problema resuelve esto y por qué, hasta ahora, tan pocos proyectos lo han hecho bien.</p>
       `,
-      references: ["Pivote RWA BrainShield 2026-07-14"],
+      references: ["Marco de originación de RWA de BrainShield (4 patas: valuación, título, flujo, procedencia)"],
     },
     {
       title: "El problema que resuelve",
@@ -73,7 +73,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Esta es exactamente la razón por la que BrainShield construyó un marco explícito de verificación antes de considerar que un activo puede llamarse RWA dentro de nuestro ecosistema. No basta con "tener un token." Se necesita demostrar sustancia real, de manera verificable, en cuatro frentes distintos. A eso le llamamos las <strong>4 patas de un RWA legítimo</strong>, y es exactamente el tema que exploraremos, con calma y con ejemplos concretos, en el módulo 3.</p>
       `,
-      references: ["Pivote RWA BrainShield 2026-07-14"],
+      references: ["Marco de originación de RWA de BrainShield (4 patas: valuación, título, flujo, procedencia)"],
     },
     {
       title: "Las 4 patas de un RWA legítimo (marco BrainShield)",
@@ -111,7 +111,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>En el siguiente módulo vamos a hablar de cómo, una vez que las cuatro patas están firmes en el mundo off-chain, BrainShield usa la tecnología blockchain —específicamente la red Base— no para reemplazar nada de esto, sino para sellarlo de forma pública e inalterable. Vamos a hablar de atestación, no de tokenización especulativa, y del token CEDU de Ceduverse, diseñado deliberadamente para no tener volatilidad — aunque, como vas a ver, todavía no está desplegado.</p>
       `,
-      references: ["Pivote RWA BrainShield 2026-07-14"],
+      references: ["Marco de originación de RWA de BrainShield (4 patas: valuación, título, flujo, procedencia)"],
     },
     {
       title: "On-chain sin miedo: atestación vs. tokenización",
@@ -151,7 +151,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>En el módulo final vamos a dar un paso atrás y ver el panorama completo: cómo encajan BrainShield, el marketplace de RWA, CryptoVault 24k y el anonimato del socio en un solo ecosistema coherente — y cómo puedes tú empezar a participar en él.</p>
       `,
-      references: ["Pivote RWA BrainShield 2026-07-14"],
+      references: ["Marco de originación de RWA de BrainShield (4 patas: valuación, título, flujo, procedencia)"],
     },
     {
       title: "El ecosistema BrainShield",
@@ -190,7 +190,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>El siguiente paso es tuyo: <strong>crea tu cuenta y explora el marketplace de activos reales</strong>. Ahí vas a encontrar, aplicados en la práctica, cada uno de los conceptos que acabas de aprender. No tengas miedo de hacer preguntas, de pedir ver el expediente de procedencia de un activo, o de verificar tú mismo el hash de un dictamen en la red Base. Ese es, precisamente, el espíritu de todo este ecosistema: la transparencia no es un adorno, es el fundamento.</p>
       `,
-      references: ["Pivote RWA BrainShield 2026-07-14"],
+      references: ["Marco de originación de RWA de BrainShield (4 patas: valuación, título, flujo, procedencia)"],
     },
   ],
 
@@ -220,7 +220,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Con esta base ya puedes entender por qué BrainShield existe: para que activos reales —tangibles o intangibles— que hoy son difíciles de valuar, difíciles de proteger y difíciles de licenciar con confianza, puedan pasar por un proceso serio que los vuelva defendibles. En el siguiente módulo vamos a entrar al corazón de la propuesta para propiedad intelectual: la <strong>bóveda de PI anónima</strong>, cómo se deposita un activo intangible ahí, y cómo funciona el modelo de reparto cuando ese activo empieza a generar valor.</p>
       `,
-      references: ["Pivote RWA BrainShield 2026-07-14", "Estructura legal BrainShield S.C. (Acta 5905)"],
+      references: ["Marco de originación de RWA de BrainShield (4 patas: valuación, título, flujo, procedencia)", "Estructura legal BrainShield S.C. (Acta 5905)"],
     },
     {
       title: "La bóveda de PI anónima",
@@ -252,7 +252,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Con esto ya sabes cómo se deposita, se identifica y se remunera un activo intangible dentro de BrainShield. Pero para que ese activo tenga valor defendible, alguien tiene que ponerle un número serio y verificable: eso es exactamente lo que vamos a ver en el siguiente módulo, dedicado a la valuación y a la atestación on-chain.</p>
       `,
-      references: ["Pivote RWA BrainShield 2026-07-14", "Estructura legal BrainShield S.C. (Acta 5905)", "Master RAW seal / tokenización 2026-07-15"],
+      references: ["Marco de originación de RWA de BrainShield (4 patas: valuación, título, flujo, procedencia)", "Estructura legal BrainShield S.C. (Acta 5905)", "Atestación por hash SHA-256 en la red Base"],
     },
     {
       title: "Valuación y atestación",
@@ -279,7 +279,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Esta secuencia —sustancia primero, sello después— es el criterio que separa a BrainShield de los proyectos que solo fingen tener un RWA detrás de su token. En el siguiente módulo vamos a hablar de lo que sí se representa dentro del ecosistema con un token: el <strong>token BRAIN</strong>, y por qué está diseñado deliberadamente para no tener volatilidad.</p>
       `,
-      references: ["Portal del Corredor BrainShield 2026-07-14", "Master RAW seal / tokenización 2026-07-15", "Pivote RWA BrainShield 2026-07-14"],
+      references: ["NIF C-8 — Norma de Información Financiera (activos intangibles)", "Atestación por hash SHA-256 en la red Base", "Marco de originación de RWA de BrainShield (4 patas: valuación, título, flujo, procedencia)"],
     },
     {
       title: "El token BRAIN",
@@ -306,7 +306,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Con esto ya conoces las tres piezas técnicas centrales de BrainShield: la bóveda de PI con su alias y su modelo 80/20, la valuación independiente sellada por atestación en Base, y el token BRAIN, diseñado para ser estable — aunque, como ya sabes, todavía no desplegado. En el último módulo vamos a ver cómo todo esto se conecta en un solo ecosistema, junto con el marketplace de RWA y CryptoVault.</p>
       `,
-      references: ["Pivote RWA BrainShield 2026-07-14"],
+      references: ["Marco de originación de RWA de BrainShield (4 patas: valuación, título, flujo, procedencia)"],
     },
     {
       title: "El ecosistema BrainShield",
@@ -332,7 +332,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 <h3>Tu siguiente paso</h3>
 <p>Has completado el Curso 2 de Academia RWA. Ya sabes qué es BrainShield, cómo funciona su bóveda de propiedad intelectual, cómo se valúa y se sella un activo, y cómo encaja el token BRAIN en todo esto. El siguiente paso es tuyo: <strong>explora el marketplace de RWA</strong> para ver activos verificados en la práctica, o, si tienes propiedad intelectual que hoy no está generando ningún valor, <strong>conoce más sobre BrainShield</strong> y evalúa si depositarla en la bóveda tiene sentido para ti. No tengas miedo de pedir ver el dictamen de un activo o de verificar tú mismo un hash en la red Base — la transparencia, como ya sabes, no es un adorno en este ecosistema: es el fundamento.</p>
       `,
-      references: ["Pivote RWA BrainShield 2026-07-14", "Master RAW seal / tokenización 2026-07-15"],
+      references: ["Marco de originación de RWA de BrainShield (4 patas: valuación, título, flujo, procedencia)", "Atestación por hash SHA-256 en la red Base"],
     },
   ],
 
@@ -364,7 +364,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Estas dos capas digitales —el título asociado a la pieza y la frase grabada en el reverso— son justamente los temas de los siguientes dos módulos. En el módulo 2 vamos a hablar del título 1:1 de la pieza: qué existe hoy, qué está diseñado para existir más adelante, y por qué es importante no confundir ambas cosas. En el módulo 3 vamos a hablar específicamente de las 24 palabras grabadas al reverso, qué son, y por qué separar el pago de una pieza de la custodia de tus propios activos es un principio de seguridad que te conviene entender bien, uses o no CryptoVault 24k. Sigamos.</p>
       `,
-      references: ["cryptovault-pricing.ts / CRYPTOVAULT_EDITIONS", "ceduverse-private.tsx (sección CryptoVault24k)"],
+      references: ["Términos del producto CryptoVault 24k — ceduverse.org"],
     },
     {
       title: "El título 1:1 del lingote: gemelo digital, con cuidado",
@@ -393,7 +393,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>En el siguiente módulo vamos a hablar de la otra capa digital de tu pieza: las 24 palabras grabadas físicamente en el reverso, qué son realmente, y por qué separar el pago de tu pieza de la custodia de tus propios activos digitales es un principio que te conviene entender bien.</p>
       `,
-      references: ["server/routes/vault.ts (markVaultOrderPaid, titleStatus)", "shared/schema.ts (crypto_vault_orders)", "Master RAW seal / tokenización 2026-07-15 (§7 Gemelo digital de productos físicos)"],
+      references: ["Términos del producto CryptoVault 24k — ceduverse.org", "Atestación por hash SHA-256 en la red Base"],
     },
     {
       title: "La seed en el reverso: tu propia autocustodia",
@@ -420,7 +420,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Con esto ya entiendes las dos capas digitales de CryptoVault 24k: el título que identifica a la pieza física, y la frase de recuperación que te protege a ti como dueño de tus propios activos. En el siguiente módulo vamos a bajar a lo más práctico: cómo se cotiza el precio de una pieza en tiempo real, qué medios de pago existen hoy, y cuáles todavía están en camino.</p>
       `,
-      references: ["ceduverse-private.tsx (Ceduverse Vault Card / CryptoVault24k)", "Master RAW seal / tokenización 2026-07-15 (§7)"],
+      references: ["Términos del producto CryptoVault 24k — ceduverse.org"],
     },
     {
       title: "Cómo se compra: cotización en vivo y medios de pago",
@@ -452,7 +452,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>En el último módulo de este curso vamos a cerrar con los guardrails que debes tener siempre presentes al considerar CryptoVault 24k: qué garantías sí puedes verificar por ti mismo, y qué es importante que nunca esperes de este producto.</p>
       `,
-      references: ["server/services/cryptovault-pricing.ts", "server/services/gold-spot.ts (goldapi.io, sin precios simulados)", "server/routes/vault.ts (/api/vault/quote, /api/vault/checkout)"],
+      references: ["Política de precios de CryptoVault 24k (valor del oro + 20% de fee operativo + gas, spot en vivo)"],
     },
     {
       title: "Guardrails: qué sí puedes verificar, qué nunca esperar",
@@ -479,7 +479,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Tu siguiente paso es tuyo: <strong>puedes reservar tu propia pieza</strong> si ya te sientes cómodo con todo lo que aprendiste en este curso, o puedes <strong>conocer más sobre el resto del ecosistema Kakaw y BrainShield</strong> antes de tomar cualquier decisión. No hay prisa. La transparencia, como ya sabes si tomaste los cursos anteriores, no es un adorno en este ecosistema — es el fundamento sobre el que se construye todo lo demás.</p>
       `,
-      references: ["ceduverse-private.tsx (\"no un instrumento de inversión\")", "server/services/gold-spot.ts (regla no-mock)", "Master RAW seal / tokenización 2026-07-15"],
+      references: ["Términos del producto CryptoVault 24k — ceduverse.org", "Política de precios de CryptoVault 24k (valor del oro + 20% de fee operativo + gas, spot en vivo)"],
     },
   ],
 
@@ -554,7 +554,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Y ahora viene la parte interesante, la que probablemente te trajo a este curso. Porque hay un mecanismo diseñado para que ese primer certificado ni siquiera tenga que salir de tu bolsillo: el <strong>bono de bienvenida</strong>. En el siguiente módulo vamos a desarmarlo peso por peso — literalmente, los $170 pesos que lo componen — para que entiendas exactamente qué es cada parte, por qué está diseñado así, y —muy importante— <strong>cuál es su estatus jurídico real</strong>, porque las cifras que vas a leer son política propuesta y todavía no aprobada.</p>
       `,
-      references: ["Ley General de Sociedades Cooperativas (LGSC) — régimen de las aportaciones de los socios y de su devolución", "Acta constitutiva 6520, Notaría 110 QR (Ceduverse S.C. de C. de R.L. de C.V.) — Art. Sexto: retiro efectivo al fin del ejercicio anual o del siguiente; devolución al cierre del ejercicio, con prelación y a prorrata, deducidas las pérdidas proporcionales", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (el valor de reembolso de los certificados capitalizados está pendiente de definirse y aprobarse)", "Master RAW seal / tokenización 2026-07-15 (§5 Aportación capitalizada)"],
+      references: ["Ley General de Sociedades Cooperativas (LGSC) — régimen de las aportaciones de los socios y de su devolución", "Acta constitutiva 6520, Notaría 110 QR (Ceduverse S.C. de C. de R.L. de C.V.) — Art. Sexto: retiro efectivo al fin del ejercicio anual o del siguiente; devolución al cierre del ejercicio, con prelación y a prorrata, deducidas las pérdidas proporcionales", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (el valor de reembolso de los certificados capitalizados está pendiente de definirse y aprobarse)"],
     },
     {
       title: "El bono de bienvenida: $170 desarmado peso por peso",
@@ -610,7 +610,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ahora bien — hay una pregunta obvia que probablemente ya te estás haciendo, y es la pregunta correcta: si el bono te regala $170 y tú no los pagas, <strong>¿de dónde salen?</strong> Alguien tiene que poner ese valor. Y la respuesta a esa pregunta es el corazón intelectual de este curso, y el tema del siguiente módulo.</p>
       `,
-      references: ["Acta constitutiva 6520, Art. Sexto (certificados digitales, nominativos, indivisibles) — VIGENTE", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador). Art. 14 Bis.1: monto $170 y desglose $150 capital / $20 crédito de descuento; Art. 14 Bis.1.b: los $20 son promoción/crédito comercial, NO capital; Art. 14 Bis.6: monto y desglose son parámetros ajustables por acuerdo de la Asamblea General Ordinaria", "Reglamento Interno Ceduverse DRAFT, Arts. 14.3 y 15 — base de IVA y retenciones pendiente de confirmación con el área fiscal", "Reglamento Interno Ceduverse DRAFT, Art. 13 (recibo de aportación de capital, no CFDI de ingreso)", "Memoria ceduverse-cobros-web3 (§ bono de bienvenida)"],
+      references: ["Acta constitutiva 6520, Art. Sexto (certificados digitales, nominativos, indivisibles) — VIGENTE", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador). Art. 14 Bis.1: monto $170 y desglose $150 capital / $20 crédito de descuento; Art. 14 Bis.1.b: los $20 son promoción/crédito comercial, NO capital; Art. 14 Bis.6: monto y desglose son parámetros ajustables por acuerdo de la Asamblea General Ordinaria", "Reglamento Interno Ceduverse DRAFT, Arts. 14.3 y 15 — base de IVA y retenciones pendiente de confirmación con el área fiscal", "Reglamento Interno Ceduverse DRAFT, Art. 13 (recibo de aportación de capital, no CFDI de ingreso)"],
     },
     {
       title: "De dónde sale el valor: el origen EXTERNO",
@@ -663,7 +663,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 <h3>Los tres avisos</h3>
 <p>Como en cada módulo de este curso: <strong>nada de esto es una oferta de valores</strong> — ni el certificado de aportación, ni el bono, ni un token que todavía no existe. <strong>Nada de esto es asesoría de inversión</strong>. Y <strong>no hay rendimientos garantizados</strong> de ninguna clase. Describimos un diseño de financiamiento del capital de una cooperativa, no un producto de inversión.</p>
       `,
-      references: ["Master RAW seal / tokenización 2026-07-15 (§5, §6, §8 fases F1/F2)", "Memoria ceduverse-cobros-web3 (§ bono / origen externo)", "Memoria brainshield-rwa-pivot (tokens 1:1, estado de despliegue: CEDU 1:1 MXN, BRAIN 1:1 USDC/USDT, KAKAW 1:1 oro — ninguno desplegado)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos. Arts. 3 y 14 Bis.2: exigen origen EXTERNO y reserva 1:1 obligatoria, y rechazan el token sin reserva como capital simulado. Su enumeración de vías admitidas solo lista BRAIN 1:1 USDC/USDT y KAKAW 1:1 oro; no menciona CEDU, cuya incorporación al Reglamento está pendiente — por eso ese artículo no se cita como sustento de la vía CEDU"],
+      references: ["Diseño de tokens 1:1 del consorcio (CEDU 1:1 MXN, BRAIN 1:1 USDC/USDT, KAKAW 1:1 oro — ninguno desplegado)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos. Arts. 3 y 14 Bis.2: exigen origen EXTERNO y reserva 1:1 obligatoria, y rechazan el token sin reserva como capital simulado. Su enumeración de vías admitidas solo lista BRAIN 1:1 USDC/USDT y KAKAW 1:1 oro; no menciona CEDU, cuya incorporación al Reglamento está pendiente — por eso ese artículo no se cita como sustento de la vía CEDU"],
     },
     {
       title: "La reserva 1:1: sin ella no se emite",
@@ -713,7 +713,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Nos falta la última pieza: ya sabemos que el valor viene de fuera y que la reserva debe existir antes. Pero, ¿cómo se <strong>prueba</strong> todo esto? ¿Cómo sabes tú, o un auditor, o el SAT, que tu aportación efectivamente existió y fue cubierta? Ese es el módulo final.</p>
       `,
-      references: ["Master RAW seal / tokenización 2026-07-15 (§5 capitalización, §8 F1/F2)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador). Art. 14: política de capitalización del 5% y tope de 20 certificados; Art. 14.6: el porcentaje, el tope y las fuentes de 'movimiento de valor' son parámetros ajustables por acuerdo de la Asamblea General Ordinaria", "Reglamento Interno Ceduverse DRAFT, Art. 14 Bis.3 (dependencia de tesorería: reserva 1:1 constituida ANTES de emitir bonos por vía token)", "LGSC y acta constitutiva 6520, Art. Décimo fracc. VII (1 socio = 1 voto)", "Memoria ceduverse-cobros-web3 (§ capitalización 5%, tope 20 certificados)"],
+      references: ["Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador). Art. 14: política de capitalización del 5% y tope de 20 certificados; Art. 14.6: el porcentaje, el tope y las fuentes de 'movimiento de valor' son parámetros ajustables por acuerdo de la Asamblea General Ordinaria", "Reglamento Interno Ceduverse DRAFT, Art. 14 Bis.3 (dependencia de tesorería: reserva 1:1 constituida ANTES de emitir bonos por vía token)", "LGSC y acta constitutiva 6520, Art. Décimo fracc. VII (1 socio = 1 voto)"],
     },
     {
       title: "Materialidad y trazabilidad: la prueba de que tu aportación existe",
@@ -766,7 +766,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Y cuando quieras profundizar en el instrumento mismo —el certificado, el NFT gemelo registral, el principio de 1 socio = 1 voto, y las reglas de transmisión y reembolso— te esperamos en el Curso 5 de Academia RWA.</p>
       `,
-      references: ["Master RAW seal / tokenización 2026-07-15 (§4 sello RAW, §5 materialidad, §6 tokenización por entidad)", "CFF art. 69-B (operaciones simuladas / materialidad)", "Acta constitutiva 6520, Art. Sexto — VIGENTE", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Arts. 19 y 20). Art. 12: certificado digital y sello RAW on-chain, Libro de Registro como fuente de verdad, sin datos personales en cadena; Art. 15: recibo de aportación de capital y comprobante sellado on-chain como materialidad; Arts. 14.6 y 14 Bis.6: bono, 5% y tope son parámetros ajustables por acuerdo de la Asamblea General Ordinaria"],
+      references: ["Atestación por hash SHA-256 en la red Base", "CFF art. 69-B (operaciones simuladas / materialidad)", "Acta constitutiva 6520, Art. Sexto — VIGENTE", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Arts. 19 y 20). Art. 12: certificado digital y sello RAW on-chain, Libro de Registro como fuente de verdad, sin datos personales en cadena; Art. 15: recibo de aportación de capital y comprobante sellado on-chain como materialidad; Arts. 14.6 y 14 Bis.6: bono, 5% y tope son parámetros ajustables por acuerdo de la Asamblea General Ordinaria"],
     },
   ],
 
@@ -833,7 +833,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ya sabes qué es el instrumento y por qué el acta permite que sea digital. En el siguiente módulo vamos a ver <em>cómo</em> se representa digitalmente — y por qué esa representación, por más tecnología que lleve encima, jamás es el título.</p>
       `,
-      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (Art. Sexto: certificados digitales, nominativos, indivisibles; Libro de Registro)", "Master RAW seal / tokenización 2026-07-15 (§2 realidad legal comparada, §6 tokenización por entidad)", "LGSC (régimen de sociedades cooperativas)"],
+      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (Art. Sexto: certificados digitales, nominativos, indivisibles; Libro de Registro)", "LGSC (régimen de sociedades cooperativas)"],
     },
     {
       title: "El NFT gemelo registral",
@@ -887,7 +887,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ya sabes qué documenta el gemelo. Falta la pregunta que todo socio comercial escucha tarde o temprano: <em>"si acumulo certificados, ¿mando más?"</em> La respuesta está en el siguiente módulo, y es un no rotundo.</p>
       `,
-      references: ["Master RAW seal / tokenización 2026-07-15 (§3 principios, §4 doble sello Opción A, §8 fases F1/F2, §13 gaps abiertos)", "Acta constitutiva 6520, Art. Sexto (Libro de Registro de Certificados de Aportación)", "LFPDPPP (tratamiento de datos personales del socio)"],
+      references: ["Atestación por hash SHA-256 en la red Base", "Acta constitutiva 6520, Art. Sexto (Libro de Registro de Certificados de Aportación)", "LFPDPPP (tratamiento de datos personales del socio)"],
     },
     {
       title: "1 socio = 1 voto",
@@ -933,7 +933,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Y un recordatorio de los guardrails, que aplican también aquí: <strong>nada de esto es una oferta de valores</strong> — el certificado no es una acción y no lleva voto proporcional, precisamente porque no es una acción. <strong>Nada de esto es asesoría de inversión.</strong> <strong>No hay rendimientos garantizados.</strong> Ser copropietario de una cooperativa de consumo es participar en una sociedad de personas cuyos servicios tú mismo consumes; no es adquirir una posición de control ni un retorno prometido.</p>
       `,
-      references: ["LGSC (1 socio = 1 voto, independientemente del número de certificados)", "Acta constitutiva 6520 (Estatutos: igualdad de derechos de los socios)", "Master RAW seal / tokenización 2026-07-15 (§3.3 respeto al régimen societario, §6 voto per-socio, no por NFT)"],
+      references: ["LGSC (1 socio = 1 voto, independientemente del número de certificados)", "Acta constitutiva 6520 (Estatutos: igualdad de derechos de los socios)"],
     },
     {
       title: "La capitalización del 5%",
@@ -992,7 +992,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ya sabes cómo nace tu certificado y cómo crece. Falta la parte más incómoda y la más honesta del curso: qué pasa cuando quieres <em>salir</em>.</p>
       `,
-      references: ["Master RAW seal / tokenización 2026-07-15 (§5 aportación capitalizada, §13 gaps abiertos)", "Reglamento Interno Ceduverse DRAFT (política de capitalización — borrador pendiente de aprobación en Asamblea)", "Acta constitutiva 6520, Art. Sexto (valor nominal $150, indivisibilidad)", "Memoria ceduverse-cobros-web3 (§ capitalización 5%, tope 20 certificados)"],
+      references: ["Reglamento Interno Ceduverse DRAFT (política de capitalización — borrador pendiente de aprobación en Asamblea)", "Acta constitutiva 6520, Art. Sexto (valor nominal $150, indivisibilidad)"],
     },
     {
       title: "Transmisión y reembolso: lo que está en firme y lo que está por aprobarse",
@@ -1061,7 +1061,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ya dominas el instrumento. Lo que falta es lo que haces con él frente a otra persona: cómo se explica, cómo se vende sin exagerar, qué comisiones lo rodean y qué objeciones vas a enfrentar. Te esperamos en el <strong>Curso 6: Modelo cooperativo comercial</strong>.</p>
       `,
-      references: ["Acta constitutiva 6520, Art. Sexto (Libro de Registro; retiro al cierre del ejercicio; preferencia de 15 días en aumentos de capital)", "Ley General de Sociedades Cooperativas (LGSC) — devolución de aportaciones al cierre del ejercicio, con prelación y a prorrata", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (transmisión, derecho del tanto y valor de reembolso siguen pendientes de definirse y aprobarse)", "Master RAW seal / tokenización 2026-07-15 (§9 plan legal: conseguir el Reglamento Interno)"],
+      references: ["Acta constitutiva 6520, Art. Sexto (Libro de Registro; retiro al cierre del ejercicio; preferencia de 15 días en aumentos de capital)", "Ley General de Sociedades Cooperativas (LGSC) — devolución de aportaciones al cierre del ejercicio, con prelación y a prorrata", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (transmisión, derecho del tanto y valor de reembolso siguen pendientes de definirse y aprobarse)"],
     },
   ],
 
@@ -1151,7 +1151,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ya sabes qué vendes y cómo abrirlo. En el siguiente módulo, la pregunta que probablemente te trajo aquí: cuánto ganas tú — y, sobre todo, qué de eso puedes prometer hoy y qué no.</p>
       `,
-      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (cooperativa de consumo, certificados $150)", "Acta 5905, Notaría 110 QR — BrainShield S.C. (originador de RWA)", "Memoria brainshield-rwa-pivot (tokens 1:1 CEDU/BRAIN/KAKAW: diseño, ninguno desplegado; solo Base + SHA-256 operan)", "Memoria ceduverse-business-model (catálogo: DC-3, SEP, RVOE Academy $49,900)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador)"],
+      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (cooperativa de consumo, certificados $150)", "Acta 5905, Notaría 110 QR — BrainShield S.C. (originador de RWA)", "Diseño de tokens 1:1 del consorcio (CEDU 1:1 MXN, BRAIN 1:1 USDC/USDT, KAKAW 1:1 oro — ninguno desplegado; solo Base + atestación por hash SHA-256 operan)", "Catálogo de certificaciones Ceduverse (DC-3, SEP, RVOE Academy por experiencias laborales)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador)"],
     },
     {
       title: "Comisiones: el 15%, el $500 y lo que todavía no puedes prometer",
@@ -1207,7 +1207,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ya sabes qué ganas y qué no puedes prometer. Ahora, lo que va a pasar en la conversación real: las cuatro preguntas que te van a hacer.</p>
       `,
-      references: ["Modelo de roles y comisiones de Ceduverse (rol comercial plano: el porcentaje de cada socio es su propio parámetro, 15% por defecto; no hay niveles nombrados; director es un rol distinto, no un nivel de comisión)", "Modelo de negocio Ceduverse (el bono de $500 por referido se paga cuando la EMPRESA referida hace su primera aportación; no hay bono por referir socios estudiantes; las comisiones se pagan del fee de administración, no de la aportación)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (Art. 14.2: el 5% aplica a consumo y comisiones por referido, tope 20 certificados; Art. 14.6: parámetros ajustables por la Asamblea)"],
+      references: ["Política de comisiones de socio comercial de Ceduverse (rol comercial plano: el porcentaje de cada socio es su propio parámetro, 15% por defecto; no hay niveles nombrados; director es un rol distinto, no un nivel de comisión)", "Política de referidos de Ceduverse (el bono de $500 por referido se paga cuando la empresa referida hace su primera aportación; no hay bono por referir socios estudiantes; las comisiones se pagan del fee de administración, no de la aportación)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (Art. 14.2: el 5% aplica a consumo y comisiones por referido, tope 20 certificados; Art. 14.6: parámetros ajustables por la Asamblea)"],
     },
     {
       title: "Manejo de objeciones: ¿es cripto?, ¿es legal?, ¿es estafa?, ¿por qué anónimo?",
@@ -1276,7 +1276,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 <h3>Los tres avisos</h3>
 <p><strong>Nada de esto es una oferta de valores. Nada de esto es asesoría de inversión. No hay rendimientos garantizados.</strong> Y en el manejo de objeciones esto tiene una aplicación directa: si un prospecto insiste en que le confirmes un retorno —"pero dime cuánto voy a ganar"—, la respuesta no es un número más bajo ni una estimación prudente. La respuesta es que <strong>este modelo no promete retornos, y si eso es lo que busca, esto no es para él</strong>. Perder esa venta es ganar: el prospecto que compra creyendo que le prometiste un rendimiento es un reclamo con fecha diferida.</p>
       `,
-      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 — VIGENTE", "Ley General de Sociedades Cooperativas (LGSC) — 1 socio = 1 voto; régimen de las sociedades cooperativas", "Pivote RWA BrainShield (bóveda de PI, alias, anonimato como secreto industrial; tokens CEDU/BRAIN/KAKAW: diseño, no desplegados; solo Base + SHA-256 operan)", "Modelo de negocio Ceduverse (el $500 se paga sobre la primera aportación de la EMPRESA referida; no hay bono por referir estudiantes; comisiones del fee de administración)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos"],
+      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 — VIGENTE", "Ley General de Sociedades Cooperativas (LGSC) — 1 socio = 1 voto; régimen de las sociedades cooperativas", "Marco de originación de RWA de BrainShield (bóveda de PI, alias, anonimato como secreto industrial; diseño de tokens 1:1 del consorcio — ninguno desplegado; solo Base + atestación por hash SHA-256 operan)", "Política de referidos de Ceduverse (el $500 se paga sobre la primera aportación de la empresa referida; no hay bono por referir estudiantes; comisiones del fee de administración)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos"],
     },
     {
       title: "El modelo cooperativo desde la venta: tu rol y tu límite",
@@ -1341,7 +1341,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ya sabes qué eres dentro de la estructura. Falta el módulo que más te va a proteger: la lista exacta de lo que no puedes decir, y el guion honesto de cada caso.</p>
       `,
-      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (5 socios fundadores, 100 certificados de $150; retiro efectivo al fin del ejercicio anual o del siguiente)", "Ley General de Sociedades Cooperativas (LGSC) — devolución al cierre del ejercicio, con prelación y a prorrata, deducidas las pérdidas proporcionales", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (Art. 14: capitalización 5%, tope 20 certificados $3,000, ejemplo RVOE $49,900 → $2,495; Art. 14.6: parámetros ajustables por la Asamblea; el valor de reembolso de los certificados capitalizados sigue pendiente de definirse)", "Estructura legal de Ceduverse (1 socio = 1 voto; cooperativa de consumo)"],
+      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (5 socios fundadores, 100 certificados de $150; retiro efectivo al fin del ejercicio anual o del siguiente)", "Ley General de Sociedades Cooperativas (LGSC) — devolución al cierre del ejercicio, con prelación y a prorrata, deducidas las pérdidas proporcionales", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (Art. 14: capitalización 5%, tope 20 certificados $3,000, ejemplo RVOE $49,900 → $2,495; Art. 14.6: parámetros ajustables por la Asamblea; el valor de reembolso de los certificados capitalizados sigue pendiente de definirse)"],
     },
     {
       title: "Guardrails de venta: lo que NO puedes decir (y el guion honesto de cada caso)",
@@ -1420,7 +1420,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Y antes de tu primera conversación con un prospecto, haz este ejercicio: <strong>di en voz alta las tres cosas que no existen todavía</strong> — ningún token está desplegado, el NFT no está acuñado, el Reglamento es borrador. Si puedes decirlas con naturalidad, sin que te tiemble la voz y sin sentir que estás debilitando tu pitch, estás listo. Si todavía te incomodan, repásalas hasta que no. <strong>Esa comodidad con la verdad incompleta del proyecto es, literalmente, tu producto.</strong></p>
       `,
-      references: ["Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador; Arts. 14 y 14 Bis: 5%, tope 20 certificados, bono $170, parámetros ajustables por Asamblea)", "Memoria brainshield-rwa-pivot (CEDU/BRAIN/KAKAW: diseño, ninguno desplegado; KakawChain/KakawCoin no existen; solo Base + SHA-256 operan)", "Modelo de roles y comisiones de Ceduverse (rol comercial plano, 15% por defecto, sin niveles nombrados; director es un rol distinto)", "Modelo de negocio Ceduverse ($500 sobre la primera aportación de la EMPRESA referida; sin bono por referir estudiantes; comisiones del fee de administración)", "Ley General de Sociedades Cooperativas (LGSC) y acta constitutiva 6520 — reembolso al cierre del ejercicio, sin garantía de monto, deducidas las pérdidas proporcionales", "Reglamento Interno Ceduverse DRAFT — el tratamiento fiscal de los $20 del bono y la base gravable del split del 5% siguen pendientes de confirmación con el área fiscal"],
+      references: ["Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador; Arts. 14 y 14 Bis: 5%, tope 20 certificados, bono $170, parámetros ajustables por Asamblea)", "Diseño de tokens 1:1 del consorcio (CEDU/BRAIN/KAKAW: diseño, ninguno desplegado; KakawChain/KakawCoin no existen como producto; solo Base + atestación por hash SHA-256 operan)", "Política de comisiones de socio comercial de Ceduverse (rol comercial plano, 15% por defecto, sin niveles nombrados; director es un rol distinto)", "Política de referidos de Ceduverse ($500 sobre la primera aportación de la empresa referida; sin bono por referir estudiantes; comisiones del fee de administración)", "Ley General de Sociedades Cooperativas (LGSC) y acta constitutiva 6520 — reembolso al cierre del ejercicio, sin garantía de monto, deducidas las pérdidas proporcionales", "Reglamento Interno Ceduverse DRAFT — el tratamiento fiscal de los $20 del bono y la base gravable del split del 5% siguen pendientes de confirmación con el área fiscal"],
     },
   ],
 
