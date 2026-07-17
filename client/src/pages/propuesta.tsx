@@ -22,11 +22,18 @@ import {
   Zap,
   Globe,
   BookOpen,
+  Info,
   Menu,
   X,
 } from "lucide-react";
 
 const UMA = 113.14;
+
+// Misma etiqueta de honestidad que /socios (constante NOTA_ASAMBLEA de
+// socios-landing.tsx). Acompaña a todo parámetro de bonos de esta página: el
+// Reglamento Interno sigue en borrador y sin efectos jurídicos.
+const NOTA_ASAMBLEA =
+  "Política propuesta, sujeta a ratificación o ajuste por la Asamblea General. El Reglamento Interno está en borrador y no tiene efectos jurídicos: estos parámetros no son una regla vigente ni un compromiso en firme.";
 
 const PLANS: Record<string, { umas: number; feePct: number; label: string; range: string; color: string; certDiscount: number }> = {
   Impulsa: { umas: 6, feePct: 0.20, label: "Impulsa", range: "1–10 colaboradores", color: "#00b87a", certDiscount: 5 },
@@ -34,7 +41,17 @@ const PLANS: Record<string, { umas: number; feePct: number; label: string; range
   Lidera: { umas: 20, feePct: 0.10, label: "Lidera", range: "100–500 colaboradores", color: "#7c3aed", certDiscount: 15 },
 };
 
-function getComisionPct(n: number) {
+// Precios y participaciones del socio Consultor, tomados de /socios
+// (socios-landing.tsx) para que las dos páginas públicas cuenten lo mismo.
+const DC3_PRICE = 399;
+const SEP_PRICE = 1999;
+const DC3_SHARE = 0.40;
+const SEP_SHARE = 0.10;
+const SEP_SOBRE_DC3 = 0.1; // supuesto: 1 de cada 10 que tramita DC-3 también tramita SEP
+const BONO_REFERIDO = 500; // Consultor, según /socios
+
+// Participación del socio sobre el fee de administración, por su PROPIA cartera.
+function getAnticipoPct(n: number) {
   if (n <= 3) return 0.25;
   if (n <= 7) return 0.30;
   return 0.35;
@@ -176,7 +193,7 @@ function PropNav() {
           <a href="#mercado" className="text-xs font-semibold text-gray-500 hover:text-gray-900 no-underline">Mercado</a>
           <a href="#modelo" className="text-xs font-semibold text-gray-500 hover:text-gray-900 no-underline">Modelo</a>
           <a href="#plan" className="text-xs font-semibold text-gray-500 hover:text-gray-900 no-underline">Plan 2026</a>
-          <a href="#proyeccion" className="text-xs font-semibold text-gray-500 hover:text-gray-900 no-underline">Proyección</a>
+          <a href="#proyeccion" className="text-xs font-semibold text-gray-500 hover:text-gray-900 no-underline">Simulador</a>
           <Link href="/socios" className="bg-[#1b5adf] text-white text-xs font-bold px-5 py-2 rounded-lg hover:bg-blue-700 no-underline transition-colors" data-testid="link-ser-socio">
             Ser Socio
           </Link>
@@ -190,7 +207,7 @@ function PropNav() {
           <a href="#mercado" className="block py-2 text-sm text-gray-700 no-underline" onClick={() => setMobileOpen(false)}>Mercado</a>
           <a href="#modelo" className="block py-2 text-sm text-gray-700 no-underline" onClick={() => setMobileOpen(false)}>Modelo</a>
           <a href="#plan" className="block py-2 text-sm text-gray-700 no-underline" onClick={() => setMobileOpen(false)}>Plan 2026</a>
-          <a href="#proyeccion" className="block py-2 text-sm text-gray-700 no-underline" onClick={() => setMobileOpen(false)}>Proyección</a>
+          <a href="#proyeccion" className="block py-2 text-sm text-gray-700 no-underline" onClick={() => setMobileOpen(false)}>Simulador</a>
           <Link href="/socios" className="block mt-2 bg-[#1b5adf] text-white text-center text-sm font-bold px-5 py-3 rounded-lg no-underline" onClick={() => setMobileOpen(false)}>Ser Socio</Link>
         </div>
       )}
@@ -215,7 +232,7 @@ function SlidePortada() {
           La plataforma EdTech + IA líder en capacitación laboral para América Latina
         </p>
         <p className="text-base text-white/60 max-w-xl mx-auto mb-12">
-          Modelo de negocio escalable con ingresos recurrentes, respaldado por inteligencia de mercado real de más de 780,000 empresas identificadas.
+          Cooperativa de consumo con un modelo de aportaciones mensuales, respaldado por inteligencia de mercado real del DENUE (INEGI).
         </p>
         <a href="#problema" className="inline-flex items-center gap-2 text-white/70 hover:text-white text-sm transition-colors">
           <ChevronUp size={18} className="rotate-180 animate-bounce" />
@@ -445,7 +462,7 @@ function SlideModelo() {
             Tres planes, un modelo escalable
           </h2>
           <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            Cada empresa aporta mensualmente según su tamaño. Ceduverse cobra un fee de administración del cual se pagan comisiones a socios.
+            Cada empresa aporta mensualmente según su tamaño. Ceduverse cobra un fee de administración, y de ese fee salen los anticipos de rendimientos y los bonos de los socios.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -495,6 +512,7 @@ function SlideModelo() {
           })}
         </div>
         <p className="text-center text-xs text-gray-400 mt-6">UMA 2026 = ${UMA} MXN. Aportación = colaboradores × UMAs × valor UMA.</p>
+        <p className="text-center text-[11px] text-gray-400 mt-2 max-w-2xl mx-auto leading-relaxed" data-testid="nota-modelo-asamblea">{NOTA_ASAMBLEA}</p>
       </div>
     </SlideWrapper>
   );
@@ -502,22 +520,25 @@ function SlideModelo() {
 
 function SlidePlanComercial() {
   const timeline = [
-    { q: "Q1 2026", title: "Lanzamiento", items: ["Zona Norte: 1 Director + 2 Consultores", "Zona Bajío: 1 Director", "Meta: 12 clientes"] },
-    { q: "Q2 2026", title: "Expansión", items: ["Norte: +1 Consultor (3 total)", "Bajío: +2 Consultores", "Centro: 1 Director", "Meta: 24 clientes acumulados"] },
-    { q: "Q3 2026", title: "Consolidación", items: ["Centro: +3 Consultores", "Sur-Sureste: 1 Director + 1 Consultor", "Meta: 48 clientes acumulados"] },
-    { q: "Q4 2026", title: "Escala completa", items: ["Sur-Sureste: +2 Consultores", "Todas las zonas activas y productivas", "Meta: 72 clientes activos"] },
+    { q: "Q1 2026", title: "Lanzamiento", items: ["Zona Norte: 1 Coordinador Regional + 2 Consultores", "Zona Bajío: 1 Coordinador Regional", "Meta: 12 clientes"] },
+    { q: "Q2 2026", title: "Expansión", items: ["Norte: +1 Consultor (3 total)", "Bajío: +2 Consultores", "Centro: 1 Coordinador Regional", "Meta: 24 clientes acumulados"] },
+    { q: "Q3 2026", title: "Consolidación", items: ["Centro: +3 Consultores", "Sur-Sureste: 1 Coordinador Regional + 1 Consultor", "Meta: 48 clientes acumulados"] },
+    { q: "Q4 2026", title: "Escala completa", items: ["Sur-Sureste: +2 Consultores", "Todas las zonas activas", "Meta: 72 clientes activos"] },
   ];
 
   return (
     <SlideWrapper className="bg-[#faf8f4]" id="plan">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
-          <span className="text-xs font-bold text-[#f28023] uppercase tracking-widest">Plan comercial 2026</span>
+          <span className="text-xs font-bold text-[#f28023] uppercase tracking-widest">Plan de crecimiento 2026</span>
           <h2 className="font-serif text-4xl md:text-5xl text-gray-900 mt-3 mb-4">
             4 zonas × 4 socios = 16 socios activos
           </h2>
           <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            Meta: 1 Director + 3 Consultores por zona. Cada consultor cierra 6 clientes/año para alcanzar 72 clientes activos al cierre de 2026.
+            Meta de la cooperativa: 1 Coordinador Regional + 3 Consultores por zona. El plan supone que cada consultor incorpora 6 empresas al año para llegar a 72 clientes activos al cierre de 2026.
+          </p>
+          <p className="text-xs text-gray-400 max-w-2xl mx-auto mt-4 leading-relaxed" data-testid="nota-plan-meta">
+            Son <strong>metas de plan, no resultados ni compromisos</strong>. Hay <strong>un Coordinador Regional por zona, máximo cuatro en el país</strong>: es un puesto que <strong>asigna la cooperativa</strong> y es <strong>revocable</strong> — no se gana reclutando gente.
           </p>
         </div>
 
@@ -535,7 +556,7 @@ function SlidePlanComercial() {
                     <span className="text-sm font-semibold text-gray-900">{zona}</span>
                   </div>
                   <div className="flex gap-1">
-                    <span className="text-[10px] bg-[#7c3aed] text-white px-2 py-0.5 rounded-full font-bold">1 Dir</span>
+                    <span className="text-[10px] bg-[#7c3aed] text-white px-2 py-0.5 rounded-full font-bold">1 Coord</span>
                     <span className="text-[10px] bg-[#1b5adf] text-white px-2 py-0.5 rounded-full font-bold">3 Cons</span>
                   </div>
                   <span className="text-xs text-gray-400">= 18 clientes</span>
@@ -544,7 +565,7 @@ function SlidePlanComercial() {
               <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
                 <span className="text-sm font-bold text-gray-900">Total</span>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-[#7c3aed]">4 Directores</span>
+                  <span className="text-sm font-bold text-[#7c3aed]">4 Coordinadores</span>
                   <span className="text-sm font-bold text-[#1b5adf]">12 Consultores</span>
                   <span className="text-sm font-bold text-[#00b87a]">72 clientes</span>
                 </div>
@@ -555,7 +576,7 @@ function SlidePlanComercial() {
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Calendar size={16} className="text-[#f28023]" />
-              Timeline de reclutamiento
+              Timeline de incorporación
             </h3>
             <div className="space-y-0" data-testid="timeline">
               {timeline.map((t, i) => (
@@ -584,24 +605,26 @@ function SlidePlanComercial() {
   );
 }
 
-function SlideComisiones() {
+function SlideBonos() {
   return (
-    <SlideWrapper className="bg-white">
+    <SlideWrapper className="bg-white" id="bonos">
       <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-14">
-          <span className="text-xs font-bold text-[#00b87a] uppercase tracking-widest">Estructura de comisiones</span>
+        <div className="text-center mb-10">
+          <span className="text-xs font-bold text-[#00b87a] uppercase tracking-widest">Esquema de bonos</span>
           <h2 className="font-serif text-4xl md:text-5xl text-gray-900 mt-3 mb-4">
-            Ingresos recurrentes + bonos
+            Anticipos y bonos por tu propia operación
           </h2>
+          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            Cada socio recibe en proporción a las empresas que él mismo lleva. Ningún socio recibe un porcentaje de lo que operan otros socios, y en la cooperativa 1 socio = 1 voto.
+          </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {[
-            { title: "Residual mensual", desc: "Comisión recurrente del fee Ceduverse por cada empresa activa", items: ["1-3 empresas: 25%", "4-7 empresas: 30%", "8+ empresas: 35%"], color: "#1b5adf", icon: DollarSign },
-            { title: "Bono de cierre", desc: "Pago único al cerrar una nueva empresa", items: ["50% del primer fee mensual", "Se paga al activarse la empresa"], color: "#f28023", icon: Star },
-            { title: "Certificaciones", desc: "Ingreso adicional por DC-3 y SEP", items: ["$60 por cada DC-3", "$200 por cada certificado SEP", "~40% de empleados compran DC-3"], color: "#7c3aed", icon: Award },
-            { title: "Override director", desc: "Bono mensual sobre fees de consultores en tu zona", items: ["5% del fee total de consultores", "Se acumula con tu residual propio", "Incentivo para reclutar y mentorear"], color: "#00b87a", icon: Users },
+            { title: "Anticipo de rendimientos", desc: "Anticipo mensual del fee de administración por cada empresa activa de tu propia cartera", items: ["1-3 empresas: 25% del fee", "4-7 empresas: 30% del fee", "8+ empresas: 35% del fee"], color: "#1b5adf", icon: DollarSign },
+            { title: "Bono de referido", desc: "Pago único cuando una empresa que referiste se activa", items: [`$${BONO_REFERIDO} por empresa referida (Consultor)`, "Se paga al primer pago de la empresa"], color: "#f28023", icon: Star },
+            { title: "Certificaciones", desc: "Participación por cada DC-3 y certificado SEP tramitado", items: [`${DC3_SHARE * 100}% del DC-3 ($${DC3_PRICE})`, `${SEP_SHARE * 100}% del certificado SEP ($${SEP_PRICE})`], color: "#7c3aed", icon: Award },
           ].map((c, i) => (
-            <div key={i} className="rounded-2xl border p-5 bg-gray-50/50" style={{ borderColor: c.color + "30" }} data-testid={`card-comision-${i}`}>
+            <div key={i} className="rounded-2xl border p-5 bg-gray-50/50" style={{ borderColor: c.color + "30" }} data-testid={`card-bono-${i}`}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: c.color + "15" }}>
                 <c.icon size={20} style={{ color: c.color }} />
               </div>
@@ -617,6 +640,44 @@ function SlideComisiones() {
             </div>
           ))}
         </div>
+
+        <div className="rounded-2xl border border-[#00b87a]/30 bg-gray-50/50 p-6 mt-5" data-testid="card-bono-regional">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#00b87a15" }}>
+              <MapPin size={20} style={{ color: "#00b87a" }} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900 text-sm">Bono por Crecimiento Regional — Coordinador Regional</h3>
+              <p className="text-xs text-gray-400">Un puesto que asigna la cooperativa, no un nivel por encima de nadie</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <p className="text-xs text-gray-600 leading-relaxed mb-2">
+                Hay <strong>un Coordinador Regional por zona (máximo cuatro)</strong>. El puesto lo <strong>asigna la cooperativa</strong> y es <strong>revocable</strong>: no se gana reclutando gente. Sus funciones son capacitar, dar soporte, abrir plaza por zona, promover el cooperativismo y la economía solidaria, dar conferencias, ayudar en el onboarding de empresas y acompañar a las comisiones mixtas de capacitación a registrar sus actas ante la STPS.
+              </p>
+              <ul className="space-y-1.5">
+                <li className="text-xs text-gray-600 flex items-start gap-1.5"><span style={{ color: "#00b87a" }}>✓</span> <span><strong>Cuota fija</strong> por desempeñar la función</span></li>
+                <li className="text-xs text-gray-600 flex items-start gap-1.5"><span style={{ color: "#00b87a" }}>✓</span> <span><strong>Variable</strong> por metas de zona</span></li>
+                <li className="text-xs text-gray-600 flex items-start gap-1.5"><span style={{ color: "#00b87a" }}>✓</span> <span>Se paga por el <strong>servicio prestado</strong>, no por las operaciones de otros socios. <strong>No hay cascada ni niveles debajo.</strong></span></li>
+              </ul>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+              <Info size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-900 mb-1">Montos por definir por la Asamblea</p>
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  La cuota fija y las metas de zona <strong>todavía no están definidas</strong>. Los determinará la Asamblea General.
+                  No publicamos cifras estimadas de este bono porque hoy no existen, y por eso <strong>tampoco entra en el simulador</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-gray-400 mt-5 text-center max-w-3xl mx-auto leading-relaxed" data-testid="nota-bonos-asamblea">
+          Todos estos porcentajes se calculan sobre la <strong>operación propia</strong> de cada socio. {NOTA_ASAMBLEA}
+        </p>
       </div>
     </SlideWrapper>
   );
@@ -631,50 +692,47 @@ function SlideProyeccion({ data, isLoading }: { data: MercadoData | undefined; i
 
   const cfg = PLANS[plan] || PLANS.Transforma;
   const feePorEmpresa = avgEmpleados * cfg.umas * UMA * cfg.feePct;
-  const comPct = getComisionPct(numEmpresas);
+  const anticipoPct = getAnticipoPct(numEmpresas);
 
   const ZONE_NAMES = ["Norte", "Bajío", "Centro", "Sur-Sureste"];
   const zoneColors: Record<string, string> = {
     Norte: "#1b5adf", Bajío: "#f28023", Centro: "#7c3aed", "Sur-Sureste": "#00b87a",
   };
 
+  // Los anticipos de una zona son la SUMA de la operación propia de cada socio
+  // de esa zona, y nada más. Aquí se sumaba además un 5% del fee de toda la
+  // zona para la figura que encabezaba el nivel superior: ese mecanismo
+  // multinivel se eliminó por incompatible con una cooperativa de consumo
+  // (nadie cobra por la producción de otro socio).
   const zoneData = ZONE_NAMES.map(zona => {
     const dbZone = data?.zonas?.find(z => z.zona === zona);
     const clientesZona = consultoresPorZona * numEmpresas;
     const feeMensualZona = feePorEmpresa * clientesZona;
-    const residualConsultores = feePorEmpresa * comPct * numEmpresas * consultoresPorZona;
-    const overrideDirector = feePorEmpresa * clientesZona * 0.05;
-    const comisionesMensualesZona = residualConsultores + overrideDirector;
+    const anticiposMensualesZona = feePorEmpresa * anticipoPct * numEmpresas * consultoresPorZona;
     return {
       zona,
       empresasDB: dbZone?.empresas || 0,
       perfiladas: dbZone?.con_plan || 0,
       clientes: clientesZona,
       feeMensual: feeMensualZona,
-      comisionesMensuales: comisionesMensualesZona,
+      anticiposMensuales: anticiposMensualesZona,
     };
   });
 
   const totalSocios = ZONE_NAMES.length * (1 + consultoresPorZona);
   const totalClientes = zoneData.reduce((s, z) => s + z.clientes, 0);
   const totalFeeMensual = zoneData.reduce((s, z) => s + z.feeMensual, 0);
-  const totalComisionesMensuales = zoneData.reduce((s, z) => s + z.comisionesMensuales, 0);
+  const totalAnticiposMensuales = zoneData.reduce((s, z) => s + z.anticiposMensuales, 0);
 
-  const residualConsultor = feePorEmpresa * comPct * numEmpresas;
-  const cierreConsultor = feePorEmpresa * 0.50 * numEmpresas;
+  // Solo se modela la operación PROPIA del socio, con los mismos parámetros que
+  // /socios. El Bono por Crecimiento Regional del Coordinador no se simula:
+  // sus montos aún no existen y no se inventan.
+  const anticipoConsultor = feePorEmpresa * anticipoPct * numEmpresas;
+  const referidoConsultor = BONO_REFERIDO * numEmpresas;
   const empsConsultor = avgEmpleados * numEmpresas;
-  const dc3Consultor = Math.floor(empsConsultor * dc3Pct / 100) * 60;
-  const sepConsultor = Math.floor(empsConsultor * 0.05) * 200;
-  const anualConsultor = (residualConsultor * 12) + cierreConsultor + dc3Consultor + sepConsultor;
-
-  const clientesDirector = consultoresPorZona * numEmpresas;
-  const residualDirector = feePorEmpresa * comPct * numEmpresas;
-  const overrideDirector = feePorEmpresa * clientesDirector * 0.05;
-  const cierreDirector = feePorEmpresa * 0.50 * numEmpresas;
-  const empsDirector = avgEmpleados * numEmpresas;
-  const dc3Director = Math.floor(empsDirector * dc3Pct / 100) * 60;
-  const sepDirector = Math.floor(empsDirector * 0.05) * 200;
-  const anualDirector = (residualDirector * 12) + (overrideDirector * 12) + cierreDirector + dc3Director + sepDirector;
+  const dc3Consultor = Math.floor(empsConsultor * dc3Pct / 100) * (DC3_PRICE * DC3_SHARE);
+  const sepConsultor = Math.floor(empsConsultor * (dc3Pct / 100) * SEP_SOBRE_DC3) * (SEP_PRICE * SEP_SHARE);
+  const anualConsultor = (anticipoConsultor * 12) + referidoConsultor + dc3Consultor + sepConsultor;
 
   const proyeccion = Array.from({ length: 12 }, (_, i) => {
     const mes = i + 1;
@@ -691,14 +749,28 @@ function SlideProyeccion({ data, isLoading }: { data: MercadoData | undefined; i
   return (
     <SlideWrapper className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" id="proyeccion">
       <div className="max-w-6xl mx-auto w-full">
-        <div className="text-center mb-10">
-          <span className="text-xs font-bold text-[#00b87a] uppercase tracking-widest">Simulador de ingresos</span>
+        <div className="text-center mb-8">
+          <span className="text-xs font-bold text-[#00b87a] uppercase tracking-widest">Simulador</span>
           <h2 className="font-serif text-4xl md:text-5xl text-white mt-3 mb-4">
-            Proyección de ingresos por zona
+            Simula la operación por zona
           </h2>
           <p className="text-base text-gray-400 max-w-2xl mx-auto">
-            Ajusta los supuestos para simular los ingresos de toda la red de socios, justificados con datos reales del mercado.
+            Mueve los controles con tus propios supuestos y mira qué resultaría para la red de socios. Las cifras de mercado por zona sí son reales (DENUE); los escenarios son tuyos.
           </p>
+        </div>
+
+        <div className="bg-amber-500/10 border border-amber-400/30 rounded-2xl p-4 flex gap-3 max-w-3xl mx-auto mb-8" data-testid="aviso-simulacion">
+          <Info size={18} className="text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-100/90 leading-relaxed space-y-1.5">
+            <p>
+              <strong>Esto es una simulación, no una promesa de ingresos.</strong> Los resultados salen únicamente de los supuestos que tú eliges
+              (cuántas empresas, de qué tamaño, cuántas personas certifican). Nadie garantiza que un socio refiera una sola empresa, ni que las que refiera permanezcan activas.
+            </p>
+            <p>{NOTA_ASAMBLEA}</p>
+            <p>
+              Solo se modela la <strong>operación propia</strong> de cada socio. El Bono por Crecimiento Regional del Coordinador no se simula: sus montos aún no existen.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8">
@@ -751,17 +823,17 @@ function SlideProyeccion({ data, isLoading }: { data: MercadoData | undefined; i
 
             <div className="text-[10px] text-gray-600 border-t border-white/10 pt-3">
               <p>UMA 2026 = ${UMA} · Fee {cfg.label}: {(cfg.feePct * 100)}% · {cfg.umas} UMAs/col</p>
-              <p>Comisión: {(comPct * 100)}% ({numEmpresas <= 3 ? "1-3 emp" : numEmpresas <= 7 ? "4-7 emp" : "8+ emp"})</p>
+              <p>Anticipo: {(anticipoPct * 100)}% del fee ({numEmpresas <= 3 ? "1-3 emp" : numEmpresas <= 7 ? "4-7 emp" : "8+ emp"})</p>
             </div>
           </div>
 
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Socios activos", value: String(totalSocios), sub: `${ZONE_NAMES.length} zonas × (1 Dir + ${consultoresPorZona} Cons)`, color: "#7c3aed" },
-                { label: "Clientes proyectados", value: String(totalClientes), sub: `${ZONE_NAMES.length} × ${consultoresPorZona} × ${numEmpresas} emp`, color: "#1b5adf" },
+                { label: "Socios activos", value: String(totalSocios), sub: `${ZONE_NAMES.length} zonas × (1 Coord + ${consultoresPorZona} Cons)`, color: "#7c3aed" },
+                { label: "Clientes del escenario", value: String(totalClientes), sub: `${ZONE_NAMES.length} × ${consultoresPorZona} × ${numEmpresas} emp`, color: "#1b5adf" },
                 { label: "Fee mensual total", value: fmt(totalFeeMensual), sub: "Toda la red", color: "#00b87a" },
-                { label: "Comisiones mensuales", value: fmt(totalComisionesMensuales), sub: "Todos los socios", color: "#f28023" },
+                { label: "Anticipos mensuales", value: fmt(totalAnticiposMensuales), sub: "Suma de la operación propia de cada socio", color: "#f28023" },
               ].map((s, i) => (
                 <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 text-center" data-testid={`proj-stat-${i}`}>
                   <p className="text-2xl md:text-3xl font-bold" style={{ color: s.color }}>{s.value}</p>
@@ -785,9 +857,9 @@ function SlideProyeccion({ data, isLoading }: { data: MercadoData | undefined; i
                       <th className="text-left py-2.5 px-5 font-semibold">Zona</th>
                       <th className="text-right py-2.5 px-3 font-semibold">Empresas identificadas</th>
                       <th className="text-right py-2.5 px-3 font-semibold">Perfiladas</th>
-                      <th className="text-right py-2.5 px-3 font-semibold">Clientes proy.</th>
+                      <th className="text-right py-2.5 px-3 font-semibold">Clientes del escenario</th>
                       <th className="text-right py-2.5 px-3 font-semibold">Fee mensual</th>
-                      <th className="text-right py-2.5 px-5 font-semibold">Comisiones/mes</th>
+                      <th className="text-right py-2.5 px-5 font-semibold">Anticipos/mes</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -801,7 +873,7 @@ function SlideProyeccion({ data, isLoading }: { data: MercadoData | undefined; i
                         <td className="py-3 px-3 text-right text-gray-400">{isLoading ? <span className="inline-block w-10 h-3 bg-white/10 rounded animate-pulse" /> : fmtK(z.perfiladas)}</td>
                         <td className="py-3 px-3 text-right font-bold" style={{ color: zoneColors[z.zona] }}>{z.clientes}</td>
                         <td className="py-3 px-3 text-right text-gray-300">{fmt(z.feeMensual)}</td>
-                        <td className="py-3 px-5 text-right font-bold text-[#00b87a]">{fmt(z.comisionesMensuales)}</td>
+                        <td className="py-3 px-5 text-right font-bold text-[#00b87a]">{fmt(z.anticiposMensuales)}</td>
                       </tr>
                     ))}
                     <tr className="bg-white/[0.04]">
@@ -810,7 +882,7 @@ function SlideProyeccion({ data, isLoading }: { data: MercadoData | undefined; i
                       <td className="py-3 px-3 text-right font-bold text-gray-300">{isLoading ? <span className="inline-block w-10 h-3 bg-white/10 rounded animate-pulse" /> : fmtK(zoneData.reduce((s, z) => s + z.perfiladas, 0))}</td>
                       <td className="py-3 px-3 text-right font-bold text-white">{totalClientes}</td>
                       <td className="py-3 px-3 text-right font-bold text-white">{fmt(totalFeeMensual)}</td>
-                      <td className="py-3 px-5 text-right font-bold text-[#00b87a]">{fmt(totalComisionesMensuales)}</td>
+                      <td className="py-3 px-5 text-right font-bold text-[#00b87a]">{fmt(totalAnticiposMensuales)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -840,36 +912,48 @@ function SlideProyeccion({ data, isLoading }: { data: MercadoData | undefined; i
                     <Briefcase size={16} className="text-[#1b5adf]" />
                   </div>
                   <h4 className="text-sm font-bold text-white">Consultor</h4>
-                  <span className="text-[10px] text-gray-500 ml-auto">{numEmpresas} empresas</span>
+                  <span className="text-[10px] text-gray-500 ml-auto">{numEmpresas} empresas propias</span>
                 </div>
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between"><span className="text-gray-400">Residual mensual</span><span className="text-[#00b87a] font-bold">{fmt(residualConsultor)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Bono cierre (anual)</span><span className="text-[#f28023] font-bold">{fmt(cierreConsultor)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Anticipo de rendimientos mensual</span><span className="text-[#00b87a] font-bold">{fmt(anticipoConsultor)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Bono de referido (anual)</span><span className="text-[#f28023] font-bold">{fmt(referidoConsultor)}</span></div>
                   <div className="flex justify-between"><span className="text-gray-400">DC-3 ({dc3Pct}%)</span><span className="text-[#7c3aed] font-bold">{fmt(dc3Consultor)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">SEP (~5%)</span><span className="text-[#7c3aed] font-bold">{fmt(sepConsultor)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">SEP</span><span className="text-[#7c3aed] font-bold">{fmt(sepConsultor)}</span></div>
                   <div className="flex justify-between border-t border-white/10 pt-2">
-                    <span className="text-white font-bold">Ingreso anual</span>
+                    <span className="text-white font-bold">Total anual del escenario</span>
                     <span className="text-white font-bold text-base">{fmt(anualConsultor)}</span>
                   </div>
+                  <p className="text-[9px] text-gray-500 leading-relaxed pt-1">
+                    Resultado de tus supuestos, no un ingreso prometido. Supone que las {numEmpresas} {numEmpresas === 1 ? "empresa permanece activa" : "empresas permanecen activas"} los 12 meses
+                    y que 1 de cada 10 personas que tramita su DC-3 tramita también el SEP.
+                  </p>
                 </div>
               </div>
-              <div className="bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10" data-testid="desglose-director">
+              <div className="bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10" data-testid="desglose-coordinador">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-[#7c3aed]/20 flex items-center justify-center">
-                    <Users size={16} className="text-[#7c3aed]" />
+                    <MapPin size={16} className="text-[#7c3aed]" />
                   </div>
-                  <h4 className="text-sm font-bold text-white">Director</h4>
-                  <span className="text-[10px] text-gray-500 ml-auto">{numEmpresas} propias + {consultoresPorZona} consultores</span>
+                  <h4 className="text-sm font-bold text-white">Coordinador Regional</h4>
+                  <span className="text-[10px] text-gray-500 ml-auto">1 por zona · asignado</span>
                 </div>
                 <div className="space-y-2 text-xs">
-                  <div className="flex justify-between"><span className="text-gray-400">Residual propio</span><span className="text-[#00b87a] font-bold">{fmt(residualDirector)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Override 5% ({consultoresPorZona} cons.)</span><span className="text-[#00b87a] font-bold">{fmt(overrideDirector)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Bono cierre (anual)</span><span className="text-[#f28023] font-bold">{fmt(cierreDirector)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">DC-3 + SEP</span><span className="text-[#7c3aed] font-bold">{fmt(dc3Director + sepDirector)}</span></div>
+                  <p className="text-gray-400 leading-relaxed">
+                    Puesto <strong className="text-gray-300">asignado por la cooperativa</strong> y revocable — no se gana reclutando.
+                    Además de su propia cartera (que se calcula igual que la de un Consultor), recibe un <strong className="text-gray-300">Bono por Crecimiento Regional</strong>: cuota fija por la función + variable por metas de zona.
+                  </p>
                   <div className="flex justify-between border-t border-white/10 pt-2">
-                    <span className="text-white font-bold">Ingreso anual</span>
-                    <span className="text-white font-bold text-base">{fmt(anualDirector)}</span>
+                    <span className="text-gray-400">Cuota fija por la función</span>
+                    <span className="text-amber-300 font-bold">Por definir</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Variable por metas de zona</span>
+                    <span className="text-amber-300 font-bold">Por definir</span>
+                  </div>
+                  <p className="text-[9px] text-gray-500 leading-relaxed pt-1">
+                    Los montos los fijará la Asamblea General. No los estimamos aquí porque hoy no existen, y por eso este bono no entra en el simulador.
+                    No es una tajada de las operaciones de otros socios: no hay cascada ni niveles debajo.
+                  </p>
                 </div>
               </div>
             </div>
@@ -912,7 +996,7 @@ function SlideCTA() {
           ¿Listo para construir tu negocio?
         </h2>
         <p className="text-lg text-white/80 mb-10 max-w-xl mx-auto">
-          Únete a la red de socios comerciales de Ceduverse. Ingresos recurrentes mensuales desde el primer cliente que refieras.
+          Súmate como socio comercial a la cooperativa Ceduverse y empieza a construir tu propia cartera de empresas.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
@@ -945,7 +1029,7 @@ export default function PropuestaPage() {
   });
 
   const { activeIdx } = useIntersectionObserver();
-  const labels = ["Portada", "Problema", "Solución", "Mercado", "Modelo", "Plan 2026", "Comisiones", "Proyección", "Contacto"];
+  const labels = ["Portada", "Problema", "Solución", "Mercado", "Modelo", "Plan 2026", "Bonos", "Simulador", "Contacto"];
 
   return (
     <div className="bg-[#faf8f4]">
@@ -957,7 +1041,7 @@ export default function PropuestaPage() {
       <SlideMercado data={data} isLoading={isLoading} isError={isError} />
       <SlideModelo />
       <SlidePlanComercial />
-      <SlideComisiones />
+      <SlideBonos />
       <SlideProyeccion data={data} isLoading={isLoading} />
       <SlideCTA />
     </div>

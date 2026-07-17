@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ESTADOS_POR_ZONA } from "@shared/zonas";
 
 interface EstadoInfo {
   estado: string;
@@ -28,12 +29,12 @@ const ZONE_COLORS_LIGHT: Record<string, string> = {
   Otra: "#e2e8f0",
 };
 
-const ZONE_STATES: Record<string, string[]> = {
-  Norte: ["Baja California", "Baja California Sur", "Sonora", "Chihuahua", "Sinaloa", "Durango", "Coahuila de Zaragoza", "Nuevo León", "Tamaulipas"],
-  Bajío: ["Nayarit", "Jalisco", "Colima", "Aguascalientes", "Zacatecas", "San Luis Potosí", "Guanajuato", "Querétaro"],
-  Centro: ["Hidalgo", "México", "Ciudad de México", "Tlaxcala", "Puebla", "Morelos"],
-  "Sur-Sureste": ["Michoacán de Ocampo", "Guerrero", "Oaxaca", "Chiapas", "Tabasco", "Veracruz de Ignacio de la Llave", "Campeche", "Yucatán", "Quintana Roo"],
-};
+// Agrupación estado -> zona tomada de @shared/zonas, la única definición del
+// sistema. Aquí vivía una tercera copia escrita a mano (con Querétaro en Bajío,
+// San Luis Potosí/Zacatecas/Nayarit en Bajío y Michoacán en Sur-Sureste) que
+// contradecía tanto al CRM como a /socios. Solo agrupa: la geometría del mapa
+// vive en STATE_PATHS y no se toca.
+const ZONE_STATES: Record<string, string[]> = ESTADOS_POR_ZONA;
 
 const STATE_ABBREV: Record<string, string> = {
   "Aguascalientes": "AGS",
