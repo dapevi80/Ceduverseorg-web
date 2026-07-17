@@ -51,3 +51,6 @@ _tts-sample.mjs
 
 # Auditorías internas (no van al repo)
 AUDITORIA-*.md
+
+# Documentos legales confidenciales — solo local, NUNCA a GitHub (CURP, estrategia fiscal, paquete Daniel)
+docs/legal/
