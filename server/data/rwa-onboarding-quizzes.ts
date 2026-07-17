@@ -331,4 +331,99 @@ export const rwaOnboardingQuizzes: Record<string, RwaQuiz> = {
     ],
   },
 
+  "modelo-cooperativo-comercial": {
+    title: "Evaluación: Modelo cooperativo comercial (cómo vender)",
+    passingScore: 70,
+    questions: [
+      {
+        question: "Sobre los niveles de comisión de un socio comercial, ¿cuál afirmación es correcta?",
+        options: [
+          "Existe una escalera de rangos (agente → senior → director) y se asciende automáticamente por volumen de ventas",
+          "El rol es PLANO: todos los agentes son socio_comercial y el 'nivel' es simplemente el campo de comisión, con valor base de 15%. 'Director' es un rol distinto de la estructura, NO un peldaño de comisión",
+          "La comisión sube automáticamente a 30% con 4 empresas y a 35% con 8 empresas",
+          "Cada socio comercial negocia su propio tier vitalicio al firmar",
+        ],
+        correctIndex: 1,
+        explanation: "El rol comercial es plano: todos los agentes son socio_comercial. No existe ninguna escalera de rangos nombrados en el sistema. El 'nivel' es literalmente un campo de comisión asociado al código del socio, cuyo valor por defecto es 15% (ajustable caso por caso por la administración). 'Director' es un rol distinto dentro de la estructura —un escalón arriba de comercial—, no un tier de comisión que se alcance vendiendo. ATENCIÓN: si viste en materiales públicos una tabla de perfiles con escalones (25/30/35%), override sobre la red de otros, comisiones 'vitalicias' o proyecciones de ingreso mensual, esa estructura NO existe en el sistema — es material comercial. No la repitas frente a un prospecto: quien queda mal es quien la dice, no quien la escribió.",
+      },
+      {
+        question: "¿Cuándo se paga el bono de $500 por referido, y cuál es su estado real hoy?",
+        options: [
+          "Por cada estudiante que refieras, en automático al registrarse",
+          "Cuando la EMPRESA referida hace su PRIMERA APORTACIÓN. No hay bono por referir estudiantes. Estado: está definido como política, pero todavía NO opera en el motor de comisiones — no se promete con fecha",
+          "Cuando la empresa referida firma la carta de intención",
+          "Cada mes mientras la empresa referida siga activa, de forma vitalicia y garantizada",
+        ],
+        correctIndex: 1,
+        explanation: "Los $500 están atados a que una EMPRESA referida haga su primera aportación real — no a que se registre, ni a que muestre interés, ni a que firme. Y la mitad que más se olvida: NO hay bono por referir socios estudiantes; no se paga por cabeza ni por reclutar. Estado real: el bono está documentado como regla de negocio, pero a la fecha no hay un cálculo que lo dispare en el motor de comisiones (esa línea aparece en cero). La formulación honesta es: 'está definido, atado a la primera aportación de la empresa referida, y su operación está pendiente'. Nunca le pongas fecha ni lo presentes como algo que ya se está pagando.",
+      },
+      {
+        question: "Un prospecto te pregunta qué día del mes se pagan las comisiones. ¿Cuál es la respuesta correcta?",
+        options: [
+          "El día 20 de cada mes, por transferencia bancaria",
+          "El día 25 de cada mes, en automático",
+          "Que no existe una fecha automática de dispersión: las comisiones se generan por periodo mensual y la administración las aprueba y paga de forma manual; el calendario exacto se confirma con administración",
+          "El primer día hábil tras el cierre de cada trimestre",
+        ],
+        correctIndex: 2,
+        explanation: "No hay ningún proceso automático que disperse comisiones en una fecha. Las comisiones se generan por periodo mensual y avanzan por estados (pendiente → aprobada → pagada), pero ese avance lo ejecuta la administración manualmente. Además, hay materiales que se contradicen entre sí sobre la fecha de corte, y ninguna de esas fechas está implementada. Por eso la regla es absoluta: nunca prometas una fecha de pago de comisiones —ni a un prospecto, ni a tu red, ni a ti mismo—. La respuesta correcta remite a administración. Es una respuesta aburrida, y es la única cierta.",
+      },
+      {
+        question: "¿Sobre qué base se calcula tu comisión, y por qué?",
+        options: [
+          "Sobre la aportación de la empresa, porque es el monto más grande",
+          "Sobre el fee de administración de Ceduverse, NUNCA sobre la aportación — porque la aportación es capital del socio (patrimonio suyo) y pagar comisiones con ella sería tomar capital ajeno",
+          "Sobre el valor nominal de los certificados emitidos",
+          "Sobre el total facturado incluyendo IVA",
+        ],
+        correctIndex: 1,
+        explanation: "La comisión sale del fee de administración, que sí es ingreso de la cooperativa por el servicio que presta. Jamás de la aportación. Y la razón es la consecuencia directa del Curso 4: la aportación es capital del socio, patrimonio suyo. Si tu comisión saliera de ahí, la cooperativa le entregaría a un socio un certificado de $150 mientras le descuenta una parte para pagarte — sería tomar el patrimonio de otra persona y llamarlo comisión. El capital del socio no se toca. Nunca. Nota además que tu comisión NO es un rendimiento de tu aportación: son cosas separadas (tu comisión la ganas por tu trabajo comercial; tu aportación no promete nada).",
+      },
+      {
+        question: "Un prospecto te dice: '¿esto no será una pirámide?'. ¿Cuál es la mejor respuesta?",
+        options: [
+          "Ofenderte y asegurarle que definitivamente no lo es",
+          "Contestar con la estructura: no hay bono por referir personas (el $500 se paga cuando una EMPRESA compra y aporta de verdad, no por cabeza); la comisión sale del fee, no de la aportación; la capitalización tiene tope de 20 certificados ($3,000); 1 socio = 1 voto; y no hay rendimiento",
+          "Explicarle que todas las empresas modernas funcionan así",
+          "Prometerle que si no le gusta, le devuelven su dinero completo",
+        ],
+        correctIndex: 1,
+        explanation: "Una pirámide tiene una firma inconfundible: el dinero entra por reclutar gente, no por vender algo real. La objeción se contesta con estructura, no con indignación (la indignación no prueba nada; los datos sí). Los cinco puntos: (1) no hay bono por referir personas — el $500 está atado a que una EMPRESA compre capacitación real y aporte; (2) la comisión sale del fee de administración, no del capital del socio; (3) la capitalización se detiene en 20 certificados ($3,000) — en una pirámide te empujan a meter cada vez más; (4) 1 socio = 1 voto, nadie tiene más poder por tener más certificados; (5) no hay rendimiento prometido. Y el remate honesto que sella la respuesta: el bono de $500 ni siquiera está operando todavía — si esto fuera un esquema para reclutar, el pago por reclutar sería lo PRIMERO en funcionar, no lo último que falta.",
+      },
+      {
+        question: "¿Cuál de estas frases SÍ puedes decirle a un prospecto?",
+        options: [
+          "'Si no te gusta, te devuelven tu dinero'",
+          "'Tu aportación es tuya y es reembolsable — con procedimiento, con calendario y sin garantía de monto: no es una cuenta de ahorro, es capital de una sociedad real, y si hubiera pérdidas tu reembolso las absorbe en tu parte'",
+          "'Es una inversión segura con un 5% de rendimiento'",
+          "'Puedes vender tus certificados después, cuando se aprecien'",
+        ],
+        correctIndex: 1,
+        explanation: "'Si no te gusta, te devuelven tu dinero' es falsa en dos dimensiones a la vez. Falsa en el TIEMPO: el retiro no surte efectos hasta el fin del ejercicio anual — o del ejercicio siguiente si se notifica después del último trimestre; pueden pasar meses y hasta cerca de dos años. Falsa en el MONTO: la devolución se practica al cierre del ejercicio, con prelación y a prorrata, deducidas las pérdidas que proporcionalmente correspondan (LGSC art. 52 y acta 6520), y hay puntos aún pendientes de definir, como a qué valor se reembolsan los certificados capitalizados. Las otras dos opciones también están prohibidas: el 5% NO es un rendimiento (es una fracción de tu propio pago reencauzada a tu propio capital, con tope de $3,000) y 'inversión segura' es doblemente incorrecto — un certificado es capital de riesgo de una sociedad real. Y no hay mercado secundario: el certificado vale $150 de valor nominal el día uno y $150 tres años después.",
+      },
+      {
+        question: "Un prospecto te pregunta si puede recibir su bono financiado con el token CEDU y ver su NFT de certificado. ¿Qué contestas?",
+        options: [
+          "Que sí, que CEDU ya está desplegado 1:1 al peso y su NFT se acuña al aportar",
+          "Que ese canal NO está disponible: ningún token del consorcio está desplegado (CEDU, BRAIN y KAKAW son diseño), el NFT del certificado no está acuñado, la reserva 1:1 no existe todavía y sin ella el canal no se activa por diseño. Hoy solo operan la red Base y la atestación por hash SHA-256",
+          "Que espere unas semanas porque el despliegue es inminente",
+          "Que KakawChain ya lo garantiza y el NFT llega por correo",
+        ],
+        correctIndex: 1,
+        explanation: "Ofrecer hoy el canal de token no es exagerar: es describir algo que no existe. Ningún token del consorcio está desplegado — CEDU (diseñado 1:1 MXN), BRAIN (1:1 USDC/USDT) y KAKAW (1:1 oro) son diseño, y KakawChain/KakawCoin no existen como producto. El NFT del certificado tampoco está acuñado. Además, la vía del token exige constituir ANTES la reserva 1:1 (un peso real guardado por cada peso de token), que no existe; y la billetera del proyecto de Ceduverse ni siquiera está constituida. La regla de la reserva no es burocracia: un token sin respaldo sería capital simulado, e inflaría el capital social sin que entrara un peso — exactamente el fraude del que el modelo quiere distinguirse. Lo único que opera hoy es Base + SHA-256. Tampoco le pongas fecha al despliegue.",
+      },
+      {
+        question: "¿Cuál es el estatus del bono de $170 y de la capitalización del 5% con tope de 20 certificados, y cómo debes presentarlos?",
+        options: [
+          "Son reglas vigentes de la cooperativa y puedes ofrecerlas en firme como un derecho adquirido",
+          "Son política PROPUESTA: viven en el Reglamento Interno, que es un BORRADOR no aprobado por la Asamblea General y sin efectos jurídicos, y el propio borrador los declara parámetros ajustables por la Asamblea. Se explican como diseño, nunca como garantía",
+          "Están en el acta constitutiva 6520 y solo un notario puede cambiarlos",
+          "Los fija la administración y puede cambiarlos cuando quiera sin avisar",
+        ],
+        correctIndex: 1,
+        explanation: "El bono de $170 ($150 que fundan el primer certificado + $20 de crédito de descuento para el primer DC-3/SEP) y la capitalización del 5% con tope de 20 certificados ($3,000) viven en el Reglamento Interno, que hoy es un borrador NO aprobado por la Asamblea General y que NO surte efectos jurídicos (Arts. 19 y 20 del propio borrador). Además, el borrador declara expresamente que esos montos son 'parámetros ajustables por acuerdo de la Asamblea General Ordinaria' — ni siquiera una vez aprobados quedarían grabados en piedra. Preséntalos siempre con la etiqueta: 'así está diseñado; el Reglamento que lo contiene está pendiente de aprobación en Asamblea'. Un socio comercial que promete $170 como derecho adquirido le crea a la cooperativa un reclamo real con una persona real el día que la Asamblea ajuste el parámetro — y ese reclamo lleva su nombre.",
+      },
+    ],
+  },
+
 };

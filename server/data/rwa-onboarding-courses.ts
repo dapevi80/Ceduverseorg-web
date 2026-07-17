@@ -1000,4 +1000,342 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
     },
   ],
 
+  "modelo-cooperativo-comercial": [
+    {
+      title: "El pitch en 3 minutos",
+      description: "Qué vendes realmente (capacitación y certificación, membresía cooperativa, bóveda de PI, marketplace RWA, CryptoVault 24k) y por qué la sustancia real —no la promesa— es el argumento. La estructura de tres minutos y por qué decir lo que todavía no existe es tu mejor herramienta de venta.",
+      durationMinutes: 13,
+      contentHtml: `
+<p>Bienvenido al Curso 6, el último de Academia RWA y el cierre del arco comercial. Igual que los dos anteriores, es exclusivo para socios comerciales, empresas aliadas y directores — y por una razón que ahora entenderás mejor que nunca: aquí vas a hablar con otras personas.</p>
+
+<p>En el Curso 4 entendiste el mecanismo que funda tu certificado: la aportación como patrimonio, el bono de $170 desarmado peso por peso, el origen externo obligatorio, la reserva 1:1. En el Curso 5 pusiste bajo la lupa el instrumento mismo: el certificado nominativo e indivisible de $150, el gemelo registral, un socio un voto, la capitalización del 5% con su tope, y la parte incómoda de la salida. Ya dominas el modelo. <strong>Lo que falta es lo único que este curso puede darte: qué sale de tu boca cuando tienes enfrente a una persona real que está decidiendo si confiar en ti.</strong></p>
+
+<p>Y aquí va la advertencia que ordena todo el curso: a partir de este momento, cada frase que aprendas la vas a repetir frente a alguien que puede tomar una decisión patrimonial por lo que tú le digas. Un error en un examen se corrige con un clic. Un error frente a un prospecto se convierte en un reclamo real, con una persona real, meses después. Por eso este curso es menos sobre <em>cómo convencer</em> y mucho más sobre <em>cómo no mentir sin darte cuenta</em>.</p>
+
+<h3>Primero: qué vendes realmente</h3>
+<p>Si te preguntaran ahora mismo "¿qué vendes?", ¿qué contestarías? Mucha gente nueva contesta "blockchain," "RWA," "tokens," "una oportunidad." Todas esas respuestas son malas, y una de ellas es directamente falsa. Vamos a ordenarlo.</p>
+
+<p>Lo que la gente <strong>paga</strong> hoy, con dinero real, es esto: <strong>capacitación y certificación</strong>. Cursos, certificados <strong>DC-3</strong> (la constancia de competencias o habilidades laborales que reconoce la Secretaría del Trabajo y Previsión Social), certificados con reconocimiento <strong>SEP</strong>, y el producto ancla del catálogo: la <strong>certificación RVOE Academy por experiencias laborales, de $49,900 pesos</strong>. Eso es el negocio. Eso es lo que una empresa contrata y lo que un trabajador usa. Si tu pitch no aterriza ahí en los primeros treinta segundos, estás vendiendo humo aunque tengas la razón en todo lo demás.</p>
+
+<p>Alrededor de ese núcleo hay cuatro cosas más que conviene que sepas nombrar con precisión, porque cada una tiene un estatus distinto:</p>
+
+<p><strong>La membresía cooperativa.</strong> Ceduverse es una sociedad cooperativa de consumo real: <strong>acta 6520, Notaría 110 de Quintana Roo, inscrita en el Registro Público de Comercio bajo el folio N-2026009627</strong>. Quien entra no es cliente: es <strong>socio copropietario</strong>, con su certificado de aportación de $150 a su nombre. Esto existe hoy y es verificable por cualquiera.</p>
+
+<p><strong>La bóveda de PI de BrainShield.</strong> BrainShield es una Sociedad Civil mexicana constituida —acta 5905— que origina RWA tangibles (inmuebles) e intangibles (propiedad intelectual: patentes, marcas, secretos industriales), con valuación de <strong>corredor público titulado bajo NIF C-8 y 0% de margen</strong>, precisamente para que quien valúa no tenga incentivo de inflar el número. Existe y opera.</p>
+
+<p><strong>El marketplace RWA y CryptoVault 24k.</strong> El oro físico Au 999.9 en ediciones de 100 g y 200 g, serie limitada 1/320 · 2026. Producto real, con guardrails propios que ya estudiaste en el Curso 3.</p>
+
+<p>Cuatro cosas, cuatro estatus. Un socio comercial que las mezcla en una sola nube de entusiasmo —"es una cooperativa con blockchain y oro y patentes"— no está vendiendo: está confundiendo. Y un prospecto confundido no compra; asiente y desaparece.</p>
+
+<h3>La estructura de tres minutos</h3>
+<p>Tres minutos. No más. Si necesitas veinte para que alguien entienda qué haces, el problema no es el tiempo del prospecto: es que tú todavía no lo entiendes lo suficiente.</p>
+
+<p><strong>Primeros 30 segundos — el problema, en su idioma.</strong> No empieces por ti. Empieza por el dolor que esa persona ya tiene. A una empresa: "la STPS te exige constancias DC-3 de tu personal, y hoy eso te cuesta tiempo, dinero y trámite." A una persona: "tienes quince años de experiencia real y ningún papel que lo acredite." Ese es el gancho, y no tiene una sola palabra de tecnología.</p>
+
+<p><strong>Siguientes 60 segundos — la sustancia.</strong> Aquí explicas qué es Ceduverse y por qué es distinto. Y "distinto" se demuestra con datos verificables, no con adjetivos: una cooperativa constituida ante notario con folio registral que se puede consultar; certificaciones con reconocimiento oficial; un modelo donde quien consume el servicio es copropietario de la sociedad que se lo presta.</p>
+
+<p><strong>Siguientes 60 segundos — qué hay para esa persona.</strong> El reencuadre del Curso 4, dicho en una frase: <strong>no te cobramos por entrar, fundas tu patrimonio</strong>. Tu aportación de $150 no es una cuota que se va: es un certificado a tu nombre dentro del capital social. Y si eres empresa: tu aportación capacita a tu gente y te vuelve parte de la estructura.</p>
+
+<p><strong>Últimos 30 segundos — el siguiente paso, concreto.</strong> No "¿qué te parece?" sino algo que se pueda agendar: una llamada de onboarding, una demo del panel, el envío del kit. Un pitch que termina en admiración y no en calendario no terminó.</p>
+
+<h3>Por qué somos distintos: sustancia real</h3>
+<p>Ahora, el corazón del módulo. ¿Cuál es <em>realmente</em> el diferenciador? No es la tecnología. Cualquiera puede comprar tecnología. El diferenciador es exactamente lo que aprendiste en el Curso 1 y que ahora se vuelve tu argumento central: <strong>la sustancia vive off-chain, y nosotros la tenemos</strong>.</p>
+
+<p>La mayoría de los proyectos que se presentan como "RWA" fingen esa sustancia: ponen un token bonito y detrás no hay activo defendible, ni valuación independiente, ni título legal, ni procedencia. Un espejo apuntando al vacío. Nosotros tenemos actas notariales con folio registral, un corredor público que valúa sin margen, certificaciones con reconocimiento oficial, y un capital social que crece solo cuando entra dinero de verdad — nunca fabricado desde adentro.</p>
+
+<p>Dicho en una frase que puedes usar tal cual: <strong>"Lo que nos hace distintos no es lo que prometemos que va a pasar. Es lo que ya se puede verificar hoy, con folio y con nombre."</strong></p>
+
+<h3>Tu mejor herramienta de venta: decir lo que todavía NO existe</h3>
+<p>Y ahora la lección más contraintuitiva de todo el curso, la que separa a un socio comercial serio de uno que va a causar un problema.</p>
+
+<p>Tu prospecto ya escuchó veinte pitches. Todos le prometieron todo. Todos le dijeron que ya estaba listo, que ya operaba, que ya era el futuro. Si tú llegas y haces lo mismo, eres el vigésimo primero — indistinguible, y con razón. <strong>Pero si tú eres la primera persona que le dice con naturalidad qué parte todavía no existe, acabas de hacer algo que ninguno de los otros veinte hizo: le diste una razón para creerte el resto.</strong></p>
+
+<p>Así que memoriza esta lista, porque la vas a decir en voz alta y sin nervios:</p>
+
+<p><strong>Ningún token del consorcio está desplegado.</strong> CEDU (diseñado 1:1 al peso mexicano), BRAIN (1:1 USDC/USDT) y KAKAW (1:1 oro) son <strong>diseño</strong>. Ninguno opera. KakawChain y KakawCoin no existen como producto. Lo único que existe y opera hoy es la <strong>red Base y la atestación por hash SHA-256</strong>.</p>
+
+<p><strong>El NFT del certificado de aportación no está acuñado.</strong> Es diseño. Ningún socio puede tenerlo hoy.</p>
+
+<p><strong>El Reglamento Interno es un borrador.</strong> No ha sido aprobado por la Asamblea General y no surte efectos jurídicos. El bono de $170, la capitalización del 5% y el tope de 20 certificados viven ahí: son <strong>política propuesta, ajustable o ratificable por la Asamblea</strong>. No son reglas en vigor.</p>
+
+<p>Fíjate en algo. Nada de esa lista destruye el pitch. Al contrario: cuando dices "los tokens todavía son diseño, lo que opera hoy es el sello en Base," el prospecto entiende que le estás distinguiendo lo real de lo planeado — y por primera vez tiene motivo para pensar que cuando le digas "esto sí existe," sea cierto. <strong>La credibilidad no se construye diciendo más cosas buenas; se construye siendo la persona que dice también las incómodas.</strong></p>
+
+<h3>Los tres avisos</h3>
+<p>Como en todo el arco comercial, y desde el primer módulo. <strong>Nada de esto es una oferta de valores</strong>: un certificado de aportación cooperativa no es una acción, ni un bono, ni un título colocable en mercado alguno, ni está registrado ante autoridad bursátil. <strong>Nada de esto es asesoría de inversión</strong>: no es una recomendación sobre qué hacer con el dinero de nadie. <strong>No hay rendimientos garantizados</strong> de ningún tipo: ser copropietario de una cooperativa no es invertir esperando un retorno.</p>
+
+<p>Ya sabes qué vendes y cómo abrirlo. En el siguiente módulo, la pregunta que probablemente te trajo aquí: cuánto ganas tú — y, sobre todo, qué de eso puedes prometer hoy y qué no.</p>
+      `,
+      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (cooperativa de consumo, certificados $150)", "Acta 5905, Notaría 110 QR — BrainShield S.C. (originador de RWA)", "Memoria brainshield-rwa-pivot (tokens 1:1 CEDU/BRAIN/KAKAW: diseño, ninguno desplegado; solo Base + SHA-256 operan)", "Memoria ceduverse-business-model (catálogo: DC-3, SEP, RVOE Academy $49,900)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador)"],
+    },
+    {
+      title: "Comisiones: el 15%, el $500 y lo que todavía no puedes prometer",
+      description: "La comisión base de agente es 15% y el rol es PLANO: no existe una escalera de rangos. El $500 por referido se paga sobre la primera aportación de la EMPRESA referida, no por estudiante. Qué está definido, qué está implementado, y por qué nunca debes prometer un monto ni una fecha de pago.",
+      durationMinutes: 14,
+      contentHtml: `
+<p>Vamos a la pregunta que probablemente te trajo a este curso: <strong>¿cuánto ganas tú?</strong> Y vamos a contestarla con una precisión que quizá te sorprenda, porque este módulo tiene dos mitades muy distintas. La primera te dice cuáles son los parámetros. La segunda te dice cuáles de esos parámetros <em>ya funcionan</em> y cuáles todavía no — y esa segunda mitad es, de lejos, la más importante que vas a leer en todo el curso.</p>
+
+<h3>La comisión base: 15%</h3>
+<p>Tu <strong>comisión base como agente es del 15%</strong>. Cuando un estudiante se convierte en socio comercial, el sistema le genera su código comercial y le asigna ese <strong>15% por defecto</strong>. Es un campo de comisión asociado a tu código, que la administración puede ajustar caso por caso.</p>
+
+<p>Y ahora la precisión que más malentendidos evita: <strong>ese 15% se calcula sobre el fee de administración de Ceduverse, NO sobre la aportación de la empresa</strong>. Lee eso otra vez, porque no es un tecnicismo — es la consecuencia directa de todo el Curso 4. La aportación es <em>capital del socio</em>, patrimonio suyo. Si tu comisión saliera de ahí, la cooperativa estaría pagándote con el patrimonio de otra persona: le entregaría a un socio un certificado de $150 mientras le descuenta una parte para pagarte a ti. Sería tomar capital ajeno y llamarlo comisión. Por eso la comisión sale del <strong>fee de administración</strong>, que sí es ingreso de la cooperativa por el servicio que presta. El capital del socio no se toca. Nunca.</p>
+
+<h3>El rol es PLANO: no hay escalera de rangos</h3>
+<p>Aquí viene el punto donde muchos socios comerciales llegan con una idea equivocada, y necesitamos corregirla sin rodeos.</p>
+
+<p><strong>El rol comercial es plano. Todos los agentes son socio_comercial. No existe una escalera de rangos de comisión —agente, luego senior, luego director— dentro del sistema.</strong> Lo que existe es un <strong>campo de comisión por socio</strong>, cuyo valor por defecto es 15%. Eso es todo. Cuando alguien dice "el nivel de agente," lo que quiere decir literalmente es: un socio comercial con su comisión en el valor base de 15%. El "nivel" no es un rango con nombre, insignia ni progresión automática: es un número en un campo.</p>
+
+<p>¿Y el <strong>director</strong>? El director existe, pero no es lo que probablemente imaginas. <strong>Director es un rol distinto —un escalón arriba de comercial en la estructura—, no un peldaño de una escalera de comisiones.</strong> No se llega a director acumulando ventas ni cruzando un umbral automático: es un rol que se asigna. Confundir estas dos cosas —un rol de la estructura con un tier de comisión— es el error conceptual más común en esta materia, y lleva directo a prometerle a alguien un ascenso que el sistema no otorga.</p>
+
+<h3>El $500 por referido</h3>
+<p>El otro parámetro que debes conocer al detalle: el bono de <strong>$500 por referido</strong>. Y su condición de activación es muy específica, así que dila completa siempre:</p>
+
+<p><strong>Los $500 se pagan cuando la EMPRESA referida hace su PRIMERA APORTACIÓN.</strong> No cuando se registra. No cuando muestra interés. No cuando firma. Cuando aporta por primera vez, de verdad.</p>
+
+<p>Y la mitad que más se olvida, que es justo la que te protege: <strong>NO hay bono por referir estudiantes</strong>. No se paga por persona inscrita, ni por socio reclutado, ni por cabeza. El bono está atado exclusivamente a que una <em>empresa</em> se vuelva cliente real y aporte. Guarda esa frase, porque en el módulo 3 vas a descubrir que es tu mejor respuesta a la objeción más dura que vas a enfrentar en tu vida comercial.</p>
+
+<h3>La segunda mitad: qué está definido y qué está implementado</h3>
+<p>Y ahora el giro. Todo lo anterior es la <strong>política</strong>. Pero un socio comercial honesto tiene que saber distinguir tres estados muy distintos que la gente suele meter en el mismo cajón: lo que está <em>escrito como política</em>, lo que está <em>implementado y funcionando</em>, y lo que está <em>publicado en una página de marketing</em>. No son lo mismo, y confundirlos es exactamente cómo se prometen cosas que no llegan.</p>
+
+<p><strong>El $500 está definido como política, pero todavía no opera en el motor de comisiones.</strong> Está documentado como regla de negocio, sí. Pero a la fecha de este curso no hay un cálculo que lo dispare cuando una empresa referida hace su primera aportación: esa línea aparece en cero. Así que la formulación honesta —la única— es: <strong>"el bono de $500 por referido está definido, atado a la primera aportación de la empresa referida, y su operación en el sistema está pendiente."</strong> No le pongas fecha. No lo prometas como algo que ya se está pagando.</p>
+
+<p><strong>La dispersión no tiene una fecha automática.</strong> Y este punto merece toda tu atención, porque es donde es más fácil quedar mal. Las comisiones se generan por periodo mensual y pasan por estados —pendiente, aprobada, pagada— pero <strong>ese avance lo ejecuta la administración de forma manual</strong>. No hay un proceso automático que corra un día del mes y disperse solo.</p>
+
+<p>Peor todavía, y necesitas saberlo: <strong>hay materiales que se contradicen entre sí sobre la fecha</strong>. Es probable que hayas leído una fecha de corte en algún lado y otra distinta en otro. Ninguna de las dos está implementada como un proceso automático. Así que la regla es absoluta y no admite excepción: <strong>nunca le prometas a nadie —ni a un prospecto, ni a un socio de tu red, ni a ti mismo— una fecha de pago de comisiones.</strong> La respuesta correcta es: <em>"las comisiones se generan por periodo mensual y las dispersa la administración; el calendario exacto confírmalo con administración, no conmigo."</em> Aburrida, sí. Cierta, también.</p>
+
+<h3>Lo que quizá leíste en la página pública</h3>
+<p>Y ahora un aviso que este curso te debe, porque nadie más te lo va a dar.</p>
+
+<p>Es muy posible que hayas visto en materiales públicos o de reclutamiento una tabla de perfiles con rangos, porcentajes escalonados que suben con el número de empresas, comisiones "vitalicias," bonos de override sobre la red de otros, y proyecciones de ingreso mensual. <strong>Ese contenido es material comercial, y la estructura que describe no existe hoy en el sistema.</strong> No hay escalera de rangos, no hay escalonamiento automático por volumen, no hay override, no hay una duración "vitalicia" configurada en ningún lado. Lo que existe es lo que ya te dijimos: <strong>un rol plano y un campo de comisión con valor base de 15%</strong>.</p>
+
+<p>¿Por qué te lo contamos en vez de dejarlo pasar? Por la misma razón que en el Curso 4 te dijimos que el Reglamento aún no cita CEDU, y en el Curso 5 que el NFT no está acuñado. <strong>Porque tú eres quien va a estar en la sala cuando alguien pregunte.</strong> Si repites una tabla de rangos que el sistema no implementa, la persona que quede mal no es quien la escribió: eres tú, con tu nombre, frente a alguien que te creyó. Y si le prometiste "vitalicio" y "35%," ese reclamo tiene tu cara.</p>
+
+<p>Y sobre las <strong>proyecciones de ingreso mensual</strong> que puedas haber visto: no las repitas. Una cifra de ganancia proyectada, dicha en una conversación de reclutamiento, funciona exactamente como una promesa de rendimiento — y ya sabes lo que opinamos de esas.</p>
+
+<h3>Una nota que te conviene: tus comisiones y el 5%</h3>
+<p>Un detalle que cierra el círculo con el Curso 5. El proyecto de Reglamento contempla que la capitalización del <strong>5%</strong> se aplique a cada movimiento de valor del socio — y ahí incluye expresamente, además del consumo de cursos y certificaciones, <strong>las comisiones por referido</strong>. Es decir: una fracción de tus propias comisiones se reencauzaría a tu propio capital, en certificados de $150, hasta el <strong>tope de 20 certificados ($3,000)</strong>.</p>
+
+<p>Con la etiqueta de siempre, que a estas alturas ya deberías poner tú solo: eso vive en el <strong>Reglamento Interno, que es borrador no aprobado por la Asamblea y sin efectos jurídicos</strong>, y el propio borrador declara el 5% y el tope <strong>parámetros ajustables por acuerdo de la Asamblea General Ordinaria</strong>. Política propuesta. No una regla en vigor.</p>
+
+<h3>Los tres avisos</h3>
+<p><strong>Nada de esto es una oferta de valores.</strong> <strong>Nada de esto es asesoría de inversión.</strong> Y <strong>no hay rendimientos garantizados</strong> — lo cual, en este módulo, tiene una consecuencia directa y práctica: tu comisión no es un rendimiento de tu aportación. Son cosas completamente separadas. Tu comisión la ganas por tu trabajo comercial y sale del fee de administración; tu aportación es tu patrimonio y no promete nada. Un prospecto que salga pensando "aporto $150 y me pagan 15%" entendió dos cosas distintas como si fueran una, y esa confusión es tuya para prevenir.</p>
+
+<p>Ya sabes qué ganas y qué no puedes prometer. Ahora, lo que va a pasar en la conversación real: las cuatro preguntas que te van a hacer.</p>
+      `,
+      references: ["Memoria ceduverse-roles-comision (rol comercial PLANO: todos socio_comercial; el nivel es el campo commissionRate por socio, default 15%; NO hay tiers nombrados; director = user_role distinto, no tier de comisión)", "Memoria ceduverse-business-model (regla 2026-07-13: el bono de $500 por referido se paga cuando la EMPRESA referida hace su primera aportación; NO hay bono por referir socios estudiantes; comisiones se pagan del fee de administración, no de la aportación)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 14.2: el 5% aplica a consumo Y comisiones por referido, tope 20 certificados; Art. 14.6: parámetros ajustables por Asamblea)", "[PENDIENTE] Operación del bono de $500 en el motor de comisiones: definido como política, no implementado a la fecha — no prometer con fecha (confirmar con David/administración)", "[PENDIENTE] Calendario de dispersión de comisiones: no existe proceso automático; la dispersión es una acción manual de administración. Materiales comerciales muestran fechas de corte contradictorias entre sí — no citar ninguna (confirmar con administración)"],
+    },
+    {
+      title: "Manejo de objeciones: ¿es cripto?, ¿es legal?, ¿es estafa?, ¿por qué anónimo?",
+      description: "Las cuatro preguntas que te van a hacer siempre, con la respuesta honesta de cada una. Por qué la objeción de 'pirámide' se responde con la estructura de comisiones y no con indignación, y por qué el anonimato de BrainShield es hacia el público, nunca hacia la autoridad.",
+      durationMinutes: 14,
+      contentHtml: `
+<p>Hay cuatro preguntas que te van a hacer. No algunas veces: siempre. Y la diferencia entre un socio comercial que cierra y uno que se traba no es que el primero tenga respuestas más ingeniosas — es que tiene <strong>respuestas verdaderas y ya preparadas</strong>, dichas sin ponerse a la defensiva.</p>
+
+<p>Porque eso es lo primero que hay que entender sobre una objeción: <strong>no es un ataque, es una petición de información</strong>. Cuando alguien te dice "¿esto no será una estafa?", no te está insultando: te está diciendo que quiere creerte y no tiene con qué. Si te ofendes, confirmaste su sospecha. Si contestas con datos concretos y además reconoces los límites, la desarmaste.</p>
+
+<h3>Objeción 1: "¿Es cripto?"</h3>
+<p>La pregunta viene cargada. Quien la hace normalmente quiere decir: <em>¿esto es de esas cosas volátiles donde la gente pierde su dinero?</em></p>
+
+<p>La respuesta honesta empieza con un <strong>no</strong> claro, y sigue con la distinción del Curso 1:</p>
+
+<p><em>"No. Lo que Ceduverse vende son cursos y certificaciones — DC-3, SEP, certificación por experiencias laborales. Se paga en pesos, por transferencia o tarjeta, como cualquier servicio. No hay ninguna moneda volátil de por medio y tu aportación está denominada en pesos."</em></p>
+
+<p><em>"Ahora, sí usamos una pieza de tecnología blockchain, y te explico exactamente cuál, porque es más aburrida de lo que suena: usamos la red Base para anclar un hash —una huella digital— de ciertos documentos y operaciones. Eso se llama atestación. Sirve para que después nadie pueda alterar el registro sin que se note. No es un pago on-chain, no es una inversión en cripto, y no hay especulación: es un sello de integridad."</em></p>
+
+<p>Y aquí, la parte que te da credibilidad instantánea: <em>"Y para que no haya confusión: hay tokens en el diseño del consorcio —CEDU, BRAIN, KAKAW—, pero <strong>ninguno está desplegado</strong>. Son diseño. Hoy lo único que opera es la red Base y el sello por hash. Si alguien te ofrece hoy un token de este consorcio, te está ofreciendo algo que no existe."</em></p>
+
+<p>Fíjate lo que acabas de lograr: no solo contestaste, sino que le diste a tu prospecto una herramienta para detectar a un estafador — incluso a uno que use nuestro nombre.</p>
+
+<h3>Objeción 2: "¿Es legal?"</h3>
+<p>Esta es la más fácil, porque la respuesta es verificable y no depende de que te crean:</p>
+
+<p><em>"Sí, y lo puedes comprobar tú mismo. Ceduverse es una sociedad cooperativa de consumo de responsabilidad limitada de capital variable, constituida mediante el <strong>acta 6520 ante la Notaría 110 de Quintana Roo</strong>, e inscrita en el Registro Público de Comercio con el folio <strong>N-2026009627</strong>. Está regulada por la Ley General de Sociedades Cooperativas. No es un proyecto ni una comunidad: es una persona moral con instrumento notarial e inscripción registral."</em></p>
+
+<p>Y ahora la parte que un vendedor promedio se saltaría, y que tú no vas a saltarte: <em>"Lo que sí te tengo que decir es que el <strong>Reglamento Interno</strong> —que es el documento que desarrolla los detalles operativos, como el bono de bienvenida o la política de capitalización— <strong>todavía es un borrador y no ha sido aprobado por la Asamblea General</strong>. O sea: la sociedad existe y es legal; algunas de las reglas operativas que te voy a explicar son propuestas pendientes de aprobarse. Te las digo con esa etiqueta puesta."</em></p>
+
+<p>¿Te das cuenta de la fuerza de esto? Acabas de separar, frente al prospecto, lo que está en firme de lo que está pendiente. Ningún estafador hace eso jamás. Es literalmente lo contrario de lo que hace un estafador.</p>
+
+<h3>Objeción 3: "¿Es estafa? ¿Es una pirámide?"</h3>
+<p>La más dura, y la que más gente contesta mal — porque la contestan con emoción (<em>"¡claro que no!"</em>) en vez de con estructura. La indignación no prueba nada. Los datos sí.</p>
+
+<p>Una pirámide tiene una firma inconfundible: <strong>el dinero entra por reclutar gente, no por vender algo real</strong>. Quien está arriba gana porque abajo entra alguien nuevo, y ese alguien nuevo solo gana si mete a otro. Cuando se acaba la gente, se acaba el dinero — y siempre se acaba la gente.</p>
+
+<p>Entonces, contesta con la estructura, punto por punto:</p>
+
+<p><em>"Te lo contesto con cómo está armado el pago, que es donde se ve. <strong>Uno: no hay bono por referir personas.</strong> No gano nada por meter socios estudiantes, ni por cabeza, ni por reclutar. Cero. El bono de $500 está atado a que una <strong>empresa</strong> se vuelva cliente y haga su primera aportación real. O sea: gano cuando alguien <em>compra capacitación de verdad</em>, no cuando alguien <em>se registra</em>."</em></p>
+
+<p><em>"<strong>Dos: mi comisión sale del fee de administración, no de la aportación de la empresa.</strong> El dinero que un socio aporta es su capital, su patrimonio, y no se toca para pagarme."</em></p>
+
+<p><em>"<strong>Tres: la aportación tiene tope.</strong> La capitalización se detiene en 20 certificados, $3,000 pesos. En una pirámide te empujan a meter cada vez más dinero; aquí hay un techo bajo y explícito que te lo impide."</em></p>
+
+<p><em>"<strong>Cuatro: un socio, un voto.</strong> Tengas 1 certificado o 20, tu voto vale igual que el mío y que el del fundador. No hay nadie arriba con más poder por tener más."</em></p>
+
+<p><em>"<strong>Cinco: no hay rendimiento.</strong> Nadie te promete que tu dinero crezca. Si alguien te promete rendimiento, ese alguien está mintiendo — y da igual si dice que es de Ceduverse."</em></p>
+
+<p>Y remata con honestidad, que es lo que sella: <em>"De hecho, el bono de $500 <strong>ni siquiera está operando todavía</strong> en el sistema: está definido como política y su implementación está pendiente. Si esto fuera un esquema para reclutar, lo primero que estaría funcionando sería justo el pago por reclutar. Es lo último que falta."</em></p>
+
+<h3>Objeción 4: "¿Por qué anónimo?"</h3>
+<p>Esta aparece cuando explicas la bóveda de PI de BrainShield, y suena mal si no la explicas bien — porque en el imaginario de la gente, "anónimo" y "sospechoso" están pegados.</p>
+
+<p>La respuesta: <em>"El anonimato aquí protege un valor concreto, y tiene una lógica de negocio simple. Si eres el creador de un secreto industrial o de una patente y depositas ese activo, el hecho mismo de que tú seas el dueño puede ser información comercialmente sensible: le dice a tu competencia qué tienes y en qué estás trabajando. Por eso el socio opera con un alias, y la identidad se trata como secreto industrial. No es para esconder al dueño de la ley: es para esconderlo de su competencia."</em></p>
+
+<p>Y ahora el límite, que es la parte que la vuelve creíble: <em>"Y hay que ser muy claro con el alcance, porque 'anónimo' no significa lo que la gente teme. <strong>El anonimato es hacia el público, no hacia la autoridad ni hacia la propia estructura.</strong> Hay KYC: la identidad se conoce, se verifica y se documenta internamente. Lo que no se hace es publicarla. Y en la cadena no se escribe un solo dato personal: on-chain solo viaja un hash, una huella. Eso no es ocultamiento — es privacidad por diseño, que es exactamente lo contrario."</em></p>
+
+<p>Un anonimato que se cae ante la autoridad no es opacidad: es discreción comercial. Di la diferencia en voz alta, porque es la diferencia entre un modelo serio y uno turbio.</p>
+
+<h3>El principio detrás de las cuatro</h3>
+<p>Si te fijas, las cuatro respuestas tienen la misma arquitectura: <strong>un dato verificable, seguido de un límite reconocido</strong>. Acta y folio, pero el Reglamento es borrador. Base y SHA-256 operan, pero los tokens son diseño. La estructura de comisiones no paga por reclutar, y además ese bono todavía no opera. Hay privacidad, pero también hay KYC.</p>
+
+<p>Ese patrón no es un truco retórico: es lo que pasa cuando dices la verdad completa. Y resulta que la verdad completa, dicha con orden, vende mejor que la promesa — porque la promesa la puede hacer cualquiera, y la verdad verificable, no.</p>
+
+<h3>Los tres avisos</h3>
+<p><strong>Nada de esto es una oferta de valores. Nada de esto es asesoría de inversión. No hay rendimientos garantizados.</strong> Y en el manejo de objeciones esto tiene una aplicación directa: si un prospecto insiste en que le confirmes un retorno —"pero dime cuánto voy a ganar"—, la respuesta no es un número más bajo ni una estimación prudente. La respuesta es que <strong>este modelo no promete retornos, y si eso es lo que busca, esto no es para él</strong>. Perder esa venta es ganar: el prospecto que compra creyendo que le prometiste un rendimiento es un reclamo con fecha diferida.</p>
+      `,
+      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 — VIGENTE", "LGSC (1 socio = 1 voto; régimen de sociedades cooperativas)", "Memoria brainshield-rwa-pivot (bóveda de PI, alias, anonimato como secreto industrial; tokens CEDU/BRAIN/KAKAW: diseño, no desplegados; solo Base + SHA-256 operan)", "Memoria ceduverse-business-model (el $500 se paga sobre la primera aportación de la EMPRESA referida; NO hay bono por referir estudiantes; comisiones del fee de administración)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos", "[PENDIENTE] Operación del bono de $500 en el motor de comisiones: definido como política, no implementado a la fecha"],
+    },
+    {
+      title: "El modelo cooperativo desde la venta: tu rol y tu límite",
+      description: "Cómo explicar la aportación capitalizada y la copropiedad sin convertirlas en una promesa de inversión. Por qué 1 socio = 1 voto es tu mejor argumento y tu mejor límite, qué te distingue de un vendedor externo, y cómo se dice la verdad completa sobre el reembolso.",
+      durationMinutes: 13,
+      contentHtml: `
+<p>Ya sabes qué vendes, qué ganas y cómo contestar las cuatro preguntas. Este módulo cambia el ángulo: mira el modelo cooperativo <strong>desde la silla del que vende</strong>. No para repetir los Cursos 4 y 5 —eso ya lo dominas— sino para responder algo que ninguno de los dos contestó: <strong>¿qué eres tú dentro de esta estructura, y qué te impide hacer?</strong></p>
+
+<h3>No eres un vendedor externo. Eres un socio.</h3>
+<p>Empecemos por lo que hace a este rol distinto de cualquier otro trabajo comercial que hayas tenido.</p>
+
+<p>Un vendedor de una empresa normal está fuera del producto: la empresa es de otros, él cobra por colocar, y su relación con el comprador termina en la firma. Tú no. <strong>Tú eres socio cooperativista de la misma sociedad a la que estás invitando a entrar.</strong> Tienes tu certificado de $150 a tu nombre, en el mismo Libro de Registro donde va a quedar el de la persona que estás convenciendo. Tienes un voto en la misma Asamblea donde ella va a tener el suyo — y valen exactamente lo mismo.</p>
+
+<p>Esto no es una frase bonita de reclutamiento: tiene una consecuencia práctica incómoda. <strong>La persona a la que le exageras hoy va a estar sentada contigo en la Asamblea mañana.</strong> No es un cliente que se va: es un copropietario que se queda, con voz, con voto y con memoria. En una empresa tradicional, un vendedor que promete de más le crea un problema a la empresa. En una cooperativa, se lo crea <em>a sus propios socios</em>, y él es uno de ellos.</p>
+
+<p>Esa es, en el fondo, la razón por la que este curso insiste tanto en la honestidad. No es moralismo. Es que en esta estructura, la exageración te alcanza.</p>
+
+<h3>1 socio = 1 voto: tu mejor argumento y tu mejor límite</h3>
+<p>De todo lo que puedes decir, esta es la frase más poderosa que tienes — y la más peligrosa si la usas mal.</p>
+
+<p>Como argumento es imbatible: <em>"Aquí no puedes comprar poder. Tengas 1 certificado o 20, tengas $150 o $3,000, tu voto es uno. El mío también. El del fundador también. Es una sociedad de personas, no de capitales — y eso está en la ley y en el acta, no en un discurso."</em> Ese es el rasgo que separa a una cooperativa de todo lo demás que tu prospecto ha visto, y no hay letra chica que lo desmienta.</p>
+
+<p>Pero ahora míralo como límite, porque es igual de importante: <strong>si nadie puede comprar más poder, entonces acumular certificados no te da nada extra</strong>. No más voto, no más influencia, no más retorno. Y de ahí se sigue algo que debes decir sin que te lo pregunten: <em>no tiene ningún sentido tratar de "meter más dinero" a esta cooperativa</em>. No hay a qué. El modelo no lo premia y el tope lo impide.</p>
+
+<p>Si alguna vez te sorprendes usando el uno-socio-un-voto para vender y al mismo tiempo insinuando que conviene acumular, detente: te estás contradiciendo en la misma frase.</p>
+
+<h3>La aportación capitalizada, dicha sin mentir</h3>
+<p>El 5% es el punto donde más fácil se resbala un socio comercial, porque es el que más se <em>parece</em> a un rendimiento sin serlo.</p>
+
+<p>La forma correcta de decirlo: <em>"Cuando pagas por un servicio de Ceduverse, el proyecto contempla que el 5% de <strong>tu propio pago</strong> se reasigne a <strong>tu propia cuenta de capital</strong>, en certificados de $150. En la certificación RVOE Academy de $49,900, ese 5% son <strong>$2,495</strong> — unos 16 certificados. El resto es ingreso por servicio, con su factura. No es un regalo de la cooperativa, no es un subsidio, no es un interés: es tu dinero cambiando de casilla, de pago a patrimonio tuyo."</em></p>
+
+<p>Y de inmediato, sin que te lo pidan, las dos etiquetas:</p>
+
+<p><em>"Tiene <strong>tope: 20 certificados, $3,000</strong>. Con poco más de una compra del producto ancla ya estás en el techo. Esto no es un vehículo para acumular capital y no está diseñado para serlo."</em></p>
+
+<p><em>"Y su estatus: el 5% y el tope viven en el <strong>Reglamento Interno, que es un borrador no aprobado por la Asamblea</strong>. El propio borrador dice que son parámetros ajustables por acuerdo de la Asamblea General. Te lo explico porque así está diseñado, no porque sea una regla en vigor que yo te pueda garantizar."</em></p>
+
+<p>La prueba de que lo estás diciendo bien es simple. Si tu prospecto sale de la conversación diciendo <em>"me dan 5% de rendimiento"</em>, fallaste — dijiste palabras correctas y transmitiste algo falso. Si sale diciendo <em>"una parte de lo que yo pague se vuelve capital mío, hasta un tope de $3,000, y eso todavía lo tiene que aprobar la Asamblea"</em>, lo hiciste perfecto.</p>
+
+<h3>La copropiedad: potente y acotada</h3>
+<p>"Eres copropietario" es verdad y es fuerte. Pero dilo con su tamaño real, porque un prospecto que escucha "copropietario" puede imaginar cualquier cosa.</p>
+
+<p>El tamaño real es este: la cooperativa arrancó con <strong>5 socios fundadores y 100 certificados de $150</strong>, o sea $15,000 pesos de capital fundacional. Tu certificado de $150 es una participación pequeña y sana en una sociedad pensada para que quepa mucha gente con poco. <strong>Copropietario no significa dueño de una parte grande de algo grande.</strong> Significa que no eres cliente: eres parte, con tu voto entero y tu patrimonio acotado.</p>
+
+<p>Dicho así, no defrauda a nadie. Dicho a medias, crea una expectativa que la primera Asamblea va a desinflar.</p>
+
+<h3>El reembolso: la verdad completa, siempre</h3>
+<p>Y llegamos a la frase más peligrosa de todo el repertorio comercial, la que suena inofensiva y no lo es: <strong>"si no te gusta, te devuelven tu dinero."</strong></p>
+
+<p>No la digas. Nunca. Es falsa en dos dimensiones a la vez.</p>
+
+<p><strong>Falsa en el tiempo:</strong> el retiro no surte efectos hasta el <strong>fin del ejercicio anual</strong> — o hasta el fin del ejercicio <em>siguiente</em>, si se notifica después del último trimestre. Entre que alguien avisa y se le devuelve pueden pasar meses, y en el peor caso cerca de dos años. No hay botón de retirar.</p>
+
+<p><strong>Falsa en el monto:</strong> el importe <strong>no está garantizado a ser igual a lo aportado</strong>. La devolución se practica al cierre del ejercicio, con orden de prelación y a prorrata, y se calcula sobre el valor de los certificados <strong>deducidas las pérdidas que proporcionalmente correspondan</strong>. Si la cooperativa tuvo pérdidas, el reembolso las absorbe en su proporción. Además hay puntos que <strong>siguen pendientes de definirse</strong>, como a qué valor se reembolsan los certificados capitalizados.</p>
+
+<p>La versión honesta, que sí puedes usar: <em>"Tu aportación es tuya y es reembolsable — con procedimiento, con calendario y sin garantía de monto. No es una cuenta de ahorro ni un depósito. Es capital de una sociedad real, acotado a $150 por certificado, con responsabilidad limitada a ese importe. Si la cooperativa tiene pérdidas, tu reembolso las absorbe en tu parte."</em></p>
+
+<p>¿Vende menos? Sí. ¿Sabes qué vende todavía menos? Un socio que se sintió engañado explicándole a otros doce por qué lo estafaste. La versión completa es más barata que el reclamo.</p>
+
+<h3>Los tres avisos</h3>
+<p><strong>Nada de esto es una oferta de valores</strong>: el certificado no es una acción, no se coloca en mercado, no hay secundario. <strong>Nada de esto es asesoría de inversión</strong>: tu trabajo es explicar una estructura, no recomendarle a nadie qué hacer con su patrimonio — y si te piden ese consejo, la respuesta correcta es que consulten a su propio asesor. <strong>No hay rendimientos garantizados</strong>: ni la aportación, ni la capitalización, ni la copropiedad prometen retorno alguno.</p>
+
+<p>Ya sabes qué eres dentro de la estructura. Falta el módulo que más te va a proteger: la lista exacta de lo que no puedes decir, y el guion honesto de cada caso.</p>
+      `,
+      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (5 socios fundadores, 100 certificados de $150; retiro efectivo al fin del ejercicio anual o del siguiente)", "LGSC art. 52 (devolución al cierre del ejercicio, prelación y prorrata, deducción de pérdidas proporcionales)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 14: capitalización 5%, tope 20 certificados $3,000, ejemplo RVOE $49,900 → $2,495; Art. 14.6: parámetros ajustables por Asamblea; valor de reembolso de certificados capitalizados marcado [PENDIENTE])", "Memoria ceduverse-estructura-legal (1 socio = 1 voto; cooperativa de consumo)"],
+    },
+    {
+      title: "Guardrails de venta: lo que NO puedes decir (y el guion honesto de cada caso)",
+      description: "Las seis frases prohibidas con su reemplazo exacto: rendimientos, la aportación como inversión, política propuesta presentada como vigente, el canal de token como disponible, el $500 y las fechas de pago, y el certificado como algo vendible. Los tres disclaimers y el cierre del arco comercial.",
+      durationMinutes: 14,
+      contentHtml: `
+<p>Último módulo del Curso 6, del arco comercial y de Academia RWA. Y es, sin discusión, el más importante de los tres cursos comerciales — porque todo lo demás te ayuda a vender, y este te impide destruir lo que vendiste.</p>
+
+<p>Vamos a ser muy concretos. Nada de "sé prudente" ni "usa tu criterio." Aquí tienes <strong>seis frases que no puedes decir</strong>, y al lado de cada una, <strong>la frase exacta que la reemplaza</strong>. Apréndete los reemplazos, no las prohibiciones: en una conversación real no basta con saber que algo no se dice — necesitas tener listo qué <em>sí</em> se dice, o vas a improvisar, y la improvisación es donde nacen las promesas.</p>
+
+<h3>1. NO prometer rendimientos</h3>
+<p><strong>Prohibido:</strong> "tu aportación crece," "te da un 5%," "vas a recuperar más de lo que metiste," "es un buen retorno."</p>
+
+<p><strong>Guion honesto:</strong> <em>"Aquí no hay rendimiento y no te lo voy a prometer. Lo que hay es distinto: una fracción de tu propio pago se reasigna a tu propio capital, con un tope de $3,000. Eso no es un rendimiento — es tu dinero cambiando de casilla. La cooperativa no te promete que tu certificado valga más mañana, y de hecho, si hubiera pérdidas, tu reembolso las absorbe en tu parte."</em></p>
+
+<p>La trampa: el 5% <em>suena</em> a rendimiento. Si lo dices sin la aclaración, tu prospecto va a hacer la traducción solo, en su cabeza, y va a salir creyendo algo que tú nunca dijiste pero permitiste. <strong>El silencio también promete.</strong></p>
+
+<h3>2. NO vender la aportación como inversión</h3>
+<p><strong>Prohibido:</strong> "invierte $150," "es una inversión segura," "estás invirtiendo en el futuro de la cooperativa," "mete lo que puedas."</p>
+
+<p><strong>Guion honesto:</strong> <em>"No estás invirtiendo: estás fundando tu patrimonio dentro de una sociedad de la que te vuelves copropietario. Es capital, no inversión. Y no hay nada que 'meter': la aportación es de $150, el tope de la capitalización es de $3,000, y no hay ningún beneficio en acumular más — porque tu voto es uno pase lo que pase."</em></p>
+
+<p>La trampa está en la palabra "segura," que a veces sale sola por cortesía. <strong>Un certificado de aportación es capital de riesgo de una sociedad real</strong> — acotado y con responsabilidad limitada a $150 por certificado, sí, pero capital de riesgo. "Inversión segura" son dos palabras y las dos están mal.</p>
+
+<h3>3. NO presentar política propuesta como si estuviera vigente</h3>
+<p><strong>Prohibido:</strong> "el reglamento dice que...", "te corresponden $170," "la cooperativa te da el bono," "la regla es 5% con tope de 20."</p>
+
+<p><strong>Guion honesto:</strong> <em>"Así está diseñado: un bono de $170, $150 que fundan tu primer certificado y $20 de crédito para tu primer DC-3 o SEP; y una capitalización del 5% con tope de 20 certificados. Ahora, el estatus, que te lo debo decir: todo eso vive en el <strong>Reglamento Interno, que hoy es un borrador y no ha sido aprobado por la Asamblea General</strong> — no está vigente ni surte efectos jurídicos. El propio borrador dice que esos montos son parámetros ajustables por la Asamblea. Te lo explico como diseño, no como algo que yo te pueda garantizar."</em></p>
+
+<p>Esta es la que más se rompe, porque las cifras son atractivas y la etiqueta es fea. Pero mide la consecuencia: si prometes $170 como derecho adquirido y la Asamblea ajusta el parámetro, hay una persona real con un reclamo real — y tu nombre está en él. <strong>La etiqueta cuesta cuatro segundos. El reclamo cuesta años.</strong></p>
+
+<h3>4. NO ofrecer el canal de token como si estuviera disponible</h3>
+<p><strong>Prohibido:</strong> "te pagamos el bono con CEDU," "el token respalda tu aportación," "ya puedes recibir tu NFT," "KakawChain lo garantiza."</p>
+
+<p><strong>Guion honesto:</strong> <em>"Ese canal no está disponible hoy, y quiero ser exacto. <strong>Ningún token del consorcio está desplegado</strong>: CEDU, BRAIN y KAKAW son diseño. KakawChain y KakawCoin no existen como producto. Además, la vía del token exige constituir antes una <strong>reserva 1:1</strong> —un peso real guardado por cada peso de token— y esa reserva no existe todavía; sin ella el canal no se activa, por diseño. Y para cerrarlo bien: la billetera del proyecto de Ceduverse ni siquiera está constituida. Lo único que opera hoy es la red Base y el sello por hash SHA-256."</em></p>
+
+<p>Aquí no hay zona gris posible. Ofrecer hoy el canal de token no es exagerar: es <strong>describir algo que no existe</strong>. Y recuerda por qué la reserva 1:1 es innegociable, que ya lo trabajaste en el Curso 4: un token sin respaldo sería <strong>capital simulado</strong>, y acreditar aportaciones contra él inflaría el capital social sin que entrara un peso. La regla no es burocracia — es lo que impide que el modelo sea exactamente el fraude del que quiere distinguirse.</p>
+
+<p>Lo mismo con el <strong>NFT del certificado: no está acuñado</strong>. Es diseño. Nadie puede tenerlo hoy.</p>
+
+<h3>5. NO prometer el $500 ni una fecha de pago</h3>
+<p><strong>Prohibido:</strong> "te pagan $500 por cada referido," "cobras el día 20," "cobras el día 25," "la comisión cae automático," "es vitalicio," "con cuatro empresas subes a 30%."</p>
+
+<p><strong>Guion honesto:</strong> <em>"Te digo lo que está definido y lo que está pendiente, por separado. <strong>Definido:</strong> la comisión base de agente es <strong>15%</strong>, calculada sobre el fee de administración —nunca sobre la aportación—, y hay un bono de <strong>$500</strong> atado a que una <strong>empresa</strong> referida haga su <strong>primera aportación</strong>; no hay bono por referir estudiantes. <strong>Pendiente:</strong> el bono de $500 todavía no opera en el motor de comisiones, y no existe una fecha automática de dispersión — las comisiones las genera y las paga la administración por periodo mensual, de forma manual. Así que no te voy a dar una fecha ni un monto: eso lo confirmas con administración."</em></p>
+
+<p>Y el aviso extra, el que te va a salvar: si viste en materiales públicos una <strong>tabla de rangos con escalones, override, "vitalicio" y proyecciones de ingreso mensual</strong>, no la repitas. <strong>Esa estructura no existe en el sistema.</strong> El rol es plano: todos los agentes son socio comercial, y el "nivel" es simplemente un campo de comisión con valor base de 15%. Director es un <strong>rol distinto</strong> de la estructura, no un peldaño que se alcanza vendiendo. Y una proyección de ingreso mensual, dicha en una conversación de reclutamiento, funciona igual que una promesa de rendimiento.</p>
+
+<h3>6. NO presentar el certificado o el NFT como algo vendible</h3>
+<p><strong>Prohibido:</strong> "lo puedes vender después," "se va a apreciar," "lo listas en un exchange," "es tu entrada al mercado secundario."</p>
+
+<p><strong>Guion honesto:</strong> <em>"No hay mercado secundario. No hay exchange, no hay cotización, no hay comprador esperando. El certificado vale $150 de valor nominal el día uno y $150 de valor nominal tres años después. Su transmisión está restringida y el procedimiento vive en el Reglamento, que sigue en borrador. Y el gemelo digital, cuando exista, <strong>documenta</strong> una transmisión: no la ejecuta. Ningún movimiento de un NFT transmite un certificado, jamás."</em></p>
+
+<h3>Los tres avisos obligatorios, completos</h3>
+<p>Estos tres no son decoración legal ni letra chica: son la descripción exacta de lo que este modelo es. Dilos en toda conversación patrimonial, sin que te los pidan.</p>
+
+<p><strong>Esto NO es una oferta de valores.</strong> Un certificado de aportación cooperativa no es una acción, ni un bono, ni un instrumento financiero colocable en un mercado, ni está registrado ante ninguna autoridad bursátil — porque no lo es ni pretende serlo. Su gemelo registral tampoco.</p>
+
+<p><strong>Esto NO es asesoría de inversión.</strong> Nada de lo que explicas es una recomendación sobre el patrimonio de nadie. Si un prospecto tiene dudas sobre su situación patrimonial o fiscal, la respuesta correcta —siempre— es que consulte a su propio asesor. Y si te preguntan por el tratamiento fiscal fino, como el IVA de los $20 del bono o la base gravable del split del 5%, <strong>esos puntos están pendientes de confirmar con el área fiscal</strong>: no los adivines. Un número fiscal inventado en una charla comercial reaparece meses después, en una revisión, y ya no lo puedes retirar.</p>
+
+<p><strong>NO hay rendimientos garantizados.</strong> Ni un porcentaje, ni una fecha, ni una promesa. Ni el certificado, ni la capitalización, ni el bono, ni el gemelo digital prometen retorno alguno.</p>
+
+<h3>La prueba que resume el curso</h3>
+<p>Si alguna vez dudas de si puedes decir algo, aplícale esta prueba de tres preguntas: <strong>¿es verificable hoy? ¿estoy separando lo que está en firme de lo que está propuesto? ¿esta persona podría sentirse engañada en seis meses?</strong></p>
+
+<p>Si la respuesta a la tercera es "quizá," no lo digas. Da igual lo bien que suene y lo cerca que estés de cerrar.</p>
+
+<p>Y quédate con lo que has visto en los tres cursos comerciales: <strong>ninguno de los límites que aprendiste te quita argumentos — todos te los dan</strong>. El tope de $3,000 prueba que esto no es un esquema de captación. El uno-socio-un-voto prueba que el poder no se compra. La reserva 1:1 obligatoria prueba que no se fabrica capital. La ausencia de bono por reclutar prueba que no es pirámide. Decir que el Reglamento es borrador prueba que no te están vendiendo humo. <strong>La honestidad aquí no es el precio de vender: es el producto.</strong></p>
+
+<h3>Cierre del arco</h3>
+<p>Mira el camino completo. El <strong>Curso 4</strong> te dio el mecanismo: la aportación como patrimonio, el bono de $170 desarmado, el origen externo obligatorio, la reserva 1:1. El <strong>Curso 5</strong> te dio el instrumento: el certificado de $150, el gemelo registral que espeja el Libro y no lo sustituye, un socio un voto, el 5% con su tope, la salida con su verdad incómoda. El <strong>Curso 6</strong> te dio la conversación: el pitch, los números reales, las objeciones y —lo más valioso— la lista de lo que no puedes decir.</p>
+
+<p>Eso es todo lo que necesitas para representar a Ceduverse sin exponerte y sin exponer a la cooperativa. No porque ya sepas venderlo, sino porque ya sabes <strong>dónde están los bordes</strong> — y esa es la única competencia que no se puede improvisar frente a un prospecto.</p>
+
+<h3>Tu siguiente paso</h3>
+<p><strong>Agenda tu sesión de onboarding comercial</strong> con tu director o con administración, y llévale a esa sesión dos cosas concretas: tu <strong>porcentaje de comisión real</strong>, confirmado en tu panel —no el que leíste en una tabla—, y tus dudas sobre el <strong>calendario de dispersión</strong>, que tienes que confirmar con administración y no suponer.</p>
+
+<p>Y antes de tu primera conversación con un prospecto, haz este ejercicio: <strong>di en voz alta las tres cosas que no existen todavía</strong> — ningún token está desplegado, el NFT no está acuñado, el Reglamento es borrador. Si puedes decirlas con naturalidad, sin que te tiemble la voz y sin sentir que estás debilitando tu pitch, estás listo. Si todavía te incomodan, repásalas hasta que no. <strong>Esa comodidad con la verdad incompleta del proyecto es, literalmente, tu producto.</strong></p>
+      `,
+      references: ["Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador; Arts. 14 y 14 Bis: 5%, tope 20 certificados, bono $170, parámetros ajustables por Asamblea)", "Memoria brainshield-rwa-pivot (CEDU/BRAIN/KAKAW: diseño, ninguno desplegado; KakawChain/KakawCoin no existen; solo Base + SHA-256 operan)", "Memoria ceduverse-roles-comision (rol comercial PLANO, commissionRate default 15%, sin tiers nombrados; director = user_role distinto)", "Memoria ceduverse-business-model ($500 sobre la primera aportación de la EMPRESA referida; sin bono por referir estudiantes; comisiones del fee de administración)", "LGSC art. 52 y acta constitutiva 6520 (reembolso al cierre del ejercicio, sin garantía de monto, deducidas pérdidas proporcionales)", "[PENDIENTE] Tratamiento fiscal del $20 del bono y base gravable del split del 5% — confirmar con Daniel/fiscal", "[PENDIENTE] Bono de $500 no implementado en el motor de comisiones; sin calendario automático de dispersión; materiales comerciales públicos muestran una tabla de rangos/override/vitalicio y fechas de corte que el sistema no implementa — confirmar con David/administración"],
+    },
+  ],
+
 };
