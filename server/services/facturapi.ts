@@ -90,7 +90,19 @@ export async function updateCustomer(
 
 export async function createInvoice(data: {
   customerId: string;
-  items: { description: string; quantity: number; price: number; product_key: string }[];
+  items: {
+    description: string;
+    quantity: number;
+    price: number;
+    product_key: string;
+    /**
+     * Impuestos del renglón. Omitir (undefined) deja el default de FacturAPI
+     * (IVA 16% traslado) — usado para certificaciones/productos gravados.
+     * Pasar [] fuerza el renglón a SIN IVA — usado para aportaciones de
+     * empresa (exentas / no objeto de impuesto por decisión del dueño).
+     */
+    taxes?: unknown[];
+  }[];
   paymentForm: string;
   paymentMethod?: string;
   use?: string;
@@ -103,6 +115,7 @@ export async function createInvoice(data: {
         description: item.description,
         product_key: item.product_key,
         price: item.price,
+        ...(item.taxes !== undefined ? { taxes: item.taxes } : {}),
       },
     })),
     payment_form: data.paymentForm,

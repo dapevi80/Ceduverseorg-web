@@ -41,6 +41,7 @@ import {
 } from "@shared/schema";
 import { eq, and, sql, count, desc, asc, gte, lte, inArray, ilike, type SQL } from "drizzle-orm";
 import * as facturapi from "../services/facturapi";
+import { computeInvoiceTax } from "../lib/invoice-tax";
 import { sendSamConfirmationEmail, sendSamReminderEmail, sendSamPartnerNotificationEmail } from "../email";
 import { z } from "zod";
 import crypto from "crypto";
@@ -1318,8 +1319,13 @@ export function registerAdminRoutes(app: Express) {
         if (existingInvoices.length > 0) return res.status(400).json({ message: "Ya existe una factura activa para esta aportación" });
       }
 
-      const tax = Math.round(parsed.subtotal * 0.16 * 100) / 100;
-      const total = Math.round((parsed.subtotal + tax) * 100) / 100;
+      const taxResult = computeInvoiceTax({
+        invoiceType: parsed.invoiceType,
+        subtotal: parsed.subtotal,
+        productKey: parsed.productKey,
+      });
+      const tax = taxResult.taxMxn;
+      const total = taxResult.totalMxn;
 
       let facturapiInvoiceId: string | null = null;
       let cfdiUuid: string | null = null;
@@ -1348,7 +1354,8 @@ export function registerAdminRoutes(app: Express) {
             description: parsed.concept,
             quantity: 1,
             price: parsed.subtotal,
-            product_key: parsed.productKey,
+            product_key: taxResult.productKey,
+            taxes: taxResult.exento ? [] : undefined,
           }],
           paymentForm: parsed.paymentForm,
         });
