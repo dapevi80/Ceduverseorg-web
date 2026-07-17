@@ -12,7 +12,7 @@ describe("computeInvoiceTax — IVA solo en certificaciones/productos, NUNCA en 
   });
 
   it("aportación ignora cualquier productKey pasado por el caller — siempre 94101607", () => {
-    const r = computeInvoiceTax({ invoiceType: "contribution", subtotal: 500, productKey: "86101700" });
+    const r = computeInvoiceTax({ invoiceType: "contribution", subtotal: 500, productKey: "80111500" });
     expect(r.productKey).toBe("94101607");
     expect(r.exento).toBe(true);
     expect(r.taxMxn).toBe(0);
@@ -30,10 +30,10 @@ describe("computeInvoiceTax — IVA solo en certificaciones/productos, NUNCA en 
     expect(r.productKey).toBe("84111506");
   });
 
-  it("certificación usa default 86101700 si no se pasa productKey", () => {
+  it("certificación usa default 80111500 si no se pasa productKey", () => {
     const r = computeInvoiceTax({ invoiceType: "certification", subtotal: 1000 });
     expect(r.productKey).toBe(DEFAULT_PRODUCT_KEY);
-    expect(r.productKey).toBe("86101700");
+    expect(r.productKey).toBe("80111500");
   });
 
   it("IVA_RATE es exactamente 0.16 (única fuente de verdad)", () => {

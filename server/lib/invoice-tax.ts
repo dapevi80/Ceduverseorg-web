@@ -11,8 +11,8 @@
 
 export const IVA_RATE = 0.16;
 
-export const DEFAULT_PRODUCT_KEY = "86101700"; // clave SAT genérica de servicios (certificaciones/productos)
-export const CONTRIBUTION_PRODUCT_KEY = "94101607"; // Aportaciones a la asociación
+export const DEFAULT_PRODUCT_KEY = "80111500"; // Servicios de Capacitación de Personal (certificaciones/cursos) — CON IVA
+export const CONTRIBUTION_PRODUCT_KEY = "94101607"; // Aportaciones a la asociación — SIN IVA
 
 export type InvoiceType = "contribution" | "certification";
 

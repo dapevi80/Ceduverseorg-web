@@ -1301,7 +1301,7 @@ export function registerAdminRoutes(app: Express) {
         concept: z.string().min(1),
         subtotal: z.number().positive(),
         paymentForm: z.string().default("03"),
-        productKey: z.string().default("86101700"),
+        productKey: z.string().default("80111500"),
       });
       const parsed = schema.parse(req.body);
 
