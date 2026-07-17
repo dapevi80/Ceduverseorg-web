@@ -1,5 +1,24 @@
 import Anthropic from "@anthropic-ai/sdk";
 import sanitizeHtml from "sanitize-html";
+import {
+  CALL1_MAX_TOKENS,
+  CALL2_MAX_TOKENS,
+  canRetryWithMoreTokens,
+  isTruncatedResponse,
+  nextMaxTokens,
+} from "./lib/generation-retry";
+
+/** Identifica de qué generación hablan los logs (curso, módulo, usuario). */
+export interface GenerationLogContext {
+  userId?: string;
+  courseSlug?: string;
+  moduleIndex?: number;
+}
+
+function fmtCtx(ctx?: GenerationLogContext): string {
+  if (!ctx) return "";
+  return ` [course=${ctx.courseSlug ?? "?"} module=${ctx.moduleIndex ?? "?"} user=${ctx.userId ?? "?"}]`;
+}
 
 export interface StudentProfileContext {
   jobTitle?: string;
@@ -406,13 +425,19 @@ async function callAnthropicWithRetry(
 ): Promise<any> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`[ai-engine] ${label} attempt ${attempt + 1}/${maxRetries + 1}`);
+      console.log(`[ai-engine] ${label} attempt ${attempt + 1}/${maxRetries + 1} (max_tokens=${maxTokens})`);
 
       // Force structured output via tool use: Claude must emit a schema-valid object
       // in a tool_use block, so there is no free-form JSON text to (mis)parse. This
       // eliminates the HTML-in-string parse failures that previously dumped good
       // content into the generic stub.
-      const response = await client.messages.create({
+      //
+      // STREAMING IS REQUIRED, not cosmetic: with max_tokens this large a
+      // non-streamed call runs long enough to hit the SDK's HTTP timeout. The SDK
+      // accumulates the streamed `input_json_delta` chunks back into a single
+      // tool_use block, so `finalMessage()` yields the same shape `create()` did —
+      // including `stop_reason`, which is what we need to detect truncation.
+      const stream = client.messages.stream({
         model: "claude-sonnet-4-6",
         max_tokens: maxTokens,
         system: systemPrompt,
@@ -420,10 +445,35 @@ async function callAnthropicWithRetry(
         tools: [tool as any],
         tool_choice: { type: "tool", name: tool.name },
       });
+      const response = await stream.finalMessage();
 
       const stopReason = response.stop_reason;
       console.log(`[ai-engine] ${label} response: ${response.usage?.input_tokens} in / ${response.usage?.output_tokens} out`);
       console.log(`[ai-engine] ${label} stop_reason: ${stopReason}`);
+
+      // TRUNCATION CHECK MUST COME BEFORE THE tool_use RETURN.
+      // `tool_choice: { type: "tool" }` guarantees a tool_use block, so a response
+      // cut off at the token cap still carries a truthy-but-PARTIAL `input` (the
+      // SDK partial-parses the incomplete JSON buffer). Returning that as success
+      // — which is what the old order did — silently shipped content with no
+      // `lectureHtml`, which the caller then swapped for the generic stub.
+      if (isTruncatedResponse(stopReason)) {
+        if (canRetryWithMoreTokens(maxTokens, attempt, maxRetries)) {
+          const bumped = nextMaxTokens(maxTokens);
+          console.warn(
+            `[ai-engine] ${label} TRUNCATED at max_tokens=${maxTokens} ` +
+            `(${response.usage?.output_tokens} out); retrying with max_tokens=${bumped}`,
+          );
+          maxTokens = bumped;
+          continue;
+        }
+        console.error(
+          `[ai-engine] ${label} TRUNCATED at max_tokens=${maxTokens} and no retries left ` +
+          `(attempt ${attempt + 1}/${maxRetries + 1}, ${response.usage?.output_tokens} out). ` +
+          `Discarding partial tool_use instead of returning incomplete content.`,
+        );
+        return null;
+      }
 
       const toolUse = response.content.find((b) => b.type === "tool_use") as
         | { type: "tool_use"; input: any }
@@ -432,13 +482,6 @@ async function callAnthropicWithRetry(
       if (toolUse && toolUse.input && typeof toolUse.input === "object") {
         console.log(`[ai-engine] ${label} tool_use: success`);
         return toolUse.input;
-      }
-
-      // tool_use truncated by the token cap → retry with more headroom
-      if (stopReason === "max_tokens" && attempt < maxRetries) {
-        console.log(`[ai-engine] ${label} hit max_tokens, retrying with more tokens...`);
-        maxTokens = Math.min(maxTokens + 6000, 32000);
-        continue;
       }
 
       // Defensive fallback: if the model somehow returned text instead of a tool call
@@ -451,10 +494,16 @@ async function callAnthropicWithRetry(
         }
       }
 
-      console.error(`[ai-engine] ${label} no usable tool_use returned`);
+      console.error(`[ai-engine] ${label} no usable tool_use returned (stop_reason=${stopReason})`);
       return null;
     } catch (error: any) {
-      console.error(`[ai-engine] ${label} attempt ${attempt + 1} failed:`, error.message);
+      // Keep status / request_id: without them a 429 (quota) is indistinguishable
+      // from a 400 (bad request) in the logs, and both just became "stub".
+      console.error(
+        `[ai-engine] ${label} attempt ${attempt + 1}/${maxRetries + 1} failed ` +
+        `[status=${error?.status ?? "n/a"} type=${error?.error?.type ?? error?.name ?? "n/a"} ` +
+        `request_id=${error?.request_id ?? "n/a"}]: ${error?.message}`,
+      );
       if (attempt === maxRetries) throw error;
     }
   }
@@ -552,10 +601,17 @@ export async function generateModuleContent(
   courseTitle?: string,
   moduleDescription?: string,
   moduleReferences?: string,
+  ctx?: GenerationLogContext,
 ): Promise<GeneratedModuleContent> {
   const client = getAnthropicClient();
   if (!client) {
-    console.log("[ai-engine] No ANTHROPIC_API_KEY configured, using stub content");
+    // Antes: console.log + stub silencioso. Falta de key es un fallo de
+    // configuración, no un modo de operación válido: que se vea en los logs y
+    // que la fila quede marcada como fallida (isStub -> generationStatus failed).
+    console.error(
+      `[ai-engine] ANTHROPIC_API_KEY no configurada en el runtime: imposible personalizar, ` +
+      `devolviendo stub y marcando la generación como fallida.${fmtCtx(ctx)}`,
+    );
     return stubGenerateContent(moduleTitle, moduleContentHtml);
   }
 
@@ -578,13 +634,16 @@ export async function generateModuleContent(
       client,
       call1System,
       `Genera el contenido personalizado completo para este módulo y entrégalo con la herramienta. Recuerda: MÍNIMO 3,000 palabras en la lectura, y TODO personalizado para el perfil del estudiante.`,
-      16000,
+      CALL1_MAX_TOKENS,
       "Call1-Content",
       CONTENT_TOOL,
     );
 
     if (!call1Result || !call1Result.lectureHtml) {
-      console.error("[ai-engine] Call 1 failed, using stub");
+      console.error(
+        `[ai-engine] Call 1 no devolvió lectureHtml utilizable ` +
+        `(result=${call1Result ? "parcial/sin-lectureHtml" : "null"}): usando stub y marcando fallida.${fmtCtx(ctx)}`,
+      );
       return stubGenerateContent(moduleTitle, moduleContentHtml);
     }
 
@@ -606,7 +665,7 @@ export async function generateModuleContent(
         client,
         call2System,
         `Genera el quiz adaptativo de 7 preguntas y el guion de clase basándote en el contenido de lectura proporcionado, y entrégalo con la herramienta.`,
-        12000,
+        CALL2_MAX_TOKENS,
         "Call2-Quiz+Script",
         QUIZ_TOOL,
       );
@@ -615,9 +674,27 @@ export async function generateModuleContent(
         adaptiveQuiz = call2Result.adaptiveQuiz || [];
         classScript = call2Result.classScript || undefined;
         console.log(`[ai-engine] Quiz: ${adaptiveQuiz.length} questions, ClassScript: ${classScript ? classScript.length + ' chars' : 'none'}`);
+      } else {
+        console.error(
+          `[ai-engine] Call 2 (quiz+guion) no devolvió resultado utilizable. ` +
+          `Sin classScript la ruta /audio responderá 404 no_script; la fila queda 'partial', no 'complete'.${fmtCtx(ctx)}`,
+        );
+      }
+      if (call2Result && !classScript) {
+        console.error(
+          `[ai-engine] Call 2 devolvió quiz pero SIN classScript: /audio responderá 404 no_script. ` +
+          `La fila queda 'partial'.${fmtCtx(ctx)}`,
+        );
       }
     } catch (err: any) {
-      console.error("[ai-engine] Call 2 failed (quiz+script), continuing without:", err.message);
+      // Degradación parcial: seguimos (hay lectura personalizada válida), pero
+      // esto NO es "complete" — sin classScript el audio del módulo se rompe.
+      console.error(
+        `[ai-engine] Call 2 (quiz+guion) falló, se continúa sin quiz ni guion ` +
+        `[status=${err?.status ?? "n/a"} type=${err?.error?.type ?? err?.name ?? "n/a"} ` +
+        `request_id=${err?.request_id ?? "n/a"}]: ${err?.message}. ` +
+        `Consecuencia: /audio responderá 404 no_script.${fmtCtx(ctx)}`,
+      );
     }
 
     return {
@@ -633,7 +710,14 @@ export async function generateModuleContent(
       isStub: false,
     };
   } catch (err: any) {
-    console.error("[ai-engine] Generation failed:", err.message);
+    // Cuota, 429, 500, timeout, red: todo terminaba aquí convertido en
+    // "contenido genérico" sin rastro. Que el log diga QUÉ pasó exactamente.
+    console.error(
+      `[ai-engine] Generación falló, usando stub (se marcará como fallida) ` +
+      `[status=${err?.status ?? "n/a"} type=${err?.error?.type ?? err?.name ?? "n/a"} ` +
+      `request_id=${err?.request_id ?? "n/a"}]: ${err?.message}${fmtCtx(ctx)}`,
+      err?.stack,
+    );
     return stubGenerateContent(moduleTitle, moduleContentHtml);
   }
 }
