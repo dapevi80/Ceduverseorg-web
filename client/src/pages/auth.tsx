@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, ArrowLeft, Mail, ShieldCheck, Award, ChevronDown, ChevronUp, AlertCircle, Lock } from "lucide-react";
 import { Link } from "wouter";
+import { captureReferralFromUrl } from "@/lib/referral-capture";
 
 class AuthErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: string }> {
   constructor(props: { children: ReactNode }) {
@@ -94,10 +95,10 @@ function AuthPageContent() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const invite = params.get("invite");
-    // BUG 3: capturar el código de referido de la URL (?ref=) y persistirlo para
-    // el onboarding. Antes solo se leía 'invite' y los links de referido morían.
-    const ref = params.get("ref");
-    if (ref) { try { localStorage.setItem("cedu_ref", ref.trim()); } catch {} }
+    // BUG 3 (fix): la captura de ?ref= ahora vive app-wide en App.tsx (ReferralCapture),
+    // así también funciona en links que no apuntan a /auth (ej. /empresas?ref=).
+    // Esta llamada queda como red de seguridad redundante pero inofensiva.
+    captureReferralFromUrl(window.location.search);
     if (invite) {
       setInviteToken(invite);
       fetch(`/api/invitations/validate/${invite}`)

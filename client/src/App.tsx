@@ -1,5 +1,7 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useSearch } from "wouter";
+import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
+import { captureReferralFromUrl } from "@/lib/referral-capture";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -46,6 +48,18 @@ import LiveTutor from "@/pages/live-tutor";
 import PrivateSessionsPage from "@/pages/private-sessions";
 import TiendaPage, { TiendaSuccess, TiendaFailure, TiendaPending } from "@/pages/tienda";
 import CeduversePrivatePage from "@/pages/ceduverse-private";
+
+// Captura app-wide de ?ref= en cualquier ruta (no solo /auth), para que links como
+// /empresas?ref=P-XXXX (los que genera el panel de socio) no pierdan la atribución.
+// useSearch() de wouter reacciona a cambios de query string en navegación client-side,
+// así que también funciona si el ref llega vía un link interno, no solo en el primer mount.
+function ReferralCapture() {
+  const search = useSearch();
+  useEffect(() => {
+    captureReferralFromUrl(search);
+  }, [search]);
+  return null;
+}
 
 function Router() {
   return (
@@ -109,6 +123,7 @@ function App() {
                 <Toaster />
                 <PendingTermsModal />
                 <ViewAsSwitcher />
+                <ReferralCapture />
                 <ErrorBoundary>
                   <Router />
                 </ErrorBoundary>
