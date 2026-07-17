@@ -484,6 +484,39 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
   ],
 
   "bono-bienvenida": [
+    // ---------------------------------------------------------------------------
+    // NOTAS INTERNAS DEL EQUIPO — Curso 4 (bono-bienvenida)
+    //
+    // OJO: el campo `references` de cada módulo NO es metadata interna: se renderiza
+    // al socio en la pestaña "Fuentes" (client/src/pages/studio-course.tsx -> SourcesView)
+    // y en "Referencias y Bibliografía" (client/src/pages/curso-virtual.tsx).
+    // Cualquier nota al CLO, errata o pregunta abierta va AQUÍ, en comentarios de código,
+    // nunca en `references`.
+    //
+    // [PENDIENTE] Artículos de la LGSC aplicables a la separación/reembolso del socio:
+    //   - La cita previa a los arts. 49-51 NO se sostiene: esos artículos tratan
+    //     aportaciones/certificados y reducción de capital excedente, no la separación
+    //     del socio como tal. Se retiró del curso.
+    //   - El art. 52 tampoco está verificado como sustento de la devolución; también se
+    //     retiró (cursos 4, 5 y 6, contenido y quizzes).
+    //   - Mientras no haya confirmación de Daniel/CLO sobre los artículos exactos, el
+    //     texto al alumno cita la LGSC en general + las bases constitutivas (acta 6520).
+    //     NO reintroducir números de artículo de la LGSC sin esa confirmación.
+    //   - El Art. Sexto del ACTA 6520 sí está en firme y puede citarse con número.
+    //
+    // [PENDIENTE] Reglamento Interno DRAFT v0.1, Art. 8: valor de reembolso de los
+    //   certificados capitalizados (¿nominal $150 o valor contable ajustado?) — sin definir.
+    //
+    // [PENDIENTE] Ambigüedad de los $15,000 — requiere el acta 6520, confirmación del CLO:
+    //   El M1 del Curso 5 describe los 100 certificados x $150 = $15,000 como "capital
+    //   fundacional", y antes se afirmaba también un "capital mínimo fijo sin derecho a
+    //   retiro de $15,000". Si ambas cifras son el MISMO dinero, no habría reembolso
+    //   posible en absoluto, lo que contradiría toda la narrativa de reembolso de los
+    //   cursos 4 y 5. No es resoluble sin leer el acta.
+    //   Mitigación aplicada: los cursos ya NO afirman ni niegan que el capital fundacional
+    //   sea retirable, y la mención al capital mínimo fijo se dejó sin cifra. No inventar
+    //   una respuesta ni volver a poner el monto hasta que el CLO lo confirme.
+    // ---------------------------------------------------------------------------
     {
       title: "La aportación NO es un gasto",
       description: "El reencuadre central: tu aportación a la cooperativa no es dinero que se va, es patrimonio tuyo, reembolsable conforme al procedimiento estatutario. Qué dice la LGSC, con qué condiciones y plazos, y por qué esto cambia la conversación completa.",
@@ -521,7 +554,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Y ahora viene la parte interesante, la que probablemente te trajo a este curso. Porque hay un mecanismo diseñado para que ese primer certificado ni siquiera tenga que salir de tu bolsillo: el <strong>bono de bienvenida</strong>. En el siguiente módulo vamos a desarmarlo peso por peso — literalmente, los $170 pesos que lo componen — para que entiendas exactamente qué es cada parte, por qué está diseñado así, y —muy importante— <strong>cuál es su estatus jurídico real</strong>, porque las cifras que vas a leer son política propuesta y todavía no aprobada.</p>
       `,
-      references: ["LGSC — régimen de aportaciones y devolución a socios (referencia general; [PENDIENTE confirmar con Daniel/CLO los artículos exactos aplicables a la separación: la mención previa a arts. 49-51 no se sostiene, esos artículos tratan aportaciones/certificados y reducción de capital excedente, no la separación como tal)", "LGSC art. 52 y acta constitutiva 6520 (devolución al cierre del ejercicio, prelación y prorrata, deducción de pérdidas proporcionales)", "Acta constitutiva 6520, Notaría 110 QR (Ceduverse S.C. de C. de R.L. de C.V.) — Art. Sexto: retiro efectivo al fin del ejercicio anual o del siguiente", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 8: valor de reembolso de certificados capitalizados marcado [PENDIENTE])", "Master RAW seal / tokenización 2026-07-15 (§5 Aportación capitalizada)"],
+      references: ["Ley General de Sociedades Cooperativas (LGSC) — régimen de las aportaciones de los socios y de su devolución", "Acta constitutiva 6520, Notaría 110 QR (Ceduverse S.C. de C. de R.L. de C.V.) — Art. Sexto: retiro efectivo al fin del ejercicio anual o del siguiente; devolución al cierre del ejercicio, con prelación y a prorrata, deducidas las pérdidas proporcionales", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (el valor de reembolso de los certificados capitalizados está pendiente de definirse y aprobarse)", "Master RAW seal / tokenización 2026-07-15 (§5 Aportación capitalizada)"],
     },
     {
       title: "El bono de bienvenida: $170 desarmado peso por peso",
@@ -577,7 +610,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ahora bien — hay una pregunta obvia que probablemente ya te estás haciendo, y es la pregunta correcta: si el bono te regala $170 y tú no los pagas, <strong>¿de dónde salen?</strong> Alguien tiene que poner ese valor. Y la respuesta a esa pregunta es el corazón intelectual de este curso, y el tema del siguiente módulo.</p>
       `,
-      references: ["Acta constitutiva 6520, Art. Sexto (certificados digitales, nominativos, indivisibles) — VIGENTE", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador). Art. 14 Bis.1: monto $170 y desglose $150 capital / $20 crédito de descuento; Art. 14 Bis.1.b: los $20 son promoción/crédito comercial, NO capital; Art. 14 Bis.6: monto y desglose son parámetros ajustables por acuerdo de la Asamblea General Ordinaria", "Reglamento Interno Ceduverse DRAFT, Arts. 14.3 y 15 — base de IVA/retenciones marcada [PENDIENTE confirmar con Daniel/fiscal]", "Reglamento Interno Ceduverse DRAFT, Art. 13 (recibo de aportación de capital, no CFDI de ingreso)", "Memoria ceduverse-cobros-web3 (§ bono de bienvenida)"],
+      references: ["Acta constitutiva 6520, Art. Sexto (certificados digitales, nominativos, indivisibles) — VIGENTE", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador). Art. 14 Bis.1: monto $170 y desglose $150 capital / $20 crédito de descuento; Art. 14 Bis.1.b: los $20 son promoción/crédito comercial, NO capital; Art. 14 Bis.6: monto y desglose son parámetros ajustables por acuerdo de la Asamblea General Ordinaria", "Reglamento Interno Ceduverse DRAFT, Arts. 14.3 y 15 — base de IVA y retenciones pendiente de confirmación con el área fiscal", "Reglamento Interno Ceduverse DRAFT, Art. 13 (recibo de aportación de capital, no CFDI de ingreso)", "Memoria ceduverse-cobros-web3 (§ bono de bienvenida)"],
     },
     {
       title: "De dónde sale el valor: el origen EXTERNO",
@@ -630,7 +663,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 <h3>Los tres avisos</h3>
 <p>Como en cada módulo de este curso: <strong>nada de esto es una oferta de valores</strong> — ni el certificado de aportación, ni el bono, ni un token que todavía no existe. <strong>Nada de esto es asesoría de inversión</strong>. Y <strong>no hay rendimientos garantizados</strong> de ninguna clase. Describimos un diseño de financiamiento del capital de una cooperativa, no un producto de inversión.</p>
       `,
-      references: ["Master RAW seal / tokenización 2026-07-15 (§5, §6, §8 fases F1/F2)", "Memoria ceduverse-cobros-web3 (§ bono / origen externo)", "Memoria brainshield-rwa-pivot (tokens 1:1, estado de despliegue: CEDU 1:1 MXN, BRAIN 1:1 USDC/USDT, KAKAW 1:1 oro — ninguno desplegado)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos. Arts. 3 y 14 Bis.2: exigen origen EXTERNO y reserva 1:1 obligatoria, y rechazan el token sin reserva como capital simulado. ATENCIÓN: la enumeración de vías admitidas de ese artículo solo lista BRAIN 1:1 USDC/USDT y KAKAW 1:1 oro — NO menciona CEDU. El artículo NO es autoridad para la vía CEDU; su incorporación al Reglamento está [PENDIENTE] y debe resolverse antes de la Asamblea (confirmar con Daniel/CLO)"],
+      references: ["Master RAW seal / tokenización 2026-07-15 (§5, §6, §8 fases F1/F2)", "Memoria ceduverse-cobros-web3 (§ bono / origen externo)", "Memoria brainshield-rwa-pivot (tokens 1:1, estado de despliegue: CEDU 1:1 MXN, BRAIN 1:1 USDC/USDT, KAKAW 1:1 oro — ninguno desplegado)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos. Arts. 3 y 14 Bis.2: exigen origen EXTERNO y reserva 1:1 obligatoria, y rechazan el token sin reserva como capital simulado. Su enumeración de vías admitidas solo lista BRAIN 1:1 USDC/USDT y KAKAW 1:1 oro; no menciona CEDU, cuya incorporación al Reglamento está pendiente — por eso ese artículo no se cita como sustento de la vía CEDU"],
     },
     {
       title: "La reserva 1:1: sin ella no se emite",
@@ -738,6 +771,30 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
   ],
 
   "certificados-aportacion-nft": [
+    // ---------------------------------------------------------------------------
+    // NOTAS INTERNAS DEL EQUIPO — Curso 5 (certificados-aportacion-nft)
+    // Recordatorio: `references` se RENDERIZA al socio (pestaña "Fuentes"). Notas internas aquí.
+    //
+    // [PENDIENTE] Números de artículo de la LGSC: ver la nota extensa en el bloque del
+    //   Curso 4 ("bono-bienvenida"). Resumen: se retiró la cita al "art. 52 de la LGSC"
+    //   del M5 y de los quizzes; no estaba verificada. El curso cita ahora la LGSC en
+    //   general + las bases constitutivas (acta 6520). NO reintroducir un número de
+    //   artículo de la LGSC sin confirmación de Daniel/CLO. El Art. Sexto del acta 6520
+    //   sí está en firme y se sigue citando con número.
+    //
+    // [PENDIENTE] Ambigüedad de los $15,000 (capital fundacional vs. capital mínimo fijo
+    //   sin derecho a retiro): ver la nota extensa en el bloque del Curso 4. El M1 sigue
+    //   describiendo los 100 x $150 = $15,000 como capital fundacional (aritmética del
+    //   acta), y el M5 ya NO cifra el capital mínimo fijo, para que el curso no dependa
+    //   de si ambos montos son el mismo dinero. Requiere el acta 6520 + confirmación CLO.
+    //
+    // ESTADO REAL de lo descrito en el M2 (mantener sincronizado con el Curso 4):
+    //   - Operan hoy: red Base + atestación por hash SHA-256.
+    //   - NO operan: el NFT del certificado (no acuñado) y el doble sello Opción A — la
+    //     wallet de proyecto de Ceduverse todavía no está constituida; solo existe la
+    //     wallet madre de BrainShield. Por eso el M2 está redactado en condicional.
+    //     Si la wallet de Ceduverse se constituye, actualizar M2 + el cierre del M5.
+    // ---------------------------------------------------------------------------
     {
       title: "Qué es un certificado de aportación",
       description: "El título del socio en la cooperativa: nominativo, indivisible, valor nominal $150. La cooperativa detrás de él (acta 6520) y el Artículo Sexto que autoriza que los certificados sean digitales.",
@@ -780,7 +837,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
     },
     {
       title: "El NFT gemelo registral",
-      description: "El Libro de Registro es la fuente de verdad; el NFT y el sello on-chain son su espejo por hash, nunca el título negociable. El doble sello Opción A (wallet del proyecto + contrafirma de la wallet madre) y la privacidad sin datos personales on-chain.",
+      description: "El Libro de Registro es la fuente de verdad; el NFT y el sello on-chain son su espejo por hash, nunca el título negociable. El doble sello Opción A —wallet del proyecto + contrafirma de la wallet madre— como diseño aún no operativo, y la privacidad sin datos personales on-chain.",
       durationMinutes: 13,
       contentHtml: `
 <p>En el Curso 4 te presentamos la idea en una frase: el NFT es un <strong>gemelo registral</strong>, no un título negociable. Fue suficiente para cerrar aquel curso. Aquí no lo es: vas a explicar este modelo a otras personas, y para eso necesitas entender la mecánica completa, incluido el punto donde casi todo el mundo se equivoca.</p>
@@ -797,12 +854,14 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>El resultado es una prueba pública, con fecha cierta, imposible de alterar retroactivamente, de que el Libro decía exactamente eso en ese momento exacto. <strong>El gemelo no crea el derecho: lo atestigua.</strong> Es un testigo con memoria perfecta que no puede mentir sobre lo que vio — pero sigue siendo un testigo, no el hecho.</p>
 
-<h3>El doble sello: la Opción A</h3>
-<p>Aquí viene la pieza de arquitectura que distingue a este consorcio, y que no vimos en el Curso 4. Cada evento sellable no se ancla una vez: se ancla <strong>dos</strong>. Es lo que llamamos el <strong>doble sello, Opción A</strong>.</p>
+<h3>El doble sello: la Opción A (diseño, todavía no operación)</h3>
+<p>Aquí viene la pieza de arquitectura que distingue a este consorcio, y que no vimos en el Curso 4. Antes de describirla, el estatus, porque este módulo no te va a vender un calendario: <strong>el doble sello es diseño aprobado, no algo que esté operando hoy</strong>. Lo desarrollamos a fondo más abajo, pero quédate desde ya con que lo que sigue describe cómo está previsto que funcione, no lo que ya funciona.</p>
 
-<p>El primer sello lo pone la <strong>wallet del propio proyecto</strong> —en este caso, la de Ceduverse—, y significa: <em>la entidad actúa</em>. Es la cooperativa la que asienta y sella su propio evento registral. El segundo sello lo pone la <strong>wallet madre de BrainShield</strong>, que <strong>contrafirma el mismo hash</strong> haciendo referencia a la transacción del proyecto, y significa: <em>el originador RWA del consorcio ratifica</em>. Ambos anclajes viven en <strong>Base</strong>, una sola red, con costos de transacción bajos.</p>
+<p>El diseño contempla que cada evento sellable no se ancle una vez, sino <strong>dos</strong>. Es lo que llamamos el <strong>doble sello, Opción A</strong>.</p>
 
-<p>Fíjate en la elegancia de la variante elegida: la madre no repite un anclaje independiente desde cero — ancla el hash <em>más un puntero</em> a la transacción del proyecto. Mismo valor probatorio, aproximadamente la mitad del gas. Y el efecto es una <strong>doble cadena de custodia</strong>: cualquier persona puede verificar, sin permiso y sin ver un solo dato personal, dos cosas por separado — que Ceduverse selló, y que BrainShield ratificó. Dos firmas independientes sobre el mismo hecho, imposibles de fabricar una sin la otra.</p>
+<p>El primer sello lo pondría la <strong>wallet del propio proyecto</strong> —en este caso, la de Ceduverse—, y significaría: <em>la entidad actúa</em>. Sería la cooperativa la que asienta y sella su propio evento registral. El segundo sello lo pondría la <strong>wallet madre de BrainShield</strong>, que <strong>contrafirmaría el mismo hash</strong> haciendo referencia a la transacción del proyecto, y significaría: <em>el originador RWA del consorcio ratifica</em>. Ambos anclajes vivirían en <strong>Base</strong>, una sola red, con costos de transacción bajos.</p>
+
+<p>Fíjate en la elegancia de la variante elegida: la madre no repetiría un anclaje independiente desde cero — anclaría el hash <em>más un puntero</em> a la transacción del proyecto. Mismo valor probatorio, aproximadamente la mitad del gas. Y el efecto sería una <strong>doble cadena de custodia</strong>: cualquier persona podría verificar, sin permiso y sin ver un solo dato personal, dos cosas por separado — que Ceduverse selló, y que BrainShield ratificó. Dos firmas independientes sobre el mismo hecho, imposibles de fabricar una sin la otra.</p>
 
 <h3>Privacidad: hashes, nunca datos personales</h3>
 <p>La regla es absoluta y es uno de los principios rectores del diseño: <strong>on-chain solo va el hash. La información personal nunca toca la cadena.</strong></p>
@@ -819,7 +878,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 <h3>Qué existe hoy, con toda honestidad</h3>
 <p>Y ahora la parte que un curso descuidado se saltaría. Vamos a ser exactos, porque tú vas a repetir esto frente a prospectos y no puedes decir de más.</p>
 
-<p>Lo que <strong>existe y opera hoy</strong> es la red <strong>Base</strong> y el <strong>mecanismo de atestación por hash SHA-256</strong> — el motor de sellado del consorcio, que ya ancla hashes en Base. Eso es real y funciona. Lo que <strong>todavía no existe</strong> es el NFT de tu certificado: <strong>no está acuñado ni desplegado</strong>. La arquitectura de doble sello aplicada a eventos de certificados y aportaciones es la fase de arranque del proyecto, y el NFT visible como gemelo del libro digital es una fase posterior. Incluso las wallets por proyecto están en proceso de constituirse — existe la madre de BrainShield; las demás se están montando.</p>
+<p>Lo que <strong>existe y opera hoy</strong> es la red <strong>Base</strong> y el <strong>mecanismo de atestación por hash SHA-256</strong> — el motor de sellado del consorcio, que ya ancla hashes en Base. Eso es real y funciona. Lo que <strong>todavía no existe</strong> es el NFT de tu certificado: <strong>no está acuñado ni desplegado</strong>. La arquitectura de doble sello aplicada a eventos de certificados y aportaciones es la fase de arranque del proyecto, y el NFT visible como gemelo del libro digital es una fase posterior. Y el doble sello tampoco está operando: <strong>la wallet de proyecto de Ceduverse todavía no está constituida</strong> — existe la madre de BrainShield; las de los proyectos se están montando. Sin la wallet de Ceduverse no hay primer sello, y sin primer sello no hay contrafirma que dar.</p>
 
 <p>Así que cuando expliques esto: <strong>habla del NFT como diseño, nunca como algo que un socio pueda tener hoy</strong>. Y recuerda que todos los tokens del consorcio —CEDU incluido— siguen siendo diseño. Como aprendiste en el Curso 4, la honestidad sobre los tiempos no es una debilidad del pitch: es la mejor prueba de que hay sustancia detrás. Quien no tiene nada que esconder no necesita adornar el calendario.</p>
 
@@ -878,13 +937,19 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
     },
     {
       title: "La capitalización del 5%",
-      description: "Cómo tu aportación crece con tu propia actividad: 5% de cada movimiento de valor, el ejemplo del RVOE de $49,900 → $2,495 ≈ 16 certificados, la indivisibilidad y el tope de 20 certificados ($3,000).",
+      description: "Cómo tu aportación crece con tu propia actividad: 5% de cada movimiento de valor, el ejemplo del RVOE de $49,900 → $2,495 ≈ 16 certificados, la indivisibilidad y el tope de 20 certificados ($3,000). Cifras propuestas en un Reglamento Interno que sigue en borrador, pendiente de aprobación en Asamblea.",
       durationMinutes: 13,
       contentHtml: `
 <p>En el Curso 4 conociste la capitalización del 5% como parte del recorrido del bono: te dijimos que existe, cuánto es y dónde está el tope. Aquí la abrimos por dentro. Vas a ver de dónde sale cada peso, qué pasa con los centavos que no alcanzan a formar un certificado, y por qué el tope —que a primera vista parece una restricción molesta— es en realidad la pieza que sostiene todo lo que aprendiste en el módulo anterior.</p>
 
-<h3>El parámetro</h3>
-<p>La regla es esta: se capitaliza el <strong>5% de cada movimiento de valor del socio</strong> —su consumo de cursos y certificaciones, y sus comisiones por referido— convirtiéndolo en <strong>aportación propia</strong>, materializada en certificados de $150 cada uno, hasta un <strong>tope de 20 certificados ($3,000)</strong>.</p>
+<h3>El parámetro propuesto (y su estatus)</h3>
+<p>Antes de la primera cifra, la etiqueta — la misma que ya te pusimos en el Curso 4 y por la misma razón. La capitalización, su porcentaje y su tope viven en el <strong>Reglamento Interno</strong> de Ceduverse. Y aquí está el punto: <strong>el Reglamento Interno de Ceduverse es hoy un proyecto en borrador. NO ha sido aprobado por la Asamblea General de Socios y, por lo tanto, NO está vigente ni surte efectos jurídicos.</strong> Su cláusula de borrador lo dice sin rodeos —mientras conste esa marca, carece de validez jurídica y sirve exclusivamente como propuesta de trabajo para revisión del CLO y aprobación de la Asamblea— y su artículo de vigencia es igual de tajante: entrará en vigor a partir de su aprobación por la Asamblea General y del asiento del acta respectiva. Antes de eso, no antes.</p>
+
+<p>Por si fuera poco, el propio borrador declara que el porcentaje, el tope y las fuentes que cuentan como "movimiento de valor" son <strong>"parámetros ajustables por acuerdo de la Asamblea General Ordinaria"</strong>. O sea: ni siquiera una vez aprobados quedarían grabados en piedra.</p>
+
+<p>Así que lo que sigue es <strong>política propuesta, sujeta a ratificación o ajuste por la Asamblea General</strong>. Son las cifras con las que el proyecto está diseñado y las que debes dominar al detalle — pero no son todavía una regla en vigor, y <strong>no son un compromiso que tú puedas ofrecer en firme a un prospecto</strong>. Explícalas siempre con esa etiqueta puesta.</p>
+
+<p>Hecha la aclaración, vamos al diseño. El proyecto contempla capitalizar el <strong>5% de cada movimiento de valor del socio</strong> —su consumo de cursos y certificaciones, y sus comisiones por referido— convirtiéndolo en <strong>aportación propia</strong>, materializada en certificados de $150 cada uno, hasta un <strong>tope propuesto de 20 certificados ($3,000)</strong>.</p>
 
 <p>Y ahora la precisión que separa a quien entendió el modelo de quien memorizó un número. <strong>Ese 5% no es un regalo de la cooperativa. Sale del pago del propio socio.</strong> Cuando tú pagas por un servicio de Ceduverse, una fracción de <em>tu propio pago</em> se reasigna a <em>tu propia cuenta de capital</em>, y el resto se reconoce como consumo. No hay subsidio, no hay dinero externo, no hay desembolso adicional tuyo. Es tu dinero cambiando de casilla: de "pago por un servicio" a "patrimonio tuyo dentro de la sociedad."</p>
 
@@ -895,7 +960,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>El <strong>5% de $49,900 son $2,495 pesos</strong>. Esos $2,495 se asignan a tu cuenta de capital como aportación tuya. Los <strong>$47,405</strong> restantes se reconocen como ingreso por servicio de la cooperativa, con su CFDI correspondiente.</p>
 
-<p>Fíjate en lo que acaba de pasar, porque resuelve un problema real y no es un truco contable: <strong>el mismo pago se parte en dos naturalezas distintas</strong>. La porción de capital es tuya y se documenta con un <strong>recibo o constancia de aportación</strong> — no con un CFDI de ingreso, porque la cooperativa no te vendió esa parte: la recibió como aportación a su capital. La porción de servicio sí es una venta, sí es ingreso gravable de la cooperativa, y sí se factura normalmente. Es exactamente la misma distinción entre capital y consumo que ya dominas desde el Curso 4 con los $150 y los $20 del bono — aplicada ahora dentro de una sola transacción.</p>
+<p>Fíjate en lo que acaba de pasar, porque resuelve un problema real y no es un truco contable: <strong>el mismo pago se parte en dos naturalezas distintas</strong>. La porción de capital es tuya y se documenta con un <strong>recibo de aportación de capital</strong> — no con un CFDI de ingreso, porque la cooperativa no te vendió esa parte: la recibió como aportación a su capital. La porción de servicio sí es una venta, sí es ingreso gravable de la cooperativa, y sí se factura normalmente. Es exactamente la misma distinción entre capital y consumo que ya dominas desde el Curso 4 con los $150 y los $20 del bono — aplicada ahora dentro de una sola transacción.</p>
 
 <p>Un punto de honestidad: el tratamiento fiscal fino de ese split —la base exacta de IVA y retenciones sobre la porción de servicio, y si la porción de capital se detrae antes o después de los impuestos indirectos— está pendiente de validación con el área fiscal y con el CLO. El parámetro del 5% está definido; el asiento contable exacto se está cerrando con contabilidad. No te inventes ese detalle frente a un prospecto: si te preguntan por el IVA, la respuesta correcta es que ese punto está en revisión fiscal.</p>
 
@@ -907,7 +972,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 <p>Así que la acreditación es <strong>fraccionada pero nunca fraccionaria</strong>: el saldo se acumula peso por peso; el certificado nace entero o no nace. La indivisibilidad del título obliga a que exista ese saldo intermedio, y el saldo intermedio hace que ningún peso tuyo se desperdicie. Las dos piezas encajan por diseño.</p>
 
 <h3>El tope: 20 certificados, $3,000</h3>
-<p>Ahora el límite: la capitalización tiene un <strong>tope de 20 certificados, es decir, $3,000 pesos</strong> (20 × $150 = $3,000). Al alcanzarlo, la capitalización automática cesa para ese socio. Tu actividad puede seguir creciendo todo lo que quieras; tu capital acumulado por esta vía se detiene ahí.</p>
+<p>Ahora el límite: el proyecto contempla un <strong>tope de 20 certificados, es decir, $3,000 pesos</strong> (20 × $150 = $3,000). Al alcanzarlo, la capitalización automática cesaría para ese socio. Tu actividad puede seguir creciendo todo lo que quieras; tu capital acumulado por esta vía se detiene ahí.</p>
 
 <p>Haz la cuenta con el producto ancla y vas a ver algo revelador: con una certificación de $49,900 capitalizas ~16 certificados. Con poco más de una sola compra de ese producto <strong>ya estás en el tope</strong>. No hacen falta años ni volumen: el techo está prácticamente al alcance de la mano desde el arranque.</p>
 
@@ -920,7 +985,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>El tope de $3,000 cierra esa puerta desde el otro lado. Es la <strong>salvaguarda económica</strong> del principio de gobierno que estudiaste en el módulo 3: uno impide que el capital compre el voto; el otro impide que el capital se concentre. Los dos juntos, y solo los dos juntos, sostienen que Ceduverse sea de verdad una sociedad de personas.</p>
 
-<p>Una nota de precisión: tanto el porcentaje (5%) como el tope (20 certificados) son <strong>parámetros de política</strong>, no cifras grabadas en piedra en el acta. Están diseñados para poder ajustarse por acuerdo de la Asamblea General, dentro de los límites de la LGSC y de los Estatutos. Hoy son 5% y 20 certificados; explícalos con esas cifras exactas, y explica también que la Asamblea es quien puede moverlas — no la administración, no el equipo comercial, no tú.</p>
+<p>Y aquí vuelve la etiqueta con la que abrimos el módulo, porque es la que no puedes soltar: tanto el porcentaje (5%) como el tope (20 certificados) son <strong>parámetros de política propuesta</strong>, escritos en un Reglamento Interno que todavía es borrador —no aprobado por la Asamblea General y sin efectos jurídicos—, y no cifras grabadas en piedra en el acta. Están diseñados para poder ajustarse por acuerdo de la Asamblea General, dentro de los límites de la LGSC y de los Estatutos. Hoy el diseño dice 5% y 20 certificados; explícalos con esas cifras exactas, y explica también que la Asamblea es quien puede moverlas — no la administración, no el equipo comercial, no tú.</p>
 
 <h3>Los tres avisos</h3>
 <p>Y aquí caen con todo su peso, porque este es el módulo donde alguien podría confundirse. <strong>Esto no es una oferta de valores</strong>: los certificados que salen de la capitalización son idénticos a cualquier otro certificado — no negociables, sin mercado, sin cotización. <strong>Esto no es asesoría de inversión</strong>: nada aquí es una recomendación patrimonial para tu caso particular. Y sobre todo: <strong>no hay rendimientos garantizados, y la capitalización del 5% NO es un rendimiento</strong>. Repítelo así de claro cada vez que lo expliques. No es dinero que la cooperativa te promete, ni un interés, ni un retorno sobre tu aportación. Es <em>una fracción de tu propio pago reencauzada hacia tu propio patrimonio</em>, con un tope explícito de $3,000 y sin promesa alguna de que ese patrimonio crezca más allá de eso. Un prospecto que salga de tu conversación pensando "me dan 5% de rendimiento" entendió exactamente lo contrario de lo que dice el modelo.</p>
@@ -952,7 +1017,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Sobre la salida, el acta y la ley sí son claros en varios puntos. La calidad de socio es <strong>voluntaria y de libre retiro</strong>: nadie está atrapado. Pero el retiro <strong>no surte efectos sino hasta el fin del ejercicio anual</strong> — o hasta el del siguiente ejercicio, si notificas después del último trimestre. No es una salida instantánea; tiene calendario.</p>
 
-<p>La devolución de aportaciones se rige por el acta y por el <strong>artículo 52 de la LGSC</strong>: se practica al cierre del ejercicio, respetando el orden de prelación y a prorrata cuando corresponda. Además, la liquidación al socio se calcula sobre el valor de sus certificados, <strong>deducidas en su caso las pérdidas que proporcionalmente le correspondan</strong> — con responsabilidad limitada al importe de sus certificados, que es lo que significa la "R.L." del nombre de la sociedad. Y hay un piso que no se toca: <strong>la devolución nunca puede afectar el capital mínimo fijo sin derecho a retiro de $15,000</strong>.</p>
+<p>La devolución de aportaciones se rige por la <strong>Ley General de Sociedades Cooperativas</strong> y por las <strong>bases constitutivas</strong> de la sociedad —en nuestro caso el acta 6520—: se practica al cierre del ejercicio, respetando el orden de prelación y a prorrata cuando corresponda. Además, la liquidación al socio se calcula sobre el valor de sus certificados, <strong>deducidas en su caso las pérdidas que proporcionalmente le correspondan</strong> — con responsabilidad limitada al importe de sus certificados, que es lo que significa la "R.L." del nombre de la sociedad. Y hay un piso que no se toca: <strong>la devolución nunca puede afectar el capital mínimo fijo sin derecho a retiro</strong>.</p>
 
 <p>Lee esa penúltima frase otra vez, porque es la más honesta del curso: <strong>si la cooperativa tuvo pérdidas, tu reembolso las absorbe en tu proporción</strong>. Un certificado no es una cuenta de ahorro ni un depósito garantizado. Es capital de riesgo de una sociedad real — acotado a $150 por certificado y con responsabilidad limitada, pero capital al fin. Dilo así cuando lo expliques. Un modelo que oculta esto no está protegiendo a nadie; está construyendo un reclamo futuro.</p>
 
@@ -986,7 +1051,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 <p>Si alguien alguna vez te presenta un certificado de aportación de Ceduverse como una oportunidad de compraventa o de plusvalía, está describiendo algo que este instrumento no es y no puede ser — y da igual si lo dice desde dentro o desde fuera de la cooperativa.</p>
 
 <h3>Cerrando el curso</h3>
-<p>Mira el recorrido completo. Un certificado de aportación es un título <strong>nominativo, indivisible, de valor nominal $150</strong>, emitido por una cooperativa real —<strong>acta 6520, Notaría 110 QR, RPC N-2026009627</strong>— cuyo <strong>Artículo Sexto autoriza expresamente que los certificados sean digitales</strong>: esa autorización, escrita ante notario, es la base legal de todo lo demás. Su representación digital es un <strong>gemelo registral</strong>: el <strong>Libro de Registro</strong> manda, y el hash SHA-256 anclado en <strong>Base</strong> —con <strong>doble sello: la wallet del proyecto sella, la wallet madre de BrainShield contrafirma</strong>— es su espejo, sin un solo dato personal on-chain. No es título negociable, no transmite nada, y <strong>hoy no está acuñado: es diseño</strong>. Tengas 1 certificado o 20, <strong>tu voto es uno</strong>. Tu patrimonio crece con el <strong>5% de tu propia actividad</strong> hasta un <strong>tope de 20 certificados ($3,000)</strong>, que existe justamente para que el capital no se concentre. Y las reglas de transmisión y reembolso: unas ya firmes en el acta y la LGSC, otras <strong>todavía en borrador, esperando Asamblea</strong>.</p>
+<p>Mira el recorrido completo. Un certificado de aportación es un título <strong>nominativo, indivisible, de valor nominal $150</strong>, emitido por una cooperativa real —<strong>acta 6520, Notaría 110 QR, RPC N-2026009627</strong>— cuyo <strong>Artículo Sexto autoriza expresamente que los certificados sean digitales</strong>: esa autorización, escrita ante notario, es la base legal de todo lo demás. Su representación digital es un <strong>gemelo registral</strong>: el <strong>Libro de Registro</strong> manda, y el hash SHA-256 anclado en <strong>Base</strong> —con el <strong>doble sello previsto: la wallet del proyecto sellaría, la wallet madre de BrainShield contrafirmaría</strong>— es su espejo, sin un solo dato personal on-chain. No es título negociable, no transmite nada, y <strong>hoy no está acuñado: es diseño</strong>, igual que el doble sello, cuya wallet de proyecto de Ceduverse aún no está constituida. Tengas 1 certificado o 20, <strong>tu voto es uno</strong>. Tu patrimonio crece con el <strong>5% de tu propia actividad</strong> hasta un <strong>tope de 20 certificados ($3,000)</strong>, que existe justamente para que el capital no se concentre. Y las reglas de transmisión y reembolso: unas ya firmes en el acta y la LGSC, otras <strong>todavía en borrador, esperando Asamblea</strong>.</p>
 
 <h3>Los tres avisos, por última vez</h3>
 <p><strong>Nada en este curso constituye una oferta de valores.</strong> Un certificado de aportación cooperativa no es una acción, ni un bono, ni un título negociable, ni un instrumento colocable en mercado alguno, ni está registrado ante autoridad bursátil — y el gemelo registral que lo espeja tampoco. <strong>Nada en este curso constituye asesoría de inversión.</strong> Si tienes dudas sobre tu situación patrimonial o fiscal, consulta a tu propio asesor profesional. <strong>No hay rendimientos garantizados</strong>, de ningún tipo, en ninguna parte de este modelo: ni el certificado, ni la capitalización, ni el NFT prometen retorno alguno, y el reembolso puede incluso absorber pérdidas proporcionales. Ser copropietario de una cooperativa de consumo no es invertir esperando un retorno — es participar en una sociedad de personas cuyos servicios tú mismo consumes.</p>
@@ -996,11 +1061,32 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ya dominas el instrumento. Lo que falta es lo que haces con él frente a otra persona: cómo se explica, cómo se vende sin exagerar, qué comisiones lo rodean y qué objeciones vas a enfrentar. Te esperamos en el <strong>Curso 6: Modelo cooperativo comercial</strong>.</p>
       `,
-      references: ["Acta constitutiva 6520, Art. Sexto (Libro de Registro; retiro al cierre del ejercicio; preferencia de 15 días en aumentos de capital)", "LGSC art. 52 (devolución de aportaciones al cierre del ejercicio, prelación y prorrata)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (transmisión, derecho del tanto, valor de reembolso: puntos marcados como pendientes)", "Master RAW seal / tokenización 2026-07-15 (§9 plan legal: conseguir el Reglamento Interno, §13 gaps abiertos)"],
+      references: ["Acta constitutiva 6520, Art. Sexto (Libro de Registro; retiro al cierre del ejercicio; preferencia de 15 días en aumentos de capital)", "Ley General de Sociedades Cooperativas (LGSC) — devolución de aportaciones al cierre del ejercicio, con prelación y a prorrata", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (transmisión, derecho del tanto y valor de reembolso siguen pendientes de definirse y aprobarse)", "Master RAW seal / tokenización 2026-07-15 (§9 plan legal: conseguir el Reglamento Interno)"],
     },
   ],
 
   "modelo-cooperativo-comercial": [
+    // ---------------------------------------------------------------------------
+    // NOTAS INTERNAS DEL EQUIPO — Curso 6 (modelo-cooperativo-comercial)
+    // Recordatorio: `references` se RENDERIZA al socio (pestaña "Fuentes"). Notas internas aquí.
+    //
+    // [PENDIENTE] Bono de $500 por referido: definido como política, NO implementado en el
+    //   motor de comisiones a la fecha. No prometer con fecha. Confirmar con David/administración.
+    //
+    // [PENDIENTE] Calendario de dispersión de comisiones: no existe proceso automático; la
+    //   dispersión es una acción manual de administración. Los materiales comerciales públicos
+    //   muestran una tabla de rangos/override/vitalicio y fechas de corte que el sistema NO
+    //   implementa, y que además se contradicen entre sí. No citar ninguna fecha de corte.
+    //   Confirmar con administración.
+    //
+    // [PENDIENTE] Tratamiento fiscal: IVA de los $20 del bono y base gravable del split del 5%
+    //   — confirmar con Daniel/fiscal. El curso ya instruye a no adivinar estos números.
+    //
+    // [PENDIENTE] Números de artículo de la LGSC y ambigüedad de los $15,000: ver las notas
+    //   extensas en el bloque del Curso 4 ("bono-bienvenida"). Se retiró "LGSC art. 52" del
+    //   contenido, de las referencias y de los quizzes de este curso para que los cursos 4, 5
+    //   y 6 cuenten una sola historia. NO reintroducir sin confirmación de Daniel/CLO.
+    // ---------------------------------------------------------------------------
     {
       title: "El pitch en 3 minutos",
       description: "Qué vendes realmente (capacitación y certificación, membresía cooperativa, bóveda de PI, marketplace RWA, CryptoVault 24k) y por qué la sustancia real —no la promesa— es el argumento. La estructura de tres minutos y por qué decir lo que todavía no existe es tu mejor herramienta de venta.",
@@ -1121,7 +1207,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ya sabes qué ganas y qué no puedes prometer. Ahora, lo que va a pasar en la conversación real: las cuatro preguntas que te van a hacer.</p>
       `,
-      references: ["Memoria ceduverse-roles-comision (rol comercial PLANO: todos socio_comercial; el nivel es el campo commissionRate por socio, default 15%; NO hay tiers nombrados; director = user_role distinto, no tier de comisión)", "Memoria ceduverse-business-model (regla 2026-07-13: el bono de $500 por referido se paga cuando la EMPRESA referida hace su primera aportación; NO hay bono por referir socios estudiantes; comisiones se pagan del fee de administración, no de la aportación)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 14.2: el 5% aplica a consumo Y comisiones por referido, tope 20 certificados; Art. 14.6: parámetros ajustables por Asamblea)", "[PENDIENTE] Operación del bono de $500 en el motor de comisiones: definido como política, no implementado a la fecha — no prometer con fecha (confirmar con David/administración)", "[PENDIENTE] Calendario de dispersión de comisiones: no existe proceso automático; la dispersión es una acción manual de administración. Materiales comerciales muestran fechas de corte contradictorias entre sí — no citar ninguna (confirmar con administración)"],
+      references: ["Modelo de roles y comisiones de Ceduverse (rol comercial plano: el porcentaje de cada socio es su propio parámetro, 15% por defecto; no hay niveles nombrados; director es un rol distinto, no un nivel de comisión)", "Modelo de negocio Ceduverse (el bono de $500 por referido se paga cuando la EMPRESA referida hace su primera aportación; no hay bono por referir socios estudiantes; las comisiones se pagan del fee de administración, no de la aportación)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (Art. 14.2: el 5% aplica a consumo y comisiones por referido, tope 20 certificados; Art. 14.6: parámetros ajustables por la Asamblea)"],
     },
     {
       title: "Manejo de objeciones: ¿es cripto?, ¿es legal?, ¿es estafa?, ¿por qué anónimo?",
@@ -1190,7 +1276,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 <h3>Los tres avisos</h3>
 <p><strong>Nada de esto es una oferta de valores. Nada de esto es asesoría de inversión. No hay rendimientos garantizados.</strong> Y en el manejo de objeciones esto tiene una aplicación directa: si un prospecto insiste en que le confirmes un retorno —"pero dime cuánto voy a ganar"—, la respuesta no es un número más bajo ni una estimación prudente. La respuesta es que <strong>este modelo no promete retornos, y si eso es lo que busca, esto no es para él</strong>. Perder esa venta es ganar: el prospecto que compra creyendo que le prometiste un rendimiento es un reclamo con fecha diferida.</p>
       `,
-      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 — VIGENTE", "LGSC (1 socio = 1 voto; régimen de sociedades cooperativas)", "Memoria brainshield-rwa-pivot (bóveda de PI, alias, anonimato como secreto industrial; tokens CEDU/BRAIN/KAKAW: diseño, no desplegados; solo Base + SHA-256 operan)", "Memoria ceduverse-business-model (el $500 se paga sobre la primera aportación de la EMPRESA referida; NO hay bono por referir estudiantes; comisiones del fee de administración)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos", "[PENDIENTE] Operación del bono de $500 en el motor de comisiones: definido como política, no implementado a la fecha"],
+      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 — VIGENTE", "Ley General de Sociedades Cooperativas (LGSC) — 1 socio = 1 voto; régimen de las sociedades cooperativas", "Pivote RWA BrainShield (bóveda de PI, alias, anonimato como secreto industrial; tokens CEDU/BRAIN/KAKAW: diseño, no desplegados; solo Base + SHA-256 operan)", "Modelo de negocio Ceduverse (el $500 se paga sobre la primera aportación de la EMPRESA referida; no hay bono por referir estudiantes; comisiones del fee de administración)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos"],
     },
     {
       title: "El modelo cooperativo desde la venta: tu rol y tu límite",
@@ -1255,7 +1341,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Ya sabes qué eres dentro de la estructura. Falta el módulo que más te va a proteger: la lista exacta de lo que no puedes decir, y el guion honesto de cada caso.</p>
       `,
-      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (5 socios fundadores, 100 certificados de $150; retiro efectivo al fin del ejercicio anual o del siguiente)", "LGSC art. 52 (devolución al cierre del ejercicio, prelación y prorrata, deducción de pérdidas proporcionales)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 14: capitalización 5%, tope 20 certificados $3,000, ejemplo RVOE $49,900 → $2,495; Art. 14.6: parámetros ajustables por Asamblea; valor de reembolso de certificados capitalizados marcado [PENDIENTE])", "Memoria ceduverse-estructura-legal (1 socio = 1 voto; cooperativa de consumo)"],
+      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (5 socios fundadores, 100 certificados de $150; retiro efectivo al fin del ejercicio anual o del siguiente)", "Ley General de Sociedades Cooperativas (LGSC) — devolución al cierre del ejercicio, con prelación y a prorrata, deducidas las pérdidas proporcionales", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de la Asamblea General, sin efectos jurídicos (Art. 14: capitalización 5%, tope 20 certificados $3,000, ejemplo RVOE $49,900 → $2,495; Art. 14.6: parámetros ajustables por la Asamblea; el valor de reembolso de los certificados capitalizados sigue pendiente de definirse)", "Estructura legal de Ceduverse (1 socio = 1 voto; cooperativa de consumo)"],
     },
     {
       title: "Guardrails de venta: lo que NO puedes decir (y el guion honesto de cada caso)",
@@ -1334,7 +1420,7 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
 
 <p>Y antes de tu primera conversación con un prospecto, haz este ejercicio: <strong>di en voz alta las tres cosas que no existen todavía</strong> — ningún token está desplegado, el NFT no está acuñado, el Reglamento es borrador. Si puedes decirlas con naturalidad, sin que te tiemble la voz y sin sentir que estás debilitando tu pitch, estás listo. Si todavía te incomodan, repásalas hasta que no. <strong>Esa comodidad con la verdad incompleta del proyecto es, literalmente, tu producto.</strong></p>
       `,
-      references: ["Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador; Arts. 14 y 14 Bis: 5%, tope 20 certificados, bono $170, parámetros ajustables por Asamblea)", "Memoria brainshield-rwa-pivot (CEDU/BRAIN/KAKAW: diseño, ninguno desplegado; KakawChain/KakawCoin no existen; solo Base + SHA-256 operan)", "Memoria ceduverse-roles-comision (rol comercial PLANO, commissionRate default 15%, sin tiers nombrados; director = user_role distinto)", "Memoria ceduverse-business-model ($500 sobre la primera aportación de la EMPRESA referida; sin bono por referir estudiantes; comisiones del fee de administración)", "LGSC art. 52 y acta constitutiva 6520 (reembolso al cierre del ejercicio, sin garantía de monto, deducidas pérdidas proporcionales)", "[PENDIENTE] Tratamiento fiscal del $20 del bono y base gravable del split del 5% — confirmar con Daniel/fiscal", "[PENDIENTE] Bono de $500 no implementado en el motor de comisiones; sin calendario automático de dispersión; materiales comerciales públicos muestran una tabla de rangos/override/vitalicio y fechas de corte que el sistema no implementa — confirmar con David/administración"],
+      references: ["Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (Art. 19 vigencia; Art. 20 cláusula de borrador; Arts. 14 y 14 Bis: 5%, tope 20 certificados, bono $170, parámetros ajustables por Asamblea)", "Memoria brainshield-rwa-pivot (CEDU/BRAIN/KAKAW: diseño, ninguno desplegado; KakawChain/KakawCoin no existen; solo Base + SHA-256 operan)", "Modelo de roles y comisiones de Ceduverse (rol comercial plano, 15% por defecto, sin niveles nombrados; director es un rol distinto)", "Modelo de negocio Ceduverse ($500 sobre la primera aportación de la EMPRESA referida; sin bono por referir estudiantes; comisiones del fee de administración)", "Ley General de Sociedades Cooperativas (LGSC) y acta constitutiva 6520 — reembolso al cierre del ejercicio, sin garantía de monto, deducidas las pérdidas proporcionales", "Reglamento Interno Ceduverse DRAFT — el tratamiento fiscal de los $20 del bono y la base gravable del split del 5% siguen pendientes de confirmación con el área fiscal"],
     },
   ],
 
