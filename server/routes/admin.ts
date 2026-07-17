@@ -1699,33 +1699,59 @@ export function registerAdminRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
-  let propuestaMercadoCache: { data: unknown; ts: number } | null = null;
+  let propuestaMercadoCache: { data: unknown; ts: number; v?: number } | null = null;
   const PROPUESTA_CACHE_TTL = 6 * 60 * 60 * 1000;
   const PROPUESTA_CACHE_FILE = path.join(process.cwd(), ".propuesta-cache.json");
+  // Se sube cuando cambia la FORMA o el SIGNIFICADO del payload, para que un
+  // cache en disco escrito por la versión anterior no siga sirviéndose. La v2
+  // corresponde a las zonas derivadas de ZONA_POR_ESTADO (@shared/zonas).
+  const PROPUESTA_CACHE_VERSION = 2;
 
   try {
     if (fs.existsSync(PROPUESTA_CACHE_FILE)) {
       const cached = JSON.parse(fs.readFileSync(PROPUESTA_CACHE_FILE, "utf-8"));
-      if (cached.ts && Date.now() - cached.ts < PROPUESTA_CACHE_TTL) {
+      if (cached.ts && cached.v === PROPUESTA_CACHE_VERSION && Date.now() - cached.ts < PROPUESTA_CACHE_TTL) {
         propuestaMercadoCache = cached;
         console.log("[propuesta] Loaded file cache (age:", Math.round((Date.now() - cached.ts) / 1000), "s)");
       }
     }
   } catch {}
 
+  // Agrupación estado -> zona derivada de ZONA_POR_ESTADO (@shared/zonas), la
+  // ÚNICA definición de zonas del sistema (la misma que usa el CRM).
+  //
+  // Antes esta expresión llevaba su propia lista de estados escrita a mano y se
+  // había desincronizado de @shared/zonas: Querétaro caía en Bajío (es Centro);
+  // San Luis Potosí, Zacatecas y Nayarit en Bajío (son Norte); y Michoacán en
+  // Sur-Sureste (es Bajío). Como /socios re-agrega desde `estados[]` con
+  // ZONA_POR_ESTADO y /propuesta leía este `zonas[]`, las dos páginas públicas
+  // publicaban cifras distintas para la misma zona. Derivarla elimina la
+  // segunda definición en vez de sincronizar dos listas a mano.
+  const estadosPorZona = new Map<string, string[]>();
+  for (const [estado, zona] of Object.entries(ZONA_POR_ESTADO)) {
+    const lista = estadosPorZona.get(zona) ?? [];
+    lista.push(estado);
+    estadosPorZona.set(zona, lista);
+  }
+  const zoneCase = sql.join(
+    [
+      sql.raw("CASE"),
+      ...Array.from(estadosPorZona.entries()).map(([zona, estados]) =>
+        // El nombre de zona se inyecta como literal (no como parámetro) para no
+        // dejar a Postgres sin tipo en `GROUP BY 1`. Viene de una constante
+        // nuestra, pero se escapa igual por higiene.
+        sql`WHEN ${inArray(empresasProspectos.estado, estados)} THEN ${sql.raw(`'${zona.replace(/'/g, "''")}'`)}`
+      ),
+      sql.raw("ELSE 'Otra' END"),
+    ],
+    sql` `
+  );
+
   app.get("/api/propuesta/mercado", async (_req, res, next) => {
     try {
       if (propuestaMercadoCache && Date.now() - propuestaMercadoCache.ts < PROPUESTA_CACHE_TTL) {
         return res.json(propuestaMercadoCache.data);
       }
-
-      const zoneCase = sql`CASE
-        WHEN ${empresasProspectos.estado} IN ('Nuevo León','Coahuila de Zaragoza','Tamaulipas','Chihuahua','Sonora','Baja California','Sinaloa','Durango','Baja California Sur') THEN 'Norte'
-        WHEN ${empresasProspectos.estado} IN ('Jalisco','Aguascalientes','Guanajuato','Querétaro','San Luis Potosí','Zacatecas','Nayarit','Colima') THEN 'Bajío'
-        WHEN ${empresasProspectos.estado} IN ('Ciudad de México','México','Puebla','Tlaxcala','Morelos','Hidalgo') THEN 'Centro'
-        WHEN ${empresasProspectos.estado} IN ('Veracruz de Ignacio de la Llave','Oaxaca','Chiapas','Tabasco','Campeche','Yucatán','Quintana Roo','Guerrero','Michoacán de Ocampo') THEN 'Sur-Sureste'
-        ELSE 'Otra'
-      END`;
 
       const zonesResult = await db.execute(sql`
         SELECT ${zoneCase} as zona,
@@ -1785,7 +1811,7 @@ export function registerAdminRoutes(app: Express) {
         planes: plansArr,
         estados: estadosArr,
       };
-      propuestaMercadoCache = { data: payload, ts: Date.now() };
+      propuestaMercadoCache = { data: payload, ts: Date.now(), v: PROPUESTA_CACHE_VERSION };
       try { fs.writeFileSync(PROPUESTA_CACHE_FILE, JSON.stringify(propuestaMercadoCache)); } catch {}
       res.json(payload);
     } catch (err) { next(err); }
