@@ -201,15 +201,15 @@ export const rwaOnboardingQuizzes: Record<string, RwaQuiz> = {
     passingScore: 70,
     questions: [
       {
-        question: "¿Cómo se descompone el bono de bienvenida de $170 MXN?",
+        question: "¿Cómo se descompone el bono de bienvenida de $170 MXN que contempla el proyecto de Reglamento Interno?",
         options: [
           "$170 de saldo para comprar cursos",
-          "$150 que fundan tu primer certificado de aportación + $20 de saldo para tu primer certificado DC-3/SEP",
+          "$150 que fundan tu primer certificado de aportación + $20 de crédito de descuento para tu primer certificado DC-3/SEP",
           "$170 de aportación al capital social",
           "$85 de aportación + $85 de descuento en la tienda",
         ],
         correctIndex: 1,
-        explanation: "El bono son $170 exactos: $150 fondean el valor nominal de tu primer certificado de aportación (capital, genera constancia de aportación) y $20 son saldo para tu primer certificado DC-3/SEP (consumo, sí genera CFDI de ingreso). Son dos naturalezas distintas en un solo bono.",
+        explanation: "El bono propuesto son $170: $150 fondean el valor nominal de tu primer certificado de aportación (capital, se documenta con recibo de aportación de capital, NO con CFDI de ingreso) y $20 son un crédito de descuento aplicable a tu primer certificado DC-3/SEP — de naturaleza de promoción/crédito comercial, NO capital: no funda certificados. Un crédito de descuento no es en sí mismo una venta, y su tratamiento fiscal fino (base de IVA, momento y documentación) está marcado como PENDIENTE de confirmar con el área fiscal y el CLO. Importante: el monto y el desglose viven en el Reglamento Interno, que hoy es un BORRADOR no aprobado por la Asamblea General y sin efectos jurídicos; son parámetros expresamente ajustables por acuerdo de esa Asamblea.",
       },
       {
         question: "¿De dónde proviene el valor del bono de bienvenida?",
@@ -231,7 +231,7 @@ export const rwaOnboardingQuizzes: Record<string, RwaQuiz> = {
           "KakawChain ya opera y los otros dos siguen su estándar",
         ],
         correctIndex: 1,
-        explanation: "CEDU (1:1 MXN), BRAIN (1:1 USDC/USDT) y KAKAW (1:1 oro) son diseño; ninguno está desplegado. KakawChain/KakawCoin no existen como producto. Hoy solo operan la red Base y el mecanismo de atestación SHA-256. Para el bono de Ceduverse el token relevante sería CEDU —no BRAIN— porque la aportación está en pesos y CEDU está diseñado 1:1 MXN: cero riesgo cambiario.",
+        explanation: "CEDU (1:1 MXN), BRAIN (1:1 USDC/USDT) y KAKAW (1:1 oro) son diseño; ninguno está desplegado. KakawChain/KakawCoin no existen como producto. Hoy solo operan la red Base y el mecanismo de atestación SHA-256. Para el bono de Ceduverse el token relevante sería CEDU —no BRAIN— porque la aportación está en pesos y CEDU está diseñado 1:1 MXN: cero riesgo cambiario. Nota de honestidad documental: el proyecto de Reglamento Interno (borrador no aprobado) solo enumera hoy BRAIN 1:1 USDC/USDT y KAKAW 1:1 oro como vías admitidas; CEDU no aparece ahí. Su incorporación al Reglamento está PENDIENTE y debe resolverse antes de la Asamblea — no cites ese artículo como si ya autorizara la vía CEDU.",
       },
       {
         question: "¿Por qué un NFT o token sin reserva 1:1 fue rechazado como forma de acreditar aportaciones?",
@@ -247,13 +247,13 @@ export const rwaOnboardingQuizzes: Record<string, RwaQuiz> = {
       {
         question: "Sobre la capitalización, el voto y el NFT en Ceduverse, ¿cuál afirmación es correcta?",
         options: [
-          "Capitaliza el 5% del consumo/comisión con tope de 20 certificados ($3,000); 1 socio = 1 voto sin importar cuántos certificados tenga; y el NFT es un gemelo registral, NO un título negociable",
+          "El proyecto contempla capitalizar el 5% del consumo/comisión con tope de 20 certificados ($3,000) —parámetros propuestos, ajustables por la Asamblea General—; 1 socio = 1 voto sin importar cuántos certificados tenga; y el NFT es un gemelo registral, NO un título negociable",
           "Capitaliza el 15% sin tope y cada certificado da un voto adicional",
           "El NFT es un título negociable que puedes vender en un mercado secundario",
           "La capitalización garantiza un rendimiento anual sobre tu aportación",
         ],
         correctIndex: 0,
-        explanation: "Se capitaliza el 5% de cada consumo/comisión del socio (ej.: certificación RVOE Academy de $49,900 → $2,495 ≈ 16 certificados de $150), con tope de 20 certificados = $3,000, que protege la naturaleza cooperativa. El voto es per-socio (LGSC): 1 socio = 1 voto. El NFT es espejo por hash del Libro de Registro —la fuente de verdad— y no es título negociable. Nada de esto es oferta de valores ni asesoría de inversión, y no hay rendimientos garantizados: la capitalización no es un rendimiento, es tu propia actividad reencauzada a tu patrimonio.",
+        explanation: "El proyecto contempla capitalizar el 5% de cada consumo/comisión del socio (ej.: certificación RVOE Academy de $49,900 → $2,495 ≈ 16 certificados de $150), con tope de 20 certificados = $3,000, que protege la naturaleza cooperativa. Ojo con el estatus: el 5% y el tope están en el Reglamento Interno, que hoy es un BORRADOR no aprobado por la Asamblea y sin efectos jurídicos, y el propio borrador los declara parámetros ajustables por acuerdo de la Asamblea General Ordinaria — no son una regla en vigor ni un compromiso que puedas ofrecer en firme. Lo que sí está firme: el voto es per-socio (LGSC y acta 6520): 1 socio = 1 voto. El NFT es espejo por hash del Libro de Registro —la fuente de verdad— y no es título negociable. Nada de esto es oferta de valores ni asesoría de inversión, y no hay rendimientos garantizados: la capitalización no es un rendimiento, es tu propia actividad reencauzada a tu patrimonio.",
       },
     ],
   },
