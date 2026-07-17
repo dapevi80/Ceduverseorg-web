@@ -929,10 +929,17 @@ export function registerCourseRoutes(app: Express) {
           const role = getEffectiveRole(req, account);
 
           if (role === "admin" || role === "superadmin") {
-            allowedSubcategories = ["Para Todos", "Empresas", "Socios"];
+            allowedSubcategories = ["Para Todos", "Empresas", "Socios", "Comercial"];
           } else if (role === "socio_comercial" || role === "partner" || role === "director") {
-            allowedSubcategories = ["Para Todos", "Socios"];
+            allowedSubcategories = ["Para Todos", "Socios", "Comercial"];
+          } else if (role === "empresa" || role === "empresa_rh") {
+            allowedSubcategories = ["Para Todos", "Empresas", "Comercial"];
           } else {
+            // Fallback preexistente: quien administra un equipo ve los cursos de
+            // "Empresas" aunque su user_role no sea empresa (el frontend cuenta
+            // con esto, ver getOnboardingSlugsForUser(role, isTeamAdmin)).
+            // NO recibe "Comercial": esa subcategoría lleva la capa legal-fiscal
+            // y se reserva a roles comerciales/empresa explícitos.
             const userTeams = await storage.getUserTeams(userId);
             const isTeamAdmin = userTeams.some(t => t.role === "admin");
             if (isTeamAdmin) {
