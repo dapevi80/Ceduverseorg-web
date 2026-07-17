@@ -1,20 +1,11 @@
 import type { Express } from "express";
 import { requireAuth, requireAdmin, requireAdminOrPartner, requireSuperadmin } from "../auth";
 
-// Mexican state -> commercial region. Module-level so admin.ts can import it.
-export const ZONA_POR_ESTADO: Record<string, string> = {
-  "Ciudad de México": "Centro", "México": "Centro", "Puebla": "Centro",
-  "Tlaxcala": "Centro", "Morelos": "Centro", "Hidalgo": "Centro", "Querétaro": "Centro",
-  "Nuevo León": "Norte", "Chihuahua": "Norte", "Coahuila de Zaragoza": "Norte",
-  "Tamaulipas": "Norte", "Sonora": "Norte", "Baja California": "Norte",
-  "Baja California Sur": "Norte", "Sinaloa": "Norte", "Durango": "Norte",
-  "San Luis Potosí": "Norte", "Zacatecas": "Norte", "Nayarit": "Norte",
-  "Jalisco": "Bajío", "Guanajuato": "Bajío", "Aguascalientes": "Bajío",
-  "Colima": "Bajío", "Michoacán de Ocampo": "Bajío",
-  "Veracruz de Ignacio de la Llave": "Sur-Sureste", "Oaxaca": "Sur-Sureste",
-  "Chiapas": "Sur-Sureste", "Guerrero": "Sur-Sureste", "Tabasco": "Sur-Sureste",
-  "Campeche": "Sur-Sureste", "Yucatán": "Sur-Sureste", "Quintana Roo": "Sur-Sureste",
-};
+// Mexican state -> commercial region. La definición vive en `@shared/zonas`
+// (fuente única de verdad, compartida con la landing pública de socios).
+// Se reexporta aquí porque admin.ts la importa desde "./crm".
+export { ZONA_POR_ESTADO } from "@shared/zonas";
+import { ZONA_POR_ESTADO } from "@shared/zonas";
 
 import { storage } from "../storage";
 import { db } from "../db";
