@@ -131,6 +131,16 @@ function StpsPlayer({
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    // El audio ahora cambia al cambiar de módulo activo. Sin reiniciar los
+    // contadores de escucha, el progreso del módulo anterior se arrastraría y
+    // el guardia anti-adelanto (maxListenedSecond + 10%) dejaría saltarse el
+    // audio nuevo por completo.
+    listenedSegments.current = new Set();
+    maxListenedSecond.current = 0;
+    lastTimeRef.current = 0;
+    setProgress(0);
+    setCurrentTime(0);
+    setIsPlaying(false);
     const onTimeUpdate = () => {
       const ct = audio.currentTime;
       const dur = audio.duration;
@@ -527,6 +537,8 @@ function StpsSessionView({
   onMarkSectionComplete,
   onAutoComplete,
   slug,
+  activeModuleIndex,
+  onActiveModuleChange,
 }: {
   course: CourseInfo;
   modules: CourseModule[];
@@ -536,6 +548,8 @@ function StpsSessionView({
   onMarkSectionComplete: (index: number) => void;
   onAutoComplete: () => void;
   slug: string;
+  activeModuleIndex: number;
+  onActiveModuleChange: (index: number) => void;
 }) {
   const [tocOpen, setTocOpen] = useState(false);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -585,13 +599,20 @@ function StpsSessionView({
   }, [user, enrollmentForCourse]);
 
   const scrollToSection = (index: number) => {
+    // Navegar a un módulo lo vuelve el módulo activo: el reproductor de arriba
+    // debe seguir a lo que el alumno está leyendo, no quedarse en el módulo 1.
+    onActiveModuleChange(index);
     sectionRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
     setTocOpen(false);
   };
 
   const allReferences = modules.flatMap(m => m.references || []).filter((v, i, a) => a.indexOf(v) === i);
-  const audioUrl = modules.length > 0 ? modules[0]?.audioUrl : null;
-  const heygenVideoUrl = modules.find(m => m.heygenVideoUrl)?.heygenVideoUrl || null;
+  // El media del módulo ACTIVO. Antes: `modules[0]?.audioUrl` — siempre el audio
+  // del módulo cero sin importar qué módulo se estuviera viendo, que es el
+  // "el audio no coincide con lo que está escrito" que reportó el dueño.
+  const activeModule = modules[activeModuleIndex] ?? modules[0] ?? null;
+  const audioUrl = activeModule?.audioUrl ?? null;
+  const heygenVideoUrl = activeModule?.heygenVideoUrl ?? null;
   const hasVideo = !!heygenVideoUrl;
   const hasAudio = !!audioUrl;
   const allCompleted = modules.length > 0 && modules.every((_, i) => completedModules.has(i));
@@ -1320,6 +1341,8 @@ export default function CursoVirtual() {
               toast({ title: "🎉 ¡Conferencia completada!", description: "Has obtenido tu diploma digital de participación. Continúa con el Tutor IA para tu certificado DC-3 o SEP." });
             }}
             slug={slug}
+            activeModuleIndex={activeModuleIndex}
+            onActiveModuleChange={setActiveModuleIndex}
           />
         )}
       </main>

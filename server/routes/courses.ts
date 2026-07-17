@@ -3,6 +3,11 @@ import rateLimit from "express-rate-limit";
 import { requireAuth, optionalAuth, requireAdmin } from "../auth";
 import { storage } from "../storage";
 import { db } from "../db";
+import {
+  isPoisonedGeneration,
+  resolveGenerationStatus,
+  shouldServeCache,
+} from "../lib/generation-retry";
 import path from "path";
 import fs from "fs";
 import {
@@ -68,6 +73,7 @@ async function runModuleGeneration(
       result.course.title,
       result.module.description || undefined,
       result.module.references ? (result.module.references as string[]).join("; ") : undefined,
+      { userId, courseSlug: slug, moduleIndex },
     );
     await storage.saveGeneratedContent({
       userId,
@@ -80,18 +86,40 @@ async function runModuleGeneration(
       suggestedSources: generated.suggestedSources,
       classScript: generated.classScript || null,
       personalizedFor: profile ? { jobTitle: profile.jobTitle, industry: profile.industry } : null,
-      generationStatus: generated.isStub ? "failed" : (generated.adaptiveQuiz && generated.adaptiveQuiz.length > 0 ? "complete" : "partial"),
+      // 'complete' exige quiz Y guion: sin classScript la ruta /audio responde
+      // 404 no_script, así que marcarla 'complete' sería mentir en la BD.
+      generationStatus: resolveGenerationStatus({
+        isStub: generated.isStub === true,
+        quizCount: generated.adaptiveQuiz?.length ?? 0,
+        hasClassScript: !!generated.classScript,
+      }),
       isStub: generated.isStub || false,
     });
     console.log(`[studio-gen] ${slug}#${moduleIndex} done (stub=${generated.isStub === true})`);
   } catch (err: any) {
-    console.error(`[studio-gen] ${slug}#${moduleIndex} background generation failed:`, err.message);
-    await storage.saveGeneratedContent({
-      userId, courseSlug: slug, moduleIndex,
-      lectureHtml: null, mindMap: null, reflections: [], adaptiveQuiz: null,
-      suggestedSources: null, classScript: null, personalizedFor: null,
-      generationStatus: "failed", isStub: true,
-    }).catch(() => {});
+    console.error(
+      `[studio-gen] ${slug}#${moduleIndex} (user=${userId}) background generation failed ` +
+      `[status=${err?.status ?? "n/a"} type=${err?.error?.type ?? err?.name ?? "n/a"} ` +
+      `request_id=${err?.request_id ?? "n/a"}]: ${err?.message}`,
+      err?.stack,
+    );
+    try {
+      await storage.saveGeneratedContent({
+        userId, courseSlug: slug, moduleIndex,
+        lectureHtml: null, mindMap: null, reflections: [], adaptiveQuiz: null,
+        suggestedSources: null, classScript: null, personalizedFor: null,
+        generationStatus: "failed", isStub: true,
+      });
+    } catch (saveErr: any) {
+      // El .catch(() => {}) anterior se tragaba incluso el fallo de guardar: la
+      // fila se quedaba en 'generating' y el cliente hacía poll hasta el timeout
+      // de STALE_GENERATION_MS sin que nadie supiera por qué.
+      console.error(
+        `[studio-gen] ${slug}#${moduleIndex} (user=${userId}) NO se pudo persistir el estado 'failed'; ` +
+        `la fila queda en 'generating' hasta que expire (${STALE_GENERATION_MS}ms): ${saveErr?.message}`,
+        saveErr?.stack,
+      );
+    }
   }
 }
 
@@ -998,9 +1026,18 @@ export function registerCourseRoutes(app: Express) {
         return res.status(202).json(cached);
       }
 
-      // Finished content already present — return it unless the user asked to regenerate.
-      if (cached && !regenerate && cached.generationStatus !== "generating") {
+      // Finished content already present — return it unless the user asked to
+      // regenerate. Una fila envenenada (failed / isStub) NO se sirve: un fallo
+      // transitorio persistido servía el stub "Contenido genérico" para siempre y
+      // sólo se curaba con "Regenerar" manual. Ahora reintenta sola.
+      if (shouldServeCache(cached, regenerate)) {
         return res.json(cached);
+      }
+      if (isPoisonedGeneration(cached) && !regenerate) {
+        console.warn(
+          `[studio-gen] ${slug}#${moduleIndex} (user=${userId}) cache envenenada ` +
+          `(status=${cached?.generationStatus} stub=${cached?.isStub}): regenerando en vez de servirla.`,
+        );
       }
 
       const result = await storage.getStudioModuleBySlugAndIndex(slug, moduleIndex);
