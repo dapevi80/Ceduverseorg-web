@@ -662,6 +662,11 @@ export const generatedContent = pgTable("generated_content", {
   personalizedFor: jsonb("personalized_for"),
   generationStatus: text("generation_status").default("pending"),
   isStub: boolean("is_stub").default(false),
+  // Consecutive failed generations in a row for this module/user, reset to 0
+  // on any success. Drives the retry backoff/ceiling in
+  // server/lib/generation-retry.ts — without it a persistent failure (bad
+  // key, sustained 429) regenerated on every client poll with no brake.
+  consecutiveFailures: integer("consecutive_failures").notNull().default(0),
   generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   uniqueIndex("uq_generated_content_user_course_module").on(table.userId, table.courseSlug, table.moduleIndex),

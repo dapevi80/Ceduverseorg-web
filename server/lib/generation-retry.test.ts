@@ -8,6 +8,16 @@ import {
   isPoisonedGeneration,
   shouldServeCache,
   resolveGenerationStatus,
+  BACKOFF_BASE_MS,
+  BACKOFF_CAP_MS,
+  MAX_CONSECUTIVE_FAILURES,
+  MANUAL_REGENERATE_MIN_INTERVAL_MS,
+  backoffDelayMs,
+  hasReachedFailureCeiling,
+  canAutoRetry,
+  nextRetryAt,
+  canManualRegenerate,
+  manualRegenerateWaitMs,
 } from "./generation-retry";
 
 describe("isTruncatedResponse", () => {
@@ -118,5 +128,167 @@ describe("resolveGenerationStatus", () => {
 
   it("guion sin quiz -> partial", () => {
     expect(resolveGenerationStatus({ isStub: false, quizCount: 0, hasClassScript: true })).toBe("partial");
+  });
+});
+
+describe("backoffDelayMs", () => {
+  it("0 fallas -> 0 (nada que esperar, aún no ha fallado nada)", () => {
+    expect(backoffDelayMs(0)).toBe(0);
+  });
+
+  it("negativo (defensivo) -> 0", () => {
+    expect(backoffDelayMs(-1)).toBe(0);
+  });
+
+  it("curva: 30s, 2m, 8m, 32m, luego tope de 1h", () => {
+    expect(backoffDelayMs(1)).toBe(BACKOFF_BASE_MS); // 30s
+    expect(backoffDelayMs(2)).toBe(120_000); // 2m
+    expect(backoffDelayMs(3)).toBe(480_000); // 8m
+    expect(backoffDelayMs(4)).toBe(1_920_000); // 32m
+    expect(backoffDelayMs(5)).toBe(BACKOFF_CAP_MS); // 7680s crudo -> tope 1h
+  });
+
+  it("nunca rebasa el tope aunque sigan acumulándose fallas", () => {
+    expect(backoffDelayMs(6)).toBe(BACKOFF_CAP_MS);
+    expect(backoffDelayMs(20)).toBe(BACKOFF_CAP_MS);
+  });
+});
+
+describe("hasReachedFailureCeiling", () => {
+  it("por debajo del techo -> no", () => {
+    expect(hasReachedFailureCeiling(MAX_CONSECUTIVE_FAILURES - 1)).toBe(false);
+  });
+
+  it("exactamente en el techo -> sí (boundary)", () => {
+    expect(hasReachedFailureCeiling(MAX_CONSECUTIVE_FAILURES)).toBe(true);
+  });
+
+  it("por encima del techo -> sí", () => {
+    expect(hasReachedFailureCeiling(MAX_CONSECUTIVE_FAILURES + 1)).toBe(true);
+  });
+
+  it("techo custom", () => {
+    expect(hasReachedFailureCeiling(2, 2)).toBe(true);
+    expect(hasReachedFailureCeiling(1, 2)).toBe(false);
+  });
+});
+
+describe("canAutoRetry", () => {
+  const now = Date.parse("2026-07-17T12:00:00.000Z");
+
+  it("1a falla, todavía dentro de los 30s de espera -> no", () => {
+    expect(canAutoRetry({
+      consecutiveFailures: 1,
+      lastAttemptAt: now - 29_000,
+      now,
+    })).toBe(false);
+  });
+
+  it("1a falla, justo en el boundary de 30s -> sí", () => {
+    expect(canAutoRetry({
+      consecutiveFailures: 1,
+      lastAttemptAt: now - 30_000,
+      now,
+    })).toBe(true);
+  });
+
+  it("1a falla, ya pasaron los 30s -> sí", () => {
+    expect(canAutoRetry({
+      consecutiveFailures: 1,
+      lastAttemptAt: now - 31_000,
+      now,
+    })).toBe(true);
+  });
+
+  it("2a falla, sólo pasaron 30s (hace falta 2m) -> no", () => {
+    expect(canAutoRetry({
+      consecutiveFailures: 2,
+      lastAttemptAt: now - 30_000,
+      now,
+    })).toBe(false);
+  });
+
+  it("2a falla, pasaron los 2m completos -> sí", () => {
+    expect(canAutoRetry({
+      consecutiveFailures: 2,
+      lastAttemptAt: now - 120_000,
+      now,
+    })).toBe(true);
+  });
+
+  it("en el techo de fallas -> no, sin importar cuánto tiempo pasó", () => {
+    expect(canAutoRetry({
+      consecutiveFailures: MAX_CONSECUTIVE_FAILURES,
+      lastAttemptAt: now - 10 * 60 * 60 * 1000,
+      now,
+    })).toBe(false);
+  });
+
+  it("sin lastAttemptAt válido -> no hay nada que esperar, permite reintentar", () => {
+    expect(canAutoRetry({
+      consecutiveFailures: 3,
+      lastAttemptAt: "not-a-date",
+      now,
+    })).toBe(true);
+  });
+
+  it("0 fallas -> siempre sí (nada que esperar)", () => {
+    expect(canAutoRetry({ consecutiveFailures: 0, lastAttemptAt: now, now })).toBe(true);
+  });
+});
+
+describe("nextRetryAt", () => {
+  const now = Date.parse("2026-07-17T12:00:00.000Z");
+
+  it("1a falla -> 30s después del último intento", () => {
+    const result = nextRetryAt({ consecutiveFailures: 1, lastAttemptAt: now });
+    expect(Date.parse(result!)).toBe(now + 30_000);
+  });
+
+  it("en el techo -> null (no hay próximo intento automático)", () => {
+    expect(nextRetryAt({ consecutiveFailures: MAX_CONSECUTIVE_FAILURES, lastAttemptAt: now })).toBeNull();
+  });
+});
+
+describe("canManualRegenerate", () => {
+  const now = Date.parse("2026-07-17T12:00:00.000Z");
+
+  it("sin intento previo -> sí (primera vez)", () => {
+    expect(canManualRegenerate({ lastAttemptAt: null, now })).toBe(true);
+    expect(canManualRegenerate({ lastAttemptAt: undefined, now })).toBe(true);
+  });
+
+  it("click-spam: menos de 30s desde el último intento -> no", () => {
+    expect(canManualRegenerate({ lastAttemptAt: now - 5_000, now })).toBe(false);
+  });
+
+  it("justo en el boundary de 30s -> sí", () => {
+    expect(canManualRegenerate({ lastAttemptAt: now - MANUAL_REGENERATE_MIN_INTERVAL_MS, now })).toBe(true);
+  });
+
+  it("bastante después de los 30s -> sí", () => {
+    expect(canManualRegenerate({ lastAttemptAt: now - 60_000, now })).toBe(true);
+  });
+
+  it("REGRESION: el techo automático NO bloquea el botón manual (bypass explícito)", () => {
+    // canManualRegenerate no recibe consecutiveFailures a propósito: el botón
+    // ignora el techo/backoff automático, sólo se autolimita a sí mismo.
+    expect(canManualRegenerate({ lastAttemptAt: now - 60_000, now })).toBe(true);
+  });
+});
+
+describe("manualRegenerateWaitMs", () => {
+  const now = Date.parse("2026-07-17T12:00:00.000Z");
+
+  it("sin intento previo -> 0", () => {
+    expect(manualRegenerateWaitMs({ lastAttemptAt: null, now })).toBe(0);
+  });
+
+  it("a mitad del intervalo -> falta la mitad", () => {
+    expect(manualRegenerateWaitMs({ lastAttemptAt: now - 15_000, now })).toBe(15_000);
+  });
+
+  it("ya se puede -> 0, nunca negativo", () => {
+    expect(manualRegenerateWaitMs({ lastAttemptAt: now - 60_000, now })).toBe(0);
   });
 });

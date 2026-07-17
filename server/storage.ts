@@ -593,6 +593,7 @@ export class DatabaseStorage implements IStorage {
           personalizedFor: data.personalizedFor,
           generationStatus: data.generationStatus,
           isStub: data.isStub,
+          consecutiveFailures: data.consecutiveFailures,
           generatedAt: new Date(),
         },
       })
