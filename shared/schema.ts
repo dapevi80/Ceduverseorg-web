@@ -281,7 +281,9 @@ export const achievementUsers = pgTable("achievement_users", {
 export const certificateRequests = pgTable("certificate_requests", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  courseId: uuid("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  // Ancla en Studio (spec 2026-07-17, decisión 2). Reemplaza el viejo course_id
+  // (FK al catálogo legacy). Cualquier curso del Tutor IA puede anclar solicitud.
+  studioCourseSlug: text("studio_course_slug").notNull().references(() => studioCourses.slug, { onDelete: "cascade" }),
   certType: certTypeEnum("cert_type").notNull(),
   status: certRequestStatusEnum("status").notNull().default("solicitado"),
   rejectReason: text("reject_reason"),
@@ -293,7 +295,7 @@ export const certificateRequests = pgTable("certificate_requests", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
 }, (table) => [
-  uniqueIndex("uq_cert_request").on(table.userId, table.courseId, table.certType),
+  uniqueIndex("uq_cert_request").on(table.userId, table.studioCourseSlug, table.certType),
   index("idx_cert_request_user").on(table.userId),
   index("idx_cert_request_status").on(table.status),
 ]);
@@ -599,6 +601,7 @@ export const studioCourses = pgTable("studio_courses", {
   level: text("level").default("basico"),
   tags: text("tags").array().default([]),
   dc3Available: boolean("dc3_available").default(false),
+  sepAvailable: boolean("sep_available").default(false),
   icon: text("icon"),
   color: text("color"),
   source: text("source").default("studio"),
@@ -700,6 +703,28 @@ export const studioModuleProgress = pgTable("studio_module_progress", {
   index("idx_studio_module_progress_enrollment").on(table.enrollmentId),
 ]);
 
+// Historial append-only de intentos de quiz del Tutor IA. NUNCA se actualiza ni
+// se borra un renglón: es el rastro auditable detrás de un certificado ("¿con qué
+// acreditó esta persona?" → curso, fecha y calificación) y la única forma de
+// saber cuándo fue el último intento reprobado (cooldown).
+//
+// `studio_module_progress.quiz_score` sobrescribe cada intento con el anterior;
+// por eso no sirve. `quiz_attempts` tampoco: su FK apunta a course_quizzes (legacy).
+export const studioQuizAttempts = pgTable("studio_quiz_attempts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  /** slug del curso de Studio (mismo valor que studio_enrollments.course_identifier). */
+  courseIdentifier: text("course_identifier").notNull(),
+  moduleIndex: integer("module_index").notNull(),
+  /** Calificación en porcentaje 0-100, calculada por el servidor. */
+  score: integer("score").notNull(),
+  passed: boolean("passed").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("idx_studio_quiz_attempts_user_course").on(table.userId, table.courseIdentifier),
+  index("idx_studio_quiz_attempts_user").on(table.userId),
+]);
+
 export const chatSessions = pgTable("chat_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -767,6 +792,7 @@ export const insertStudentProfileSchema = createInsertSchema(studentProfiles).om
 export const insertGeneratedContentSchema = createInsertSchema(generatedContent).omit({ id: true, generatedAt: true });
 export const insertStudioEnrollmentSchema = createInsertSchema(studioEnrollments).omit({ id: true, enrolledAt: true });
 export const insertStudioModuleProgressSchema = createInsertSchema(studioModuleProgress).omit({ id: true });
+export const insertStudioQuizAttemptSchema = createInsertSchema(studioQuizAttempts).omit({ id: true, createdAt: true });
 export const insertChatSessionSchema = createInsertSchema(chatSessions).omit({ id: true, createdAt: true, updatedAt: true });
 
 export type StudioCourse = typeof studioCourses.$inferSelect;
@@ -783,6 +809,8 @@ export type StudioEnrollment = typeof studioEnrollments.$inferSelect;
 export type InsertStudioEnrollment = z.infer<typeof insertStudioEnrollmentSchema>;
 export type StudioModuleProgress = typeof studioModuleProgress.$inferSelect;
 export type InsertStudioModuleProgress = z.infer<typeof insertStudioModuleProgressSchema>;
+export type StudioQuizAttempt = typeof studioQuizAttempts.$inferSelect;
+export type InsertStudioQuizAttempt = z.infer<typeof insertStudioQuizAttemptSchema>;
 export type ChatSession = typeof chatSessions.$inferSelect;
 export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
 

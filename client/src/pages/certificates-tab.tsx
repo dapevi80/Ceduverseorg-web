@@ -27,7 +27,7 @@ import {
 type CertificateRequest = {
   id: string;
   userId: string;
-  courseId: string;
+  studioCourseSlug: string;
   certType: string;
   status: string;
   rejectReason: string | null;
@@ -35,6 +35,7 @@ type CertificateRequest = {
   createdAt: string;
   courseName?: string;
   courseTitle?: string;
+  courseSlug?: string;
 };
 
 type CourseEnrollment = {
@@ -76,9 +77,9 @@ export function CertificatesTab() {
   const completedCourses = enrollments.filter((e) => e.completed >= 100);
 
   const requestMutation = useMutation({
-    mutationFn: async (vars: { courseId: string; certType: string }) => {
+    mutationFn: async (vars: { courseSlug: string; certType: string }) => {
       const res = await apiRequest("POST", "/api/me/certificates", {
-        courseId: vars.courseId,
+        courseSlug: vars.courseSlug,
         certType: vars.certType,
       });
       return res.json();
@@ -118,8 +119,6 @@ export function CertificatesTab() {
     );
   }
 
-  const typeInfo = selectedType ? TYPE_CONFIG[selectedType] : null;
-
   return (
     <div className="space-y-6" data-testid="certificates-tab">
       <div className="flex items-center justify-between">
@@ -152,43 +151,17 @@ export function CertificatesTab() {
                       <SelectItem value="none" disabled>No hay cursos completados</SelectItem>
                     ) : (
                       completedCourses.map((e) => (
-                        <SelectItem key={e.courseId} value={e.courseId}>
-                          {e.courseSlug?.replace(/-/g, " ") || e.courseId}
+                        <SelectItem key={e.courseSlug} value={e.courseSlug}>
+                          {e.courseSlug?.replace(/-/g, " ") || e.courseSlug}
                         </SelectItem>
                       ))
                     )}
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <label className="text-sm font-medium text-cedu-ink mb-1.5 block">Tipo de certificado</label>
-                <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger data-testid="select-certificate-type">
-                    <SelectValue placeholder="Seleccionar tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dc3">{`DC-3 STPS — $${CERT_PRICES_MXN.dc3.toLocaleString()} MXN`}</SelectItem>
-                    <SelectItem value="sep">{`Certificado SEP — $${CERT_PRICES_MXN.sep.toLocaleString()} MXN`}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {typeInfo && (
-                <div className="bg-cedu-cream/50 rounded-lg p-3 border border-black/[0.06]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{typeInfo.label}</span>
-                    <span className="text-lg font-bold font-serif text-cedu-blue">{typeInfo.price}</span>
-                  </div>
-                </div>
-              )}
-              <Button
-                className="w-full bg-cedu-blue hover:bg-cedu-blue/90 text-white"
-                disabled={!selectedCourse || !selectedType || requestMutation.isPending}
-                onClick={() => requestMutation.mutate({ courseId: selectedCourse, certType: selectedType })}
-                data-testid="button-submit-certificate-request"
-              >
-                {requestMutation.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-                Solicitar
-              </Button>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Las constancias DC-3 STPS y SEP se solicitan desde el curso en el Tutor IA, al aprobar su quiz.
+              </p>
             </div>
           </DialogContent>
         </Dialog>
@@ -286,7 +259,7 @@ export function CertificatesTab() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm text-cedu-ink truncate">
-                              {cert.courseName || cert.courseTitle || cert.courseId}
+                              {cert.courseName || cert.courseTitle || cert.studioCourseSlug}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               Solicitado el {new Date(cert.createdAt).toLocaleDateString("es-MX")}
@@ -323,7 +296,7 @@ export function CertificatesTab() {
                             <button
                               className="ml-2 underline disabled:opacity-50 disabled:cursor-not-allowed"
                               disabled={requestMutation.isPending}
-                              onClick={() => requestMutation.mutate({ courseId: cert.courseId, certType: cert.certType })}
+                              onClick={() => requestMutation.mutate({ courseSlug: cert.courseSlug || cert.studioCourseSlug, certType: cert.certType })}
                               data-testid={`btn-complete-payment-${cert.id}`}
                             >Completar pago</button>
                           </div>

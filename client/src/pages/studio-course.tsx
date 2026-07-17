@@ -51,6 +51,7 @@ import {
   Share2,
 } from "lucide-react";
 import ShareCourseModal from "@/components/ShareCourseModal";
+import { certTabMessage, type CertTabState, type PaidCertType } from "@shared/cert-eligibility";
 import {
   Dialog,
   DialogContent,
@@ -1086,8 +1087,148 @@ function ChatPanel({ courseSlug, moduleIndex, profile }: {
   );
 }
 
-function CompletionCertificate({ courseName, userName, completedModules, totalModules }: {
-  courseName: string; userName: string; completedModules: number; totalModules: number;
+interface CertStatus {
+  certType: PaidCertType;
+  state: CertTabState;
+  message: string;
+  eligible: boolean;
+  priceMxn: number;
+  request: { id: string; status: string; pdfUrl: string | null; rejectReason: string | null } | null;
+}
+
+const CERT_TITLE: Record<PaidCertType, string> = {
+  dc3: "constancia DC-3 STPS",
+  sep: "constancia SEP",
+};
+
+function CertBlock({ slug, cert }: { slug: string; cert: CertStatus }) {
+  const { toast } = useToast();
+  const requestMutation = useMutation({
+    mutationFn: async () => {
+      // El precio NO se manda: lo resuelve el servidor desde CERT_PRICES_MXN.
+      const res = await apiRequest("POST", "/api/me/certificates", { courseSlug: slug, certType: cert.certType });
+      return res.json();
+    },
+    onSuccess: (d: any) => {
+      if (d?.checkout_url) { window.location.href = d.checkout_url; return; }
+      queryClient.invalidateQueries({ queryKey: ["/api/studio/courses", slug, "certificates"] });
+    },
+    onError: (e: any) => {
+      toast({ title: "No se pudo solicitar", description: e.message, variant: "destructive" });
+    },
+  });
+
+  const precio = `$${cert.priceMxn.toLocaleString("es-MX")} MXN`;
+  const titulo = CERT_TITLE[cert.certType];
+
+  if (cert.state === "elegible") {
+    return (
+      <div className="max-w-sm mx-auto rounded-xl border border-cedu-orange/30 bg-cedu-orange/5 dark:bg-cedu-orange/10 p-4 space-y-3" data-testid={`cert-elegible-${cert.certType}`}>
+        <div className="flex items-center justify-center gap-2">
+          <FileCheck size={16} className="text-cedu-orange" />
+          <p className="text-sm font-medium text-cedu-ink dark:text-white">Solicita tu {titulo}</p>
+        </div>
+        <p className="text-2xl font-serif font-bold text-cedu-ink dark:text-white">{precio}</p>
+        {cert.request?.status === "rechazado" && cert.request.rejectReason && (
+          <p className="text-xs text-red-700 dark:text-red-300">Tu solicitud anterior fue rechazada: {cert.request.rejectReason}</p>
+        )}
+        <Button
+          className="w-full bg-cedu-orange hover:bg-cedu-orange/90 text-white"
+          disabled={requestMutation.isPending}
+          onClick={() => requestMutation.mutate()}
+          data-testid={`button-request-${cert.certType}`}
+        >
+          {requestMutation.isPending && <Loader2 size={14} className="mr-1 animate-spin" />}
+          Solicitar {titulo}
+        </Button>
+      </div>
+    );
+  }
+
+  if (cert.state === "pago_pendiente") {
+    return (
+      <div className="max-w-sm mx-auto rounded-xl border border-amber-300 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-900/10 p-4 space-y-3" data-testid={`cert-pago-pendiente-${cert.certType}`}>
+        <p className="text-sm text-amber-900 dark:text-amber-200">{cert.message}</p>
+        <Button
+          className="w-full bg-cedu-orange hover:bg-cedu-orange/90 text-white"
+          disabled={requestMutation.isPending}
+          onClick={() => requestMutation.mutate()}
+          data-testid={`button-complete-payment-${cert.certType}`}
+        >
+          {requestMutation.isPending && <Loader2 size={14} className="mr-1 animate-spin" />}
+          Completar pago · {precio}
+        </Button>
+      </div>
+    );
+  }
+
+  if (cert.state === "emitido") {
+    return (
+      <div className="max-w-sm mx-auto rounded-xl border border-cedu-green/30 bg-cedu-green/5 dark:bg-cedu-green/10 p-4 space-y-3" data-testid={`cert-emitido-${cert.certType}`}>
+        <div className="flex items-center justify-center gap-2">
+          <Award size={16} className="text-cedu-green" />
+          <p className="text-sm text-cedu-ink dark:text-white">{cert.message}</p>
+        </div>
+        {cert.request?.pdfUrl && (
+          <a href={cert.request.pdfUrl} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-sm text-cedu-blue hover:underline"
+            data-testid={`link-pdf-${cert.certType}`}>
+            <Download size={14} /> Descargar {titulo}
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  // ya_solicitado / sin_intento_aprobado / curso_sin_certificado / curso_no_encontrado:
+  // se dice POR QUÉ, no "próximamente".
+  return (
+    <div className="max-w-sm mx-auto rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white/60 dark:bg-gray-900/40 p-4" data-testid={`cert-${cert.certType}-${cert.state}`}>
+      <p className="text-xs text-cedu-ink-muted dark:text-gray-400">{cert.message || certTabMessage(cert.state, cert.certType)}</p>
+    </div>
+  );
+}
+
+function CertificatesBlock({ slug }: { slug: string }) {
+  const { data, isLoading, isError } = useQuery<{ certs: { dc3: CertStatus; sep: CertStatus } }>({
+    queryKey: ["/api/studio/courses", slug, "certificates"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/studio/courses/${slug}/certificates`);
+      return res.json();
+    },
+    enabled: !!slug,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center gap-2 text-xs text-cedu-ink-muted dark:text-gray-500" data-testid="cert-loading">
+        <Loader2 size={14} className="animate-spin" /> Verificando tus certificados...
+      </div>
+    );
+  }
+
+  // Sin degradación silenciosa: un fallo de consulta NO se muestra como "no elegible".
+  if (isError || !data) {
+    return (
+      <div className="max-w-sm mx-auto rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 p-4 flex items-start gap-2" data-testid="cert-error">
+        <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />
+        <p className="text-xs text-red-800 dark:text-red-300 text-left">
+          No pudimos verificar tus certificados. Recarga la página o inténtalo en unos minutos.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <CertBlock slug={slug} cert={data.certs.dc3} />
+      <CertBlock slug={slug} cert={data.certs.sep} />
+    </div>
+  );
+}
+
+function CompletionCertificate({ courseName, userName, completedModules, totalModules, slug }: {
+  courseName: string; userName: string; completedModules: number; totalModules: number; slug: string;
 }) {
   const date = new Date().toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" });
   return (
@@ -1116,9 +1257,7 @@ function CompletionCertificate({ courseName, userName, completedModules, totalMo
         </div>
         <p className="text-xs text-cedu-ink-muted dark:text-gray-500">{date} · Ceduverse Tutor IA</p>
       </div>
-      <p className="text-xs text-cedu-ink-muted dark:text-gray-500 max-w-xs mx-auto">
-        Tu constancia DC-3 STPS estará disponible próximamente para los cursos elegibles.
-      </p>
+      <CertificatesBlock slug={slug} />
     </div>
   );
 }
@@ -1799,6 +1938,7 @@ export default function StudioCoursePage() {
 
                 {activeTab === "certificado" && allModulesCompleted && (
                   <CompletionCertificate
+                    slug={slug}
                     courseName={course.title}
                     userName={user?.fullName || user?.email || "Estudiante"}
                     completedModules={modules.length}

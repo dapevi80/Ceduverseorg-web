@@ -1,8 +1,12 @@
-# DC-3 en el Tutor IA — Design
+# DC-3 y SEP en el Tutor IA — Design
 
 **Fecha:** 2026-07-17
 **Estado:** Aprobado por David (secciones 1-4). Punto legal resuelto por Daniel Zavala (CLO).
 **Alcance:** Spec **C** de tres. Ver "Fuera de alcance" al final.
+
+> **ACTUALIZACIÓN 2026-07-17 (David):** dos decisiones que amplían el alcance original:
+> 1. **El SEP tampoco se cobra en el Aula Virtual.** La regla aplica a **AMBOS** certificados de pago (DC-3 **y** SEP), no solo al DC-3. Donde este documento diga "DC-3", léase "DC-3 y SEP" salvo que se indique lo contrario.
+> 2. **Las solicitudes de certificado se anclan a Studio, no al catálogo legacy.** Hoy `certificate_requests.course_id` es FK a `courses` (legacy, 29 filas), y ~20 cursos del Tutor IA no tienen espejo legacy → no podían anclar solicitud. Como ambos certificados nacen ahora del Tutor IA, el ancla se mueve a los cursos de Studio. Esto **repara** el hueco de los 20 huérfanos de raíz y hace que el Aula Virtual pierda DC-3 **y** SEP de un solo golpe. Seguro sin migración de datos: David confirmó que **nadie ha solicitado ni pagado ningún certificado**.
 
 ## Problema
 
@@ -18,10 +22,10 @@ Al mismo tiempo, el **Aula Virtual** —que son **conferencias que se escuchan**
 
 ## Decisión de producto (David)
 
-- **Aula Virtual** = escuchar clases → **diploma de asistencia** ("de que lo escuchaste") + invitación a tomar el curso en el Tutor IA. **No cobra. No emite DC-3.**
-- **Tutor IA** = estudiar el curso → **aprobar el quiz** → **DC-3**.
+- **Aula Virtual** = escuchar clases → **diploma de asistencia** ("de que lo escuchaste") + invitación a tomar el curso en el Tutor IA. **No cobra nada — ni DC-3 ni SEP.**
+- **Tutor IA** = estudiar el curso → **aprobar el quiz** → **DC-3 y/o SEP**.
 
-La conferencia acredita que **escuchaste**; el curso acredita que **aprendiste**. Un DC-3 certifica competencia, no asistencia.
+La conferencia acredita que **escuchaste**; el curso acredita que **aprendiste**. Un certificado oficial (DC-3 STPS / SEP) certifica competencia, no asistencia.
 
 ## Arquitectura: la regla de elegibilidad
 

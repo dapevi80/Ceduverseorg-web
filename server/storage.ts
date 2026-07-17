@@ -23,6 +23,7 @@ import {
   generatedContent,
   studioEnrollments,
   studioModuleProgress,
+  studioQuizAttempts,
   chatSessions,
   supportThreads,
   supportMessages,
@@ -70,6 +71,8 @@ import {
   type InsertStudioEnrollment,
   type StudioModuleProgress,
   type InsertStudioModuleProgress,
+  type StudioQuizAttempt,
+  type InsertStudioQuizAttempt,
   type ChatSession,
   type SupportThread,
   type InsertSupportThread,
@@ -174,6 +177,8 @@ export interface IStorage {
   getModuleProgress(enrollmentId: string, moduleIdentifier: string): Promise<StudioModuleProgress | undefined>;
   getModuleProgressForEnrollment(enrollmentId: string): Promise<StudioModuleProgress[]>;
   upsertModuleProgress(enrollmentId: string, moduleIdentifier: string, data: Partial<InsertStudioModuleProgress>): Promise<StudioModuleProgress>;
+  createStudioQuizAttempt(data: InsertStudioQuizAttempt): Promise<StudioQuizAttempt>;
+  getStudioQuizAttempts(userId: string, courseIdentifier: string): Promise<StudioQuizAttempt[]>;
   deleteStudioEnrollment(userId: string, courseIdentifier: string): Promise<boolean>;
   resetStudioEnrollmentProgress(enrollmentId: string): Promise<boolean>;
   getChatSession(userId: string, courseSlug: string, moduleIndex: number): Promise<ChatSession | undefined>;
@@ -668,6 +673,19 @@ export class DatabaseStorage implements IStorage {
       ...data,
     }).returning();
     return created;
+  }
+
+  // Append-only a propósito: solo insert. No hay update ni delete de intentos.
+  async createStudioQuizAttempt(data: InsertStudioQuizAttempt): Promise<StudioQuizAttempt> {
+    const [attempt] = await db.insert(studioQuizAttempts).values(data).returning();
+    return attempt;
+  }
+
+  async getStudioQuizAttempts(userId: string, courseIdentifier: string): Promise<StudioQuizAttempt[]> {
+    return db.select().from(studioQuizAttempts).where(and(
+      eq(studioQuizAttempts.userId, userId),
+      eq(studioQuizAttempts.courseIdentifier, courseIdentifier),
+    )).orderBy(desc(studioQuizAttempts.createdAt));
   }
 
   async deleteStudioEnrollment(userId: string, courseIdentifier: string): Promise<boolean> {

@@ -16,6 +16,12 @@ import {
 import path from "path";
 import fs from "fs";
 import {
+  submitStudioQuiz,
+  type StudioQuizSubmitDeps,
+  type StoredQuiz,
+} from "../lib/studio-quiz-submit";
+import { DEFAULT_PASSING_SCORE, type GradableQuestion } from "@shared/quiz-grading";
+import {
   insertCourseSchema,
   insertAchievementSchema,
   insertCourseUserSchema,
@@ -37,6 +43,7 @@ import { eq, and, sql, count, desc } from "drizzle-orm";
 import { sendKitEmail } from "../email";
 import { getInitialsFromName } from "./helpers";
 import { getEffectiveRole } from "../lib/effective-role";
+import { computeCertStatus } from "../lib/cert-status";
 
 // Public lead form — anonymous, low-volume in legitimate use.
 // 5 leads / IP / hour is generous for a real prospect (typically 1) and blocks scrapers.
@@ -1020,6 +1027,30 @@ export function registerCourseRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
+  // Estado real de los certificados de pago (DC-3 y SEP) para (socio, curso) del
+  // Tutor IA. La pestaña Certificado lo consume: cuando no se puede solicitar,
+  // dice por qué. El precio SIEMPRE sale del servidor (CERT_PRICES_MXN). Solo
+  // lectura: no crea ni modifica ninguna solicitud, no toca F0. La lógica vive
+  // en el seam testeable `cert-status` (RED→GREEN sin BD, Task 10).
+  app.get("/api/studio/courses/:slug/certificates", requireAuth, async (req, res) => {
+    const userId = req.supabaseUserId!;
+    const slug = String(req.params.slug as string);
+    const result = await computeCertStatus(
+      {
+        getStudioCourse: (s) => storage.getStudioCourse(s),
+        getAttempts: (uid, s) => storage.getStudioQuizAttempts(uid, s),
+        getRequestsByUser: (uid) => storage.getCertificateRequestsByUser(uid),
+      },
+      { userId, slug },
+    );
+    if (!result.ok) {
+      // Sin degradación silenciosa: no se responde "no elegible" cuando lo que
+      // pasó es que no se pudo calcular.
+      return res.status(503).json({ message: "No pudimos verificar tus certificados. Intenta de nuevo en unos minutos.", state: "error" });
+    }
+    return res.json({ certs: result.certs });
+  });
+
   app.get("/api/studio/courses/:slug/modules/:index", async (req, res, next) => {
     try {
       const slug = String((req.params.slug as string));
@@ -1209,33 +1240,56 @@ export function registerCourseRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
+  // Resolución del "quiz almacenado", en el mismo orden de precedencia que usa el
+  // cliente (studio-course.tsx): quiz adaptativo del usuario para ese módulo y,
+  // si no hay, el quiz del curso sembrado en studio_quizzes. Ambos viven en el
+  // servidor. Si no hay ninguno, null → la ruta responde 422 y NO se aprueba nada.
+  const studioQuizSubmitDeps: StudioQuizSubmitDeps = {
+    async getStoredQuiz(userId, courseIdentifier, moduleIndex): Promise<StoredQuiz | null> {
+      const generated = await storage.getGeneratedContent(userId, courseIdentifier, moduleIndex);
+      const adaptive = (generated?.adaptiveQuiz as GradableQuestion[] | null) ?? null;
+      const course = await storage.getStudioCourse(courseIdentifier);
+      const courseQuiz = course ? await storage.getStudioQuiz(course.id) : undefined;
+      const questions = adaptive && adaptive.length > 0
+        ? adaptive
+        : ((courseQuiz?.questions as GradableQuestion[] | undefined) ?? []);
+      if (questions.length === 0) return null;
+      return { questions, passingScore: courseQuiz?.passingScore ?? DEFAULT_PASSING_SCORE };
+    },
+    async recordAttempt(attempt) {
+      await storage.createStudioQuizAttempt(attempt);
+    },
+    async listAttempts(userId, courseIdentifier) {
+      return storage.getStudioQuizAttempts(userId, courseIdentifier);
+    },
+  };
+
   app.post("/api/studio/courses/:slug/modules/:index/quiz/submit", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
       const slug = String((req.params.slug as string));
       const moduleIndex = Number((req.params.index as string));
       if (!Number.isFinite(moduleIndex) || moduleIndex < 0) return res.status(400).json({ message: "Índice inválido" });
-      const { answers, score: clientScore } = req.body;
 
-      if (!answers || !Array.isArray(answers)) return res.status(400).json({ message: "Respuestas requeridas" });
+      const result = await submitStudioQuiz(studioQuizSubmitDeps, {
+        userId,
+        courseIdentifier: slug,
+        moduleIndex,
+        body: req.body,
+      });
 
-      const generated = await storage.getGeneratedContent(userId, slug, moduleIndex);
-      const quiz = generated?.adaptiveQuiz as any[] | null;
-      let score = 0;
-      let total = 0;
-
-      if (quiz && quiz.length > 0) {
-        total = quiz.length;
-        for (let i = 0; i < quiz.length; i++) {
-          if (answers[i] === quiz[i].correctIndex) score++;
-        }
-      } else {
-        score = clientScore || 0;
-        total = answers.length;
+      if (!result.ok) {
+        const status = result.error === "respuestas_invalidas" ? 400
+          : result.error === "sin_quiz_almacenado" ? 422
+          : 429;
+        return res.status(status).json({
+          message: result.message,
+          error: result.error,
+          ...(result.retryAfterMs != null ? { retryAfterMs: result.retryAfterMs } : {}),
+        });
       }
 
-      const scorePercent = total > 0 ? Math.round((score / total) * 100) : 0;
-      const passed = scorePercent >= 70;
+      const { score, total, scorePercent, passed } = result.grade;
 
       const allEnrollments = await storage.getStudioEnrollments(userId);
       const enrollment = allEnrollments.find(e => e.courseIdentifier === slug);

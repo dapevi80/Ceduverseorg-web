@@ -6,10 +6,10 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { r2Storage } from "../services/r2-storage";
-import { isPaidCertType, resolveCertPriceMxn } from "@shared/cert-pricing";
 import { isBlockingDuplicateStatus } from "@shared/cert-duplicate";
 import { stripe, BASE_URL } from "../lib/stripe-client";
 import { decideCertTransition } from "../lib/cert-webhook-logic";
+import { evaluateCertRequest } from "../lib/cert-request-gate";
 
 export function registerCertificateRoutes(app: Express) {
   // ==================== STRIPE WEBHOOK (CERTIFICATES) ====================
@@ -51,64 +51,46 @@ export function registerCertificateRoutes(app: Express) {
   app.post("/api/me/certificates", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const { courseId, certType } = req.body;
-      if (!courseId || !certType) {
-        return res.status(400).json({ message: "courseId y certType son requeridos" });
+
+      // Criterio Studio (spec 2026-07-17, decisión 1+2): la puerta de dc3 Y sep es un
+      // intento de quiz APROBADO del Tutor IA + el flag del curso (dc3_available /
+      // sep_available), anclado por studio_course_slug. Ya NO se mira
+      // course_users.completed ni el quiz legacy: una conferencia del Aula Virtual no
+      // existe en studio_courses ni tiene intentos, y no puede emitir DC-3 NI SEP por
+      // construcción. El diploma (gratis) NO pasa por aquí: se crea al emitir (admin).
+      // La regla vive en el seam testeable `cert-request-gate` (RED→GREEN sin BD).
+      const gate = await evaluateCertRequest(
+        {
+          getStudioCourse: (slug) => storage.getStudioCourse(slug),
+          getAttempts: (uid, slug) => storage.getStudioQuizAttempts(uid, slug),
+        },
+        { userId, body: req.body },
+      );
+      if (!gate.ok) {
+        if (gate.kind === "bad_request") return res.status(400).json({ message: gate.message });
+        // Sin degradación silenciosa: no se pudo CALCULAR la elegibilidad.
+        if (gate.kind === "error") return res.status(503).json({ message: "No pudimos verificar tu elegibilidad. Intenta de nuevo en unos minutos.", state: "error" });
+        // not_eligible: NO se crea ninguna solicitud.
+        return res.status(400).json({ message: gate.message, state: gate.state });
       }
-      if (!["dc3", "sep"].includes(certType)) {
-        return res.status(400).json({ message: "certType debe ser dc3 o sep" });
-      }
-      const course = await storage.getCourse(courseId);
-      if (!course) {
-        return res.status(404).json({ message: "Curso no encontrado" });
-      }
-      if (certType === "dc3" && !course.dc3Disponible) {
-        return res.status(400).json({ message: "Este curso no ofrece constancia DC-3" });
-      }
-      // El certificado exige haber terminado el curso: sin este check un cliente
-      // podía solicitarlo vía API con 0% de avance (la UI lo ocultaba, la API no).
-      const userCourses = await storage.getUserCourses(userId);
-      const enrollment = userCourses.find(uc => uc.courseId === courseId);
-      if (!enrollment || (enrollment.completed || 0) < 100) {
-        return res.status(400).json({ message: "Debes completar el 100% del curso antes de solicitar un certificado" });
-      }
-      const quiz = await storage.getQuizByCourse(courseId);
-      if (quiz) {
-        const attempts = await storage.getQuizAttempts(userId, quiz.id);
-        const passed = attempts.some((a: any) => a.score >= (quiz.passingScore || 70));
-        if (!passed) {
-          return res.status(400).json({ message: "Debes aprobar la evaluación antes de solicitar un certificado" });
-        }
-      }
+      const { certType, courseSlug, course, amountMxn } = gate;
+
+      // ===== F0 pay-first (plomería SIN cambios): dedupe -> checkout -> pending_payment =====
       const existing = await storage.getCertificateRequestsByUser(userId);
-      const duplicate = existing.find(r => r.courseId === courseId && r.certType === certType);
+      const duplicate = existing.find(r => r.studioCourseSlug === courseSlug && r.certType === certType);
       if (duplicate && isBlockingDuplicateStatus(duplicate.status)) {
         return res.status(409).json({ message: "Ya tienes una solicitud para este certificado", request: duplicate });
       }
 
-      // Diploma es gratis: comportamiento actual (incluye reuso de un rechazado).
-      if (!isPaidCertType(certType)) {
-        if (duplicate) {
-          const updated = await storage.updateCertificateRequest(duplicate.id, { status: "solicitado", rejectReason: null });
-          return res.status(200).json(updated);
-        }
-        const request = await storage.createCertificateRequest({
-          userId,
-          courseId,
-          certType,
-          status: "solicitado",
-        });
-        return res.status(201).json(request);
-      }
-
-      // dc3 / sep: pay-first. El monto se resuelve SIEMPRE en el servidor, nunca desde el body.
+      // dc3 / sep: pay-first. El monto lo resuelve SIEMPRE el servidor (gate.amountMxn
+      // vía resolveCertPriceMxn), nunca desde el body.
       if (!stripe) {
         return res.status(503).json({ message: "Pagos no disponibles: STRIPE_SECRET_KEY no configurada." });
       }
-      const amount = resolveCertPriceMxn(certType);
+      const amount = amountMxn;
       const request = duplicate
         ? await storage.updateCertificateRequest(duplicate.id, { status: "pending_payment", amountMxn: amount, rejectReason: null })
-        : await storage.createCertificateRequest({ userId, courseId, certType, status: "pending_payment", amountMxn: amount });
+        : await storage.createCertificateRequest({ userId, studioCourseSlug: courseSlug, certType, status: "pending_payment", amountMxn: amount });
       if (!request) {
         return res.status(500).json({ message: "No se pudo crear la solicitud de certificado" });
       }
@@ -148,7 +130,7 @@ export function registerCertificateRoutes(app: Express) {
       const allRequests = await storage.listCertificateRequests();
       const enriched = await Promise.all(allRequests.map(async (r) => {
         const profile = await storage.getProfile(r.userId);
-        const course = await storage.getCourse(r.courseId);
+        const course = await storage.getStudioCourse(r.studioCourseSlug);
         return {
           ...r,
           studentName: profile?.fullName || "Sin nombre",
@@ -208,7 +190,7 @@ export function registerCertificateRoutes(app: Express) {
           if (!finalPdf) {
             return res.status(400).json({ message: "Se requiere subir un PDF antes de emitir" });
           }
-          const course = await storage.getCourse(request.courseId);
+          const course = await storage.getStudioCourse(request.studioCourseSlug);
           if (!course) {
             return res.status(404).json({ message: "Curso no encontrado" });
           }
@@ -220,7 +202,7 @@ export function registerCertificateRoutes(app: Express) {
               name: `Diploma: ${course.title}`,
               shortDescription: `Aprobó la evaluación del curso "${course.title}"`,
               description: `Diploma Digital de Participación obtenido al aprobar con éxito la evaluación del curso ${course.title}. Verificable en blockchain.`,
-              category: course.areaTematica || "STPS",
+              category: course.category || "STPS",
               value: 1000,
               icon: "award",
             });

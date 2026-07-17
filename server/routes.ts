@@ -629,6 +629,9 @@ export async function registerRoutes(
 
       const instructorCourses = await db.select().from(courses).where(eq(courses.instructorId, userId));
       const courseIds = instructorCourses.map(c => c.id);
+      // certificate_requests ancla en studio_course_slug (Task 8), no en course_id legacy;
+      // se resuelve el slug del curso legacy para la comparación.
+      const courseSlugById = new Map(instructorCourses.map(c => [c.id, c.slug]));
 
       let totalEnrolled = 0;
       let totalCompleted = 0;
@@ -649,7 +652,7 @@ export async function registerRoutes(
           enrollmentCount++;
         }
         const [certCount] = await db.select({ count: count() }).from(certificateRequests).where(
-          and(eq(certificateRequests.courseId, cid), eq(certificateRequests.status, "emitido"))
+          and(eq(certificateRequests.studioCourseSlug, courseSlugById.get(cid)!), eq(certificateRequests.status, "emitido"))
         );
         totalCertificates += certCount.count;
       }
@@ -918,15 +921,19 @@ export async function registerRoutes(
       const userId = req.supabaseUserId!;
       const instructorCoursesData = await db.select().from(courses).where(eq(courses.instructorId, userId));
       const courseIds = instructorCoursesData.map(c => c.id);
+      // certificate_requests ancla en studio_course_slug (Task 8), no en course_id legacy;
+      // se resuelve el slug del curso legacy para la comparación.
+      const courseSlugByIdCommissions = new Map(instructorCoursesData.map(c => [c.id, c.slug]));
 
       let totalDc3 = 0;
       let totalSep = 0;
       for (const cid of courseIds) {
+        const slug = courseSlugByIdCommissions.get(cid)!;
         const [dc3Count] = await db.select({ count: count() }).from(certificateRequests).where(
-          and(eq(certificateRequests.courseId, cid), eq(certificateRequests.certType, "dc3"), eq(certificateRequests.status, "emitido"))
+          and(eq(certificateRequests.studioCourseSlug, slug), eq(certificateRequests.certType, "dc3"), eq(certificateRequests.status, "emitido"))
         );
         const [sepCount] = await db.select({ count: count() }).from(certificateRequests).where(
-          and(eq(certificateRequests.courseId, cid), eq(certificateRequests.certType, "sep"), eq(certificateRequests.status, "emitido"))
+          and(eq(certificateRequests.studioCourseSlug, slug), eq(certificateRequests.certType, "sep"), eq(certificateRequests.status, "emitido"))
         );
         totalDc3 += dc3Count?.count || 0;
         totalSep += sepCount?.count || 0;
@@ -980,6 +987,8 @@ export async function registerRoutes(
       const userId = req.supabaseUserId!;
       const instructorCoursesData = await db.select().from(courses).where(eq(courses.instructorId, userId));
       const courseIds = instructorCoursesData.map(c => c.id);
+      // certificate_requests ancla en studio_course_slug (Task 8), no en course_id legacy.
+      const courseSlugs = instructorCoursesData.map(c => c.slug);
 
       if (courseIds.length === 0) return res.json([]);
 
@@ -991,10 +1000,10 @@ export async function registerRoutes(
         .from(certificateRequests)
         .innerJoin(users, eq(certificateRequests.userId, users.id))
         .leftJoin(profiles, eq(certificateRequests.userId, profiles.id))
-        .where(inArray(certificateRequests.courseId, courseIds))
+        .where(inArray(certificateRequests.studioCourseSlug, courseSlugs))
         .orderBy(desc(certificateRequests.createdAt));
 
-      const courseMap = new Map(instructorCoursesData.map(c => [c.id, c.title]));
+      const courseMap = new Map(instructorCoursesData.map(c => [c.slug, c.title]));
 
       res.json(certs.map(r => ({
         id: r.cert.id,
@@ -1002,7 +1011,7 @@ export async function registerRoutes(
         status: r.cert.status,
         studentName: r.profile?.fullName || r.user.email,
         studentEmail: r.user.email,
-        courseTitle: courseMap.get(r.cert.courseId) || "Curso desconocido",
+        courseTitle: courseMap.get(r.cert.studioCourseSlug) || "Curso desconocido",
         createdAt: r.cert.createdAt,
       })));
     } catch (err) { next(err); }
@@ -1023,7 +1032,7 @@ export async function registerRoutes(
         const [avgRow] = await db.select({ avg: sql<number>`COALESCE(AVG(${courseUsers.completed}), 0)` })
           .from(courseUsers).where(eq(courseUsers.courseId, course.id));
         const [certCount] = await db.select({ count: count() }).from(certificateRequests).where(
-          and(eq(certificateRequests.courseId, course.id), eq(certificateRequests.status, "emitido"))
+          and(eq(certificateRequests.studioCourseSlug, course.slug), eq(certificateRequests.status, "emitido"))
         );
 
         courseAnalytics.push({

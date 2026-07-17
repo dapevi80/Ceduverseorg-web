@@ -7,6 +7,12 @@ import { yuridiaModules } from "./data/yuridia-courses";
 import { yuridiaQuizzes } from "./data/yuridia-quizzes";
 import crypto from "crypto";
 
+// dc3Disponible queda en false a propósito en TODO este catálogo (spec
+// 2026-07-17): el Aula Virtual son conferencias que se escuchan y NO emiten
+// DC-3 ni SEP. Los certificados de pago se solicitan desde el Tutor IA al
+// aprobar el quiz (server/routes/certificates.ts ya no lee esta bandera). No la
+// vuelvas a encender esperando que haga algo: no hace nada, y prometerlo en el
+// catálogo es prometer lo que la ruta no puede emitir.
 const STPS_COURSES = [
   {
     slug: "nom-035-stps-riesgo-psicosocial",
@@ -19,7 +25,7 @@ const STPS_COURSES = [
     categoria: ["Salud Ocupacional", "Normatividad", "NOM-035"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     sepCertificatePrice: 1999,
     hasRvoe: true,
     rvoeUrl: "https://ceduverse.org/programas-rvoe",
@@ -48,7 +54,7 @@ const STPS_COURSES = [
     categoria: ["Salud Mental", "Convivencia Laboral"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Conceptualización del Bullying",
       "Factores y características del Bullying",
@@ -70,7 +76,7 @@ const STPS_COURSES = [
     categoria: ["Desarrollo Personal", "Inteligencia Emocional"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Encuentro con uno mismo",
       "Encuentro con el otro",
@@ -92,7 +98,7 @@ const STPS_COURSES = [
     categoria: ["Cultura Organizacional", "Ética"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Los valores: ¿Qué son? ¿Cómo los identifico?",
       "Clarificación de valores",
@@ -114,7 +120,7 @@ const STPS_COURSES = [
     categoria: ["Comunicación", "Habilidades Blandas"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Estrategias de comunicación efectiva",
       "La comunicación interior y los vínculos en los que te relacionas",
@@ -136,7 +142,7 @@ const STPS_COURSES = [
     categoria: ["Relaciones Interpersonales", "Trabajo en Equipo"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "El hombre: un ser social",
       "La personalidad en las relaciones humanas",
@@ -157,7 +163,7 @@ const STPS_COURSES = [
     categoria: ["Desarrollo Personal", "Salud Mental"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Autoestima como marco de referencia desde el cual el hombre se proyecta",
       "Autoestima alta y baja",
@@ -178,7 +184,7 @@ const STPS_COURSES = [
     categoria: ["Liderazgo", "Resolución de Conflictos"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Trascendencia de las decisiones",
       "El proceso decisional: sus fases y etapas",
@@ -199,7 +205,7 @@ const STPS_COURSES = [
     categoria: ["Trabajo en Equipo", "Liderazgo"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Tipos de grupos y el equipo",
       "Dinámica grupal",
@@ -220,7 +226,7 @@ const STPS_COURSES = [
     categoria: ["Desarrollo Personal", "Planeación"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Necesidad de una planeación significativa de vida y trabajo",
       "Fortalezas y debilidades",
@@ -240,7 +246,7 @@ const STPS_COURSES = [
     categoria: ["Gestión", "Resolución de Problemas", "Pensamiento Analítico"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Pensamiento analítico y crítico",
       "Metodologías de resolución de problemas (Ishikawa, 5 Porqués, 8D)",
@@ -262,7 +268,7 @@ const STPS_COURSES = [
     categoria: ["Liderazgo", "Trabajo en Equipo"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     sepCertificatePrice: 1999,
     hasRvoe: true,
     rvoeUrl: "https://ceduverse.org/programas-rvoe",
@@ -287,7 +293,7 @@ const STPS_COURSES = [
     categoria: ["Seguridad Industrial", "Prevención"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Marco legal de la seguridad laboral en México",
       "Identificación de peligros y evaluación de riesgos",
@@ -310,7 +316,7 @@ const STPS_COURSES = [
     categoria: ["Seguridad Industrial", "EPP"],
     nivel: "Básico",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Normatividad aplicable (NOM-017-STPS)",
       "Tipos de EPP: cabeza, ojos, oídos, respiratorio, manos, pies, cuerpo",
@@ -333,7 +339,7 @@ const STPS_COURSES = [
     categoria: ["Operaciones", "Limpieza"],
     nivel: "Básico",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Técnicas de limpieza industrial y doméstica",
       "Manejo seguro de productos químicos de limpieza",
@@ -356,7 +362,7 @@ const STPS_COURSES = [
     categoria: ["Seguridad Industrial", "Electricidad"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Conceptos básicos de electricidad y sus riesgos",
       "NOM-029-STPS Mantenimiento de instalaciones eléctricas",
@@ -381,7 +387,7 @@ const STPS_COURSES = [
     categoria: ["Protección Civil", "Brigadas", "Incendios"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Teoría del fuego: triángulo y tetraedro del fuego",
       "Clasificación de incendios (A, B, C, D, K)",
@@ -406,7 +412,7 @@ const STPS_COURSES = [
     categoria: ["Protección Civil", "Brigadas", "Primeros Auxilios"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Principios de primeros auxilios (PAS: Proteger, Alertar, Socorrer)",
       "Evaluación primaria y secundaria de la víctima",
@@ -431,7 +437,7 @@ const STPS_COURSES = [
     categoria: ["Seguridad Industrial", "Químicos", "SGA"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "¿Qué es el Sistema Globalmente Armonizado (SGA/GHS)?",
       "NOM-018-STPS: Comunicación de peligros y riesgos por sustancias químicas",
@@ -456,7 +462,7 @@ const STPS_COURSES = [
     categoria: ["Normatividad", "NOM-035", "Salud Ocupacional"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Objetivo y campo de aplicación",
       "Factores de riesgo psicosocial en el trabajo",
@@ -479,7 +485,7 @@ const STPS_COURSES = [
     categoria: ["Capacitación", "Formación", "Didáctica"],
     nivel: "Avanzado",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "El rol del instructor en la capacitación",
       "Detección de necesidades de capacitación (DNC)",
@@ -506,7 +512,7 @@ const STPS_COURSES = [
     categoria: ["Seguridad Industrial", "LOTO", "Energías Peligrosas"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "¿Qué es el bloqueo y etiquetado (LOTO)?",
       "Tipos de energía peligrosa: eléctrica, mecánica, hidráulica, neumática, térmica, química",
@@ -531,7 +537,7 @@ const STPS_COURSES = [
     categoria: ["Normatividad", "Señalización", "Seguridad Industrial"],
     nivel: "Básico",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Objetivo y campo de aplicación de la NOM-026",
       "Colores de seguridad: rojo, amarillo, verde, azul y sus significados",
@@ -556,7 +562,7 @@ const STPS_COURSES = [
     categoria: ["Seguridad Industrial", "Herramientas", "Operaciones"],
     nivel: "Básico",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Clasificación de herramientas manuales y de poder",
       "Inspección previa al uso",
@@ -581,7 +587,7 @@ const STPS_COURSES = [
     categoria: ["Ergonomía", "Salud Ocupacional"],
     nivel: "Todos los niveles",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Fundamentos de ergonomía laboral",
       "Trastornos musculoesqueléticos más comunes (TME)",
@@ -606,7 +612,7 @@ const STPS_COURSES = [
     categoria: ["Seguridad Industrial", "Soldadura", "Trabajos en Caliente"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Tipos de soldadura y corte (arco eléctrico, oxiacetileno, MIG/MAG, TIG)",
       "NOM-027-STPS: Actividades de soldadura y corte",
@@ -632,7 +638,7 @@ const STPS_COURSES = [
     categoria: ["Operaciones", "Montacargas", "Seguridad Industrial"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Tipos de montacargas y sus componentes",
       "Principios de estabilidad y centro de gravedad",
@@ -661,7 +667,7 @@ const STPS_COURSES = [
     categoria: ["Operaciones", "Montacargas", "Actualización"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Repaso de principios de operación segura",
       "Actualización normativa",
@@ -684,7 +690,7 @@ const STPS_COURSES = [
     categoria: ["Normatividad", "Comisiones", "NOM-019"],
     nivel: "Intermedio",
     precioCurso: 0,
-    dc3Disponible: true,
+    dc3Disponible: false,
     temas: [
       "Objetivo y campo de aplicación de la NOM-019",
       "¿Qué es una Comisión de Seguridad e Higiene?",

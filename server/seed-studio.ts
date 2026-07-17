@@ -70,6 +70,7 @@ export async function seedStudioCourses() {
         level: meta.level,
         tags: meta.tags,
         dc3Available: meta.dc3Available,
+        sepAvailable: meta.sepAvailable,
         icon: meta.icon,
         color: meta.color,
         source: meta.source,
