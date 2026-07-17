@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ZONA_POR_ESTADO, ZONAS, ESTADOS_POR_ZONA, nombreCortoEstado } from "@shared/zonas";
+import { CERT_PRICES_MXN } from "@shared/cert-pricing";
 import { Link } from "wouter";
 import { motion, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -446,8 +447,12 @@ function SimuladorRendimientos() {
     lidera: { umas: 20, fee: 0.10, label: "Lidera", range: "100–500 colaboradores", desc: "20 UMAs/colaborador/mes. Para empresas grandes. Incluye Aula Virtual, Tutor IA, Academy y 15% desc. en certificaciones." },
   };
 
-  const DC3_PRICE = 399;
-  const SEP_PRICE = 1999;
+  // Precios desde la fuente ÚNICA de verdad (@shared/cert-pricing), la misma que
+  // el servidor usa para cobrar. Antes estaban hardcodeados aquí en 399 mientras
+  // el checkout cobraba 499: la página pública anunciaba un precio y el cobro
+  // real era otro. No volver a escribir el número a mano.
+  const DC3_PRICE = CERT_PRICES_MXN.dc3;
+  const SEP_PRICE = CERT_PRICES_MXN.sep;
 
   // Solo se modela la operación PROPIA del socio. La vigencia de Agente y
   // Consultor no está definida: el residual perpetuo que se anunciaba antes se

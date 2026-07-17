@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useForceLightMode } from "@/components/ThemeProvider";
 import MexicoMap from "@/components/mexico-map";
+import { CERT_PRICES_MXN } from "@shared/cert-pricing";
 import {
   TrendingUp,
   Users,
@@ -41,10 +42,13 @@ const PLANS: Record<string, { umas: number; feePct: number; label: string; range
   Lidera: { umas: 20, feePct: 0.10, label: "Lidera", range: "100–500 colaboradores", color: "#7c3aed", certDiscount: 15 },
 };
 
-// Precios y participaciones del socio Consultor, tomados de /socios
-// (socios-landing.tsx) para que las dos páginas públicas cuenten lo mismo.
-const DC3_PRICE = 399;
-const SEP_PRICE = 1999;
+// Participaciones del socio Consultor, tomadas de /socios (socios-landing.tsx)
+// para que las dos páginas públicas cuenten lo mismo.
+// Los PRECIOS vienen de la fuente ÚNICA de verdad (@shared/cert-pricing), la
+// misma que el servidor usa para cobrar. Antes estaban hardcodeados en 399
+// mientras el checkout cobraba 499. No volver a escribir el número a mano.
+const DC3_PRICE = CERT_PRICES_MXN.dc3;
+const SEP_PRICE = CERT_PRICES_MXN.sep;
 const DC3_SHARE = 0.40;
 const SEP_SHARE = 0.10;
 const SEP_SOBRE_DC3 = 0.1; // supuesto: 1 de cada 10 que tramita DC-3 también tramita SEP
