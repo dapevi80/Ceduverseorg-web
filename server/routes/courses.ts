@@ -7,6 +7,11 @@ import {
   isPoisonedGeneration,
   resolveGenerationStatus,
   shouldServeCache,
+  hasReachedFailureCeiling,
+  canAutoRetry,
+  nextRetryAt,
+  canManualRegenerate,
+  manualRegenerateWaitMs,
 } from "../lib/generation-retry";
 import path from "path";
 import fs from "fs";
@@ -56,6 +61,10 @@ async function runModuleGeneration(
   moduleIndex: number,
   result: NonNullable<Awaited<ReturnType<typeof storage.getStudioModuleBySlugAndIndex>>>,
   profile: Awaited<ReturnType<typeof storage.getStudentProfile>>,
+  // Consecutive failures already on record *before* this attempt — 0 on a
+  // fresh/never-failed module. Success resets to 0; failure increments it,
+  // which is what drives next attempt's backoff (generation-retry.ts).
+  previousConsecutiveFailures: number,
 ): Promise<void> {
   try {
     const { generateModuleContent } = await import("../ai-engine");
@@ -75,6 +84,14 @@ async function runModuleGeneration(
       result.module.references ? (result.module.references as string[]).join("; ") : undefined,
       { userId, courseSlug: slug, moduleIndex },
     );
+    // ai-engine.ts swallows every internal failure (missing key, 401, 429,
+    // truncation, timeout) and returns a stub instead of throwing — so this
+    // `try` normally completes even when generation actually failed. The
+    // stub IS the failure signal; the outer `catch` below only fires for
+    // something unrelated blowing up (e.g. storage.saveGeneratedContent
+    // itself, or getStudentProfile earlier in the caller). Both cases must
+    // count towards the same consecutive-failure streak.
+    const isFailure = generated.isStub === true;
     await storage.saveGeneratedContent({
       userId,
       courseSlug: slug,
@@ -94,13 +111,18 @@ async function runModuleGeneration(
         hasClassScript: !!generated.classScript,
       }),
       isStub: generated.isStub || false,
+      consecutiveFailures: isFailure ? previousConsecutiveFailures + 1 : 0,
     });
-    console.log(`[studio-gen] ${slug}#${moduleIndex} done (stub=${generated.isStub === true})`);
+    console.log(
+      `[studio-gen] ${slug}#${moduleIndex} ${isFailure ? "failed (stub)" : "done"} ` +
+      `(stub=${generated.isStub === true}, consecutiveFailures=${isFailure ? previousConsecutiveFailures + 1 : 0})`,
+    );
   } catch (err: any) {
+    const consecutiveFailures = previousConsecutiveFailures + 1;
     console.error(
       `[studio-gen] ${slug}#${moduleIndex} (user=${userId}) background generation failed ` +
       `[status=${err?.status ?? "n/a"} type=${err?.error?.type ?? err?.name ?? "n/a"} ` +
-      `request_id=${err?.request_id ?? "n/a"}]: ${err?.message}`,
+      `request_id=${err?.request_id ?? "n/a"}] (consecutiveFailures=${consecutiveFailures}): ${err?.message}`,
       err?.stack,
     );
     try {
@@ -109,6 +131,7 @@ async function runModuleGeneration(
         lectureHtml: null, mindMap: null, reflections: [], adaptiveQuiz: null,
         suggestedSources: null, classScript: null, personalizedFor: null,
         generationStatus: "failed", isStub: true,
+        consecutiveFailures,
       });
     } catch (saveErr: any) {
       // El .catch(() => {}) anterior se tragaba incluso el fallo de guardar: la
@@ -1029,14 +1052,57 @@ export function registerCourseRoutes(app: Express) {
       // Finished content already present — return it unless the user asked to
       // regenerate. Una fila envenenada (failed / isStub) NO se sirve: un fallo
       // transitorio persistido servía el stub "Contenido genérico" para siempre y
-      // sólo se curaba con "Regenerar" manual. Ahora reintenta sola.
+      // sólo se curaba con "Regenerar" manual. Ahora reintenta sola — pero con
+      // backoff y techo (ver server/lib/generation-retry.ts): sin eso, una falla
+      // *persistente* (429 sostenido, key inválida) regeneraba en cada poll del
+      // cliente (~5s), y con key válida cada intento es una llamada real y
+      // facturable a Claude.
+      const consecutiveFailures = cached?.consecutiveFailures ?? 0;
+
       if (shouldServeCache(cached, regenerate)) {
         return res.json(cached);
       }
-      if (isPoisonedGeneration(cached) && !regenerate) {
+
+      if (regenerate) {
+        // "Regenerar" es una acción humana explícita: puede saltarse el
+        // backoff/techo automático, pero se autolimita para que el botón no
+        // pueda spamearse en una ráfaga de intentos facturables.
+        if (!canManualRegenerate({ lastAttemptAt: cached?.generatedAt })) {
+          const waitMs = manualRegenerateWaitMs({ lastAttemptAt: cached?.generatedAt });
+          console.warn(
+            `[studio-gen] ${slug}#${moduleIndex} (user=${userId}) "Regenerar" bloqueado por rate limit ` +
+            `(faltan ${waitMs}ms).`,
+          );
+          return res.status(429).json({
+            message: "Espera unos segundos antes de volver a regenerar este módulo.",
+            retryAfterMs: waitMs,
+          });
+        }
+      } else if (isPoisonedGeneration(cached)) {
+        const ceilingReached = hasReachedFailureCeiling(consecutiveFailures);
+        const eligible = !ceilingReached && canAutoRetry({
+          consecutiveFailures,
+          lastAttemptAt: cached!.generatedAt,
+        });
+        if (!eligible) {
+          // Ni se sirve el stub como si fuera contenido bueno (ya no pasa,
+          // ver arriba) ni se regenera sin freno: se informa el estado real
+          // — fallando, cuántas veces, y cuándo (si acaso) se reintentará solo.
+          console.warn(
+            `[studio-gen] ${slug}#${moduleIndex} (user=${userId}) en backoff ` +
+            `(fallas=${consecutiveFailures} techo=${ceilingReached}): no se regenera automáticamente.`,
+          );
+          return res.json({
+            ...cached,
+            consecutiveFailures,
+            ceilingReached,
+            nextRetryAt: ceilingReached ? null : nextRetryAt({ consecutiveFailures, lastAttemptAt: cached!.generatedAt }),
+          });
+        }
         console.warn(
           `[studio-gen] ${slug}#${moduleIndex} (user=${userId}) cache envenenada ` +
-          `(status=${cached?.generationStatus} stub=${cached?.isStub}): regenerando en vez de servirla.`,
+          `(status=${cached?.generationStatus} stub=${cached?.isStub} fallas=${consecutiveFailures}): ` +
+          `regenerando en vez de servirla.`,
         );
       }
 
@@ -1060,9 +1126,13 @@ export function registerCourseRoutes(app: Express) {
         personalizedFor: profile ? { jobTitle: profile.jobTitle, industry: profile.industry } : null,
         generationStatus: "generating",
         isStub: false,
+        // Preserve the streak through the placeholder — the definitive value
+        // (reset on success, +1 on failure) is written by runModuleGeneration
+        // once the attempt actually resolves.
+        consecutiveFailures,
       });
 
-      void runModuleGeneration(userId, slug, moduleIndex, result, profile);
+      void runModuleGeneration(userId, slug, moduleIndex, result, profile, consecutiveFailures);
 
       res.status(202).json(placeholder);
     } catch (err) { next(err); }

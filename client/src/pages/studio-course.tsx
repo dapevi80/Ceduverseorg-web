@@ -134,6 +134,13 @@ interface GeneratedContent {
   classScript?: string | null;
   isStub?: boolean;
   generationStatus?: string;
+  // Present only on a "failed" response while the server is honoring the
+  // backoff (see server/lib/generation-retry.ts): tells the user the truth
+  // (generation is failing, when/if it retries on its own) instead of
+  // silently showing generic content as if it were personalized.
+  consecutiveFailures?: number;
+  ceilingReached?: boolean;
+  nextRetryAt?: string | null;
 }
 
 interface ModuleProgress {
@@ -419,6 +426,74 @@ function StubBanner({ onRegenerate, isRegenerating }: { onRegenerate: () => void
         disabled={isRegenerating}
         className="text-yellow-700 border-yellow-300 hover:bg-yellow-100 gap-1 shrink-0"
         data-testid="button-regenerate-stub"
+      >
+        {isRegenerating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+        Regenerar
+      </Button>
+    </div>
+  );
+}
+
+/** Countdown text for the next automatic retry. Re-renders every second so
+ *  it stays truthful instead of showing a stale "en 2 minutos" forever. */
+function useCountdown(targetIso: string | null | undefined): string | null {
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    if (!targetIso) return;
+    const id = setInterval(() => forceTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [targetIso]);
+  if (!targetIso) return null;
+  const remainingMs = new Date(targetIso).getTime() - Date.now();
+  if (remainingMs <= 0) return "en un momento";
+  const totalSeconds = Math.ceil(remainingMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes <= 0) return `en ${seconds}s`;
+  return `en ${minutes} min ${seconds}s`;
+}
+
+/** Honest failed state: no personalization succeeded (yet). Never dressed up
+ *  as real content — states plainly that it's failing, how many times, and
+ *  either when it'll retry on its own or that it stopped retrying and needs
+ *  a manual push. The project's rule against silent degradation applies here
+ *  as much as anywhere: showing static/generic content with no explanation
+ *  would look like personalization that never actually happened. */
+function GenerationFailedBanner({
+  consecutiveFailures,
+  ceilingReached,
+  nextRetryAt,
+  onRegenerate,
+  isRegenerating,
+}: {
+  consecutiveFailures?: number;
+  ceilingReached?: boolean;
+  nextRetryAt?: string | null;
+  onRegenerate: () => void;
+  isRegenerating: boolean;
+}) {
+  const countdown = useCountdown(ceilingReached ? null : nextRetryAt);
+  const attempts = consecutiveFailures ?? 1;
+  return (
+    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-xl p-4 mb-4 flex items-start gap-3" data-testid="banner-generation-failed">
+      <AlertTriangle size={20} className="text-red-600 mt-0.5 flex-shrink-0" />
+      <div className="flex-1">
+        <p className="text-sm text-red-800 dark:text-red-300 font-medium">
+          No pudimos generar el contenido personalizado de este módulo
+        </p>
+        <p className="text-xs text-red-700 dark:text-red-400 mt-1">
+          {ceilingReached
+            ? `Fallaron ${attempts} intentos automáticos seguidos, así que dejamos de reintentar solos. Puedes forzar un nuevo intento con el botón.`
+            : `Falló el intento ${attempts}. Reintentaremos automáticamente${countdown ? ` ${countdown}` : ""}, o puedes forzar un intento ahora.`}
+        </p>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onRegenerate}
+        disabled={isRegenerating}
+        className="text-red-700 border-red-300 hover:bg-red-100 gap-1 shrink-0"
+        data-testid="button-regenerate-failed"
       >
         {isRegenerating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
         Regenerar
@@ -1095,8 +1170,22 @@ export default function StudioCoursePage() {
     enabled: !!user && !!courseData,
     // Generation runs async server-side (~3-5 min). While in progress the server
     // returns a "generating" placeholder; poll until the real content lands.
-    refetchInterval: (query) =>
-      query.state.data?.generationStatus === "generating" ? 5000 : false,
+    // While "failed" and backing off, DON'T poll every 5s forever — that would
+    // just re-fetch the same honest "still failing" response over and over
+    // (harmless now that the server itself refuses to regenerate that often,
+    // but wasteful). Instead poll once, right when the server's own backoff
+    // window ends, so the next automatic attempt is picked up without a
+    // manual refresh. Once the ceiling is reached there's no next automatic
+    // attempt, so stop polling entirely — only "Regenerar" moves it forward.
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (data?.generationStatus === "generating") return 5000;
+      if (data?.generationStatus === "failed" && !data.ceilingReached && data.nextRetryAt) {
+        const waitMs = new Date(data.nextRetryAt).getTime() - Date.now();
+        return Math.max(waitMs, 1000);
+      }
+      return false;
+    },
   });
 
   const [showUnenrollDialog, setShowUnenrollDialog] = useState(false);
@@ -1178,7 +1267,22 @@ export default function StudioCoursePage() {
       queryClient.setQueryData(["studio-generated", slug, activeModule], data);
       toast({ title: "Generando contenido", description: "Esto puede tomar unos minutos. Se actualizará automáticamente al terminar." });
     },
-    onError: () => {
+    onError: (err: any) => {
+      // apiRequest throws `Error("429: <json body>")` for the rate-limit
+      // response from POST .../generate?regenerate=true — surface the real
+      // "wait N seconds" message instead of a generic failure.
+      const message = String(err?.message || "");
+      if (message.startsWith("429:")) {
+        let description = "Espera unos segundos antes de volver a regenerar este módulo.";
+        try {
+          const body = JSON.parse(message.slice(message.indexOf(":") + 1).trim());
+          if (typeof body?.message === "string") description = body.message;
+        } catch {
+          // body wasn't JSON — keep the generic-but-honest fallback above.
+        }
+        toast({ title: "Espera un momento", description, variant: "destructive" });
+        return;
+      }
       toast({ title: "Error", description: "No se pudo iniciar la regeneración. Intenta de nuevo.", variant: "destructive" });
     },
   });
@@ -1519,7 +1623,45 @@ export default function StudioCoursePage() {
               <>
                 {activeTab === "lectura" && (
                   <>
-                    {generatedContent?.lectureHtml ? (
+                    {generatedContent?.generationStatus === "failed" ? (
+                      <div data-testid="view-lectura">
+                        <GenerationFailedBanner
+                          consecutiveFailures={generatedContent.consecutiveFailures}
+                          ceilingReached={generatedContent.ceilingReached}
+                          nextRetryAt={generatedContent.nextRetryAt}
+                          onRegenerate={handleRegenerate}
+                          isRegenerating={regenerateMutation.isPending}
+                        />
+                        {currentModule?.contentHtml && (
+                          <>
+                            <p className="text-xs text-cedu-ink-muted dark:text-gray-500 mb-3 italic">
+                              Mientras se resuelve, aquí tienes el contenido base del módulo (todavía sin personalizar a tu perfil):
+                            </p>
+                            <div className="flex items-center gap-3 mb-6 flex-wrap">
+                              <span className="text-sm text-cedu-ink-muted dark:text-gray-400 flex items-center gap-1">
+                                <Clock size={14} /> ~{Math.ceil((currentModule.contentHtml.replace(/<[^>]*>/g, " ").split(/\s+/).length) / 200)} min de lectura
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={staticContentReader.toggle}
+                                className="h-8 text-xs gap-1"
+                                data-testid="button-static-listen"
+                              >
+                                {staticContentReader.active ? <><VolumeX size={14} /> Detener lectura</> : <><Volume2 size={14} /> Leer en voz alta</>}
+                              </Button>
+                            </div>
+                            <div
+                              ref={staticContentReader.contentRef}
+                              className="prose prose-base max-w-none prose-headings:font-serif prose-headings:text-cedu-ink dark:prose-headings:text-white prose-p:text-cedu-ink-soft dark:prose-p:text-gray-300 prose-p:leading-[1.8] prose-li:text-cedu-ink-soft dark:prose-li:text-gray-300 prose-strong:text-cedu-ink dark:prose-strong:text-white"
+                              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentModule.contentHtml) }}
+                              data-testid="content-lecture"
+                            />
+                            {staticContentReader.active && <TextReader contentRef={staticContentReader.contentRef} autoStart />}
+                          </>
+                        )}
+                      </div>
+                    ) : generatedContent?.lectureHtml ? (
                       <LectureView
                         html={generatedContent.lectureHtml}
                         reflections={generatedContent.reflections}
