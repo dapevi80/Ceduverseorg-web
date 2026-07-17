@@ -28,9 +28,9 @@
 
 ### III. Aprobación del Reglamento Interno
 
-Presentación, discusión y, en su caso, **aprobación del Reglamento Interno de la Cooperativa** (versión sometida a la Asamblea), que desarrolla las materias que las Bases Constitutivas remiten a reglamentación interna: procedimiento de admisión de socios, transmisión de certificados de aportación, operación de certificados digitales, política de capitalización, y confidencialidad y gobierno interno.
+Presentación, discusión y, en su caso, **aprobación del Reglamento Interno de la Cooperativa** (versión sometida a la Asamblea), que desarrolla las materias que las Bases Constitutivas remiten a reglamentación interna: procedimiento de admisión de socios, transmisión de certificados de aportación, operación de certificados digitales, política de capitalización, **tabulador de anticipos de rendimientos y bonos y figura del Coordinador Regional (Título Cuarto Bis)**, y confidencialidad y gobierno interno.
 
-> **⚠️ BLOQUEANTE:** este punto **no puede someterse a votación** mientras las **7 decisiones pendientes** del Reglamento sigan abiertas (Decisiones núms. 1 a 7 — ver `reglamento-interno-v1-PARA-DANIEL.md`). Votar un reglamento con huecos marcados equivale a delegar en la Administración materias no resueltas.
+> **⚠️ BLOQUEANTE:** este punto **no puede someterse a votación** mientras las **9 decisiones pendientes** del Reglamento sigan abiertas (Decisiones núms. 1 a 9 — ver `reglamento-interno-v1-PARA-DANIEL.md`). Votar un reglamento con huecos marcados equivale a delegar en la Administración materias no resueltas.
 
 ### IV. Ratificación de los parámetros de la política de capitalización
 
@@ -47,6 +47,28 @@ Discusión y, en su caso, **ratificación** de los siguientes parámetros, en el
 > **A hacer constar expresamente en el acta:** el **bono de $170.00 debe provenir necesariamente de una fuente externa al capital social de Ceduverse.** En ningún caso puede financiarse con capital propio de la Cooperativa (circularidad → capital simulado).
 
 > **`[PENDIENTE]` fiscales que este punto NO resuelve** y que deben hacerse constar como sujetos a validación: base de IVA/retenciones sobre la porción de servicio (95%); **base de IVA del saldo de billetera de $20.00**; asiento contable del split 5%/95%; efecto en PTU/ISR y en los fondos obligatorios del Art. Vigésimo Primero de las Bases Constitutivas. **Decisión Pendiente núm. 5.**
+
+### IV Bis. Ratificación, ajuste o rechazo del tabulador de anticipos de rendimientos y bonos (Título Cuarto Bis del Reglamento Interno)
+
+Discusión y, en su caso, **ratificación, ajuste o rechazo** del tabulador del **Artículo 15 Bis** del Reglamento Interno, y de la figura del **Coordinador Regional** y su **bono por crecimiento regional** (**Artículo 15 Ter**).
+
+**Tabulador sometido (transcrito de los valores hoy publicados):**
+
+| Perfil de socio | Anticipo de rendimientos (% del fee) | DC-3 | SEP | Bono de referido | Vigencia |
+|---|---|---|---|---|---|
+| **Trabajador** | 10% | 20% | 5% | $300.00 | 12 meses |
+| **Instructor** | 10% | 40% | 10% | $500.00 | 24 meses |
+| **Agente** | 15% | 40% | 10% | $500.00 | `[PENDIENTE — por definir por la Asamblea]` |
+| **Consultor** | 25% base; 30% con 4+; 35% con 8+ | 40% | 10% | $500.00 | `[PENDIENTE — por definir por la Asamblea]` |
+
+> **⚠️ A hacer constar expresamente en el acta — ORIGEN DE ESTAS CIFRAS:**
+> - **No tienen fuente documental.** No derivan de las Bases Constitutivas, de acuerdo previo de Asamblea ni de documento interno alguno: **existen hoy únicamente en el código de la página pública de socios** (`client/src/pages/socios-landing.tsx`). **Quién las fijó y con qué criterio NO CONSTA.**
+> - **Ya están publicadas al público**, con un simulador que permite calcular escenarios con ellas. **La Asamblea debe ponderar** que puede haber personas que se registraron —o que se registren mientras la página siga publicada— **confiando en ellas**.
+> - Este punto **no da por buenas** las cifras: las somete. La Asamblea **puede ratificarlas, ajustarlas o rechazarlas**.
+
+> **⚠️ Coordinador Regional (Art. 15 Ter):** puesto **asignado por la Cooperativa y revocable** —no se gana reclutando—, **uno por zona, máximo cuatro** (Centro, Norte, Bajío, Sur-Sureste), **sin cascada ni niveles**. Su **bono por crecimiento regional** se integra de **cuota fija por la función + variable por metas de zona**. **`[PENDIENTE: montos por definir por la Asamblea]` — no se propone cifra alguna.**
+
+> **⚠️ Este punto arrastra las Decisiones Pendientes núms. 8 y 9:** **(8)** si una escalera por perfil con escalación por volumen (25%/30%/35%) es compatible con la proporcionalidad propia de una **cooperativa de consumo**; y **(9)** el **marco jurídico de la figura del "socio comercial"** —quien vende y cobra un porcentaje por vender no opera como consumidor— (¿relación laboral? ¿prestación de servicios? ¿sección de producción?). **Mientras sigan abiertas, este punto no puede votarse.** `[VERIFICAR CON DANIEL: si la resolución de la Decisión núm. 9 exige reforma estatutaria, lo que convertiría este punto en materia de Asamblea EXTRAORDINARIA.]`
 
 ### V. Certificados de aportación en forma digital (Art. Sexto de las Bases Constitutivas)
 

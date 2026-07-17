@@ -2,7 +2,7 @@
 > **Este documento NO es una convocatoria emitida.** Es un proyecto de convocatoria para revisión del CLO y, en su caso, emisión y firma por el órgano facultado. **No surte efecto de convocatoria mientras no sea emitida, firmada y publicada conforme a los Estatutos y a la LGSC.**
 > Versión de borrador: v0.1 (2026-07-16).
 >
-> **⚠️ NO EMITIR ESTA CONVOCATORIA todavía.** El Reglamento Interno que se sometería a votación tiene **7 decisiones pendientes** sin resolver por el CLO (ver `reglamento-interno-v1-PARA-DANIEL.md` y `README.md`). Convocar antes de cerrarlas llevaría a la Asamblea un texto incompleto.
+> **⚠️ NO EMITIR ESTA CONVOCATORIA todavía.** El Reglamento Interno que se sometería a votación tiene **9 decisiones pendientes** sin resolver por el CLO (ver `reglamento-interno-v1-PARA-DANIEL.md` y `README.md`). Convocar antes de cerrarlas llevaría a la Asamblea un texto incompleto.
 
 ---
 
@@ -14,7 +14,7 @@
 
 ## 1. Determinación previa: ¿Ordinaria o Extraordinaria?
 
-Los actos que se someterían a la Asamblea (aprobación del Reglamento Interno, ratificación de parámetros de la política de capitalización, operación de certificados digitales al amparo del Art. Sexto ya vigente, autorización **condicionada** de la vía CEDU y de los gemelos registrales) **no modifican el capital fijo ni el objeto social**, por lo que se proyectan como materia de **Asamblea General Ordinaria**.
+Los actos que se someterían a la Asamblea (aprobación del Reglamento Interno, ratificación de parámetros de la política de capitalización, operación de certificados digitales al amparo del Art. Sexto ya vigente, autorización **condicionada** de la vía CEDU y de los gemelos registrales) **no modifican el capital fijo ni el objeto social**, por lo que se proyectan como materia de **Asamblea General Ordinaria**. `[VERIFICAR CON DANIEL: el punto IV Bis (tabulador de anticipos y bonos, Título Cuarto Bis) podría no encuadrar en esta afirmación. Si la Decisión Pendiente núm. 9 concluye que la figura del "socio comercial" exige encuadre estatutario, el punto sería materia de EXTRAORDINARIA.]`
 
 > `[VERIFICAR CON DANIEL: confirmar que la totalidad de los puntos del orden del día son materia de Asamblea Ordinaria conforme a los Arts. Noveno y Décimo del Acta Constitutiva y a la LGSC. ATENCIÓN AL RIESGO DE BIFURCACIÓN: si la resolución de la Decisión Pendiente núm. 4 (firma electrónica de títulos digitales) concluye que satisfacer el requisito de "firma autógrafa de los administradores" del Art. Sexto exige REFORMA ESTATUTARIA, ese punto sería materia de Asamblea EXTRAORDINARIA y no podría resolverse en esta Ordinaria. Lo mismo aplica a la Decisión núm. 1 si se concluye que delegar la admisión al Consejo requiere reformar el Art. Octavo. Definir esto ANTES de emitir la convocatoria: convocar mal el tipo de asamblea vicia las resoluciones.]`
 
@@ -81,6 +81,8 @@ I. Lista de asistencia, verificación de quórum e instalación legal de la Asam
 II. Designación de Presidente, Secretario y, en su caso, escrutadores.
 III. Presentación y, en su caso, **aprobación del Reglamento Interno** de la Cooperativa.
 IV. **Ratificación de los parámetros de la política de capitalización de aportaciones**: 5% del pago del propio socio y tope de 20 certificados ($3,000.00).
+IV Bis. **Ratificación, ajuste o rechazo del tabulador de anticipos de rendimientos y bonos** (Título Cuarto Bis del Reglamento Interno) y de la figura del **Coordinador Regional** y su **bono por crecimiento regional**, cuyos montos quedan por definir.
+
 V. **Certificados de aportación en forma digital** — instrucción a la Administración conforme al Artículo Sexto de las Bases Constitutivas.
 VI. **Autorización condicionada** a la Administración para instrumentar la **vía CEDU** de fondeo del bono de bienvenida.
 VII. **Autorización de los gemelos registrales** (sello por hash) de los certificados de aportación.
@@ -114,6 +116,6 @@ Ceduverse, S.C. de C. de R.L. de C.V.
 | 4 | Quórum de instalación en segunda convocatoria | `[VERIFICAR CON DANIEL]` |
 | 5 | Confirmación del medio de publicación | `[VERIFICAR CON DANIEL]` |
 | 6 | Confirmación de que todo el orden del día es materia de Ordinaria | `[VERIFICAR CON DANIEL]` |
-| 7 | **Las 7 decisiones pendientes del Reglamento** | Daniel Zavala (CLO) |
+| 7 | **Las 9 decisiones pendientes del Reglamento** | Daniel Zavala (CLO) |
 
 > **El domicilio social NO se consigna en este proyecto porque no consta en ninguna de las fuentes consultadas y NO se inventa.**

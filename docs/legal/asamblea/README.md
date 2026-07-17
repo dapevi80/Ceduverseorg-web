@@ -12,7 +12,7 @@ Borradores de los cuatro instrumentos necesarios para que la Asamblea General de
 
 | Archivo | Qué es | Estado |
 |---|---|---|
-| `reglamento-interno-v1-PARA-DANIEL.md` | Reglamento Interno evolucionado desde `../reglamento-interno-ceduverse-DRAFT.md`. Contiene las **7 decisiones pendientes surgidas inline** donde cada una muerde. | 🔴 **BLOQUEADO** — 7 decisiones abiertas |
+| `reglamento-interno-v1-PARA-DANIEL.md` | Reglamento Interno evolucionado desde `../reglamento-interno-ceduverse-DRAFT.md`. Contiene las **9 decisiones pendientes surgidas inline** donde cada una muerde. | 🔴 **BLOQUEADO** — 9 decisiones abiertas |
 | `convocatoria-asamblea.md` | Proyecto de convocatoria + análisis de plazos, quórum, órgano facultado y forma de convocar. | 🔴 **NO EMITIR** |
 | `orden-del-dia.md` | Proyecto de orden del día (5 puntos sustantivos + instalación y ejecución). | 🟡 Sujeto a confirmación del tipo de asamblea |
 | `proyecto-acta-asamblea.md` | Proyecto de acta con las **9 resoluciones redactadas para firma**, bloques de quórum/votación (1 socio = 1 voto) y hoja de firmas de los 5 socios. | 🔴 **NO CELEBRAR NI LEVANTAR** |
@@ -34,7 +34,7 @@ Borradores de los cuatro instrumentos necesarios para que la Asamblea General de
 
 ## 3. Lo que FALTA antes de poder celebrar la Asamblea
 
-### 3.1 Las 7 decisiones pendientes (Daniel Zavala, CLO) — 🔴 BLOQUEANTES
+### 3.1 Las 9 decisiones pendientes (Daniel Zavala, CLO) — 🔴 BLOQUEANTES
 
 Surgidas inline en el Reglamento, cada una donde muerde. **Ninguna tiene respuesta inventada en el paquete.**
 
@@ -47,6 +47,10 @@ Surgidas inline en el Reglamento, cada una donde muerde. **Ninguna tiene respues
 | 5 | Split contable 5% / 95% — base de IVA y retenciones | Art. 14.1 y 14.3 | Exposición ante el SAT; recalificación de la aportación como ingreso disfrazado |
 | 6 | Reserva 1:1 para la vía CEDU — custodio, responsable y asiento | Art. 14 Bis.2.a y Art. 14 Ter.3.a | Capital simulado; exposición directa de los administradores que lo autoricen |
 | 7 | Valor de reembolso de certificados capitalizados (nominal vs. contable) | Art. 8 | Arbitraje entre socios que se retiran en momentos distintos |
+| 8 | Escalera por perfil y escalación por volumen (25%/30%/35%) vs. proporcionalidad de una cooperativa de consumo | Art. 15 Bis.2 y 15 Bis.3.d | El tabulador publicado no sería ratificable tal como está; lógica de comisión mercantil en una cooperativa de consumo |
+| 9 | Marco jurídico del "socio comercial" (¿laboral? ¿servicios? ¿sección de producción?) | Todo el Título Cuarto Bis; Arts. 5 y 6 | Recalificación laboral/fiscal de los anticipos; **posible salto a Asamblea Extraordinaria** |
+
+> **⚠️ Origen de los parámetros del Título Cuarto Bis (Art. 15 Bis).** El tabulador de anticipos y bonos (15%/25%/30%/35%, DC-3, SEP, bono de referido) **no tiene fuente documental**: existe hoy **únicamente en el código de la landing pública de socios** (`client/src/pages/socios-landing.tsx`) y **ya está publicado al público**. Se incorporó al Reglamento **como PROPUESTA a ratificar, ajustar o rechazar por la Asamblea** —no como política vigente— y con constancia expresa de que puede haber personas que se registraron confiando en esas cifras. **Los montos del bono por crecimiento regional del Coordinador Regional NO existen y NO se inventaron:** `[PENDIENTE: montos por definir por la Asamblea]`.
 
 > **Las decisiones 1 y 4 son especialmente urgentes:** si cualquiera de las dos concluye que se requiere **reforma estatutaria**, el punto correspondiente **no es materia de Asamblea Ordinaria** y cambia el tipo de asamblea a convocar. **Convocar mal el tipo de asamblea vicia las resoluciones.**
 
@@ -77,8 +81,8 @@ Surgidas inline en el Reglamento, cada una donde muerde. **Ninguna tiene respues
 ## 4. Secuencia correcta
 
 ```
-0. [BLOQUEANTE] Daniel resuelve las 7 decisiones
-   └─ 1 y 4 primero: definen si hay puntos de Extraordinaria
+0. [BLOQUEANTE] Daniel resuelve las 9 decisiones
+   └─ 1, 4 y 9 primero: definen si hay puntos de Extraordinaria
 1. [BLOQUEANTE] Validación fiscal/contable de los [PENDIENTE] (§3.2)
    └─ opinión externa si la Decisión 5 se resuelve por la opción C
 2. [BLOQUEANTE] Dictamen IFPE / Ley Fintech sobre CEDU (§3.3)

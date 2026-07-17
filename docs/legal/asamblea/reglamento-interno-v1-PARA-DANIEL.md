@@ -2,7 +2,9 @@
 > Este documento **NO es un instrumento legal vigente**. Es un borrador de trabajo para revisión, ajuste y, en su caso, aprobación formal por la Asamblea General de Socios de Ceduverse. **No surte efectos jurídicos** hasta ser aprobado en Asamblea con el quórum que exigen el Acta Constitutiva y la LGSC, y asentado/protocolizado en el libro de actas correspondiente.
 > **Versión de borrador: v1.0-candidato (2026-07-16).** Evolucionado desde `docs/legal/reglamento-interno-ceduverse-DRAFT.md` (v0.1/v0.2). Redactado por asistencia legal; **requiere validación del CLO antes de circular a socios y antes de someterse a Asamblea.**
 >
-> **⚠️ Este documento contiene 7 DECISIONES PENDIENTES marcadas inline (`⚠️ DECISIÓN PENDIENTE (Daniel)`) y varios `[PENDIENTE]` fiscales sin resolver. NO se han inventado respuestas.** Mientras cualquiera de ellas siga abierta, el Reglamento **no está listo** para votación. Ver `README.md` de esta carpeta.
+> **⚠️ Este documento contiene 9 DECISIONES PENDIENTES marcadas inline (`⚠️ DECISIÓN PENDIENTE (Daniel)`) y varios `[PENDIENTE]` fiscales sin resolver. NO se han inventado respuestas.** Mientras cualquiera de ellas siga abierta, el Reglamento **no está listo** para votación. Ver `README.md` de esta carpeta.
+>
+> **⚠️ Nota sobre el TÍTULO CUARTO BIS (tabulador de anticipos y bonos), incorporado en esta versión.** Los parámetros del Artículo 15 Bis **no provienen de acuerdo de Asamblea, de las Bases Constitutivas ni de documento interno alguno**: a la fecha de este borrador existen **únicamente en el código de la página pública de socios** (`client/src/pages/socios-landing.tsx`). Se incorporan aquí **como PROPUESTA, transcritos tal como hoy se publican**, para que la Asamblea los **ratifique, ajuste o rechace** y exista por primera vez una fuente documental. **No debe leerse este Título como constancia de que tales parámetros sean política vigente.**
 >
 > **Nota sobre citas legales:** donde no fue posible verificar el texto exacto de un artículo de la LGSC contra una fuente disponible, se insertó `[VERIFICAR CON DANIEL]` en lugar de citar un número de artículo. **Un número de artículo incorrecto asentado en un acta es peor que un espacio en blanco.**
 
@@ -23,7 +25,7 @@
 ## TÍTULO PRIMERO — DISPOSICIONES GENERALES
 
 ### Artículo 1. Objeto del Reglamento
-El presente Reglamento Interno tiene por objeto desarrollar, en el ámbito operativo, las disposiciones de los Estatutos de Ceduverse, S.C. de C. de R.L. de C.V. (en adelante, la "Cooperativa"), en particular en las materias que el Acta Constitutiva remite expresamente a reglamentación interna: (i) el procedimiento operativo de admisión de nuevos socios (Art. Octavo, fracc. III de los Estatutos); (ii) el procedimiento de **transmisión de certificados de aportación** entre socios y, en su caso, a terceros, que el Acta Constitutiva no detalla; (iii) la operación de los **certificados de aportación en forma digital** reconocida en el Artículo Sexto de los Estatutos; (iv) la **política de capitalización de aportaciones**; y (v) las reglas de confidencialidad, registro y gobierno interno que faciliten el cumplimiento de la LGSC.
+El presente Reglamento Interno tiene por objeto desarrollar, en el ámbito operativo, las disposiciones de los Estatutos de Ceduverse, S.C. de C. de R.L. de C.V. (en adelante, la "Cooperativa"), en particular en las materias que el Acta Constitutiva remite expresamente a reglamentación interna: (i) el procedimiento operativo de admisión de nuevos socios (Art. Octavo, fracc. III de los Estatutos); (ii) el procedimiento de **transmisión de certificados de aportación** entre socios y, en su caso, a terceros, que el Acta Constitutiva no detalla; (iii) la operación de los **certificados de aportación en forma digital** reconocida en el Artículo Sexto de los Estatutos; (iv) la **política de capitalización de aportaciones**; (v) el **tabulador propuesto de anticipos de rendimientos y bonos** y la figura del **Coordinador Regional** (Título Cuarto Bis), **cuyos parámetros se someten a ratificación o ajuste de la Asamblea por carecer hoy de fuente documental**; y (vi) las reglas de confidencialidad, registro y gobierno interno que faciliten el cumplimiento de la LGSC.
 
 ### Artículo 2. Ámbito de aplicación
 Este Reglamento obliga a todos los socios, a los órganos de la Cooperativa (Asamblea General, Administrador Único o Consejo de Administración, y Consejo de Vigilancia) y al personal que preste servicios a la Cooperativa, desde su aprobación por la Asamblea General y mientras no sea reformado o abrogado por el mismo órgano.
@@ -37,6 +39,10 @@ Para efectos de este Reglamento se entiende por:
 - **Sello RAW / registro on-chain:** anotación criptográfica (por hash **SHA-256**) en una cadena de bloques que sirve de espejo o evidencia de una operación asentada en el Libro de Registro, sin sustituirlo. **A la fecha de este borrador, la Cooperativa opera únicamente la red Base y el sellado por atestación SHA-256.**
 - **Aportación capitalizada:** política por la cual una fracción (5%) del **pago del propio socio** por productos/servicios se asigna a su cuenta de capital (aportación) mediante la emisión de certificados, mientras el remanente se reconoce como ingreso por servicio; no es subsidio ni desembolso adicional del socio.
 - **Bono de bienvenida:** valor de origen **externo al capital social** de la Cooperativa que funda el primer certificado de aportación del socio en el onboarding y otorga un saldo de descuento en billetera, conforme al Artículo 14 Bis.
+- **Anticipo de rendimientos:** entrega periódica y a cuenta que la Cooperativa realiza a un socio **en proporción a las operaciones que ese mismo socio realiza con la Cooperativa**, sujeta a liquidación definitiva al cierre del ejercicio conforme a los Estatutos y a la LGSC. **No es comisión ni retribución por venta a terceros.** Su tabulador propuesto consta en el Artículo 15 Bis.
+- **Bono de referido:** cantidad fija que se reconoce al socio cuando una organización referida por él realiza su primera aportación/pago a la Cooperativa, conforme al tabulador propuesto del Artículo 15 Bis.
+- **Bono por crecimiento regional:** contraprestación por el desempeño efectivo de la función de **Coordinador Regional** (Artículo 15 Ter), integrada por una **cuota fija por la función** y un **variable por metas de zona**. **No es un porcentaje sobre las operaciones de otros socios ni existe cascada de niveles.** **Sus montos NO están definidos.**
+- **Zona:** cada una de las **cuatro (4)** demarcaciones comerciales en que la Cooperativa agrupa los 32 estados de la República — **Centro, Norte, Bajío y Sur-Sureste** — conforme al mapeo operativo único que utilizan la plataforma y el CRM (`shared/zonas.ts`).
 - **Fuente externa:** valor distinto y separado del capital social de la Cooperativa, admitido en dos vías: (i) **CEDU respaldado 1:1 en pesos** (Artículo 14 Ter), **cuya instrumentación queda condicionada** conforme a dicho artículo; y (ii) **beca/patrocinio de empresa** para el canal B2B. **Un token o NFT sin reserva 1:1 real y verificable NO califica como fuente externa** (sería capital simulado).
 - **CEDU:** unidad de **crédito interno de la Cooperativa**, denominada y respaldada **1:1 en pesos mexicanos (MXN)**, **nominativa y NO transferible**, definida en el Artículo 14 Ter. **CEDU es un proyecto de diseño: NO está desplegado ni emitido a la fecha de este borrador.**
 - **Reserva 1:1:** respaldo real, íntegro, segregado y verificable **en pesos mexicanos** que debe existir y mantenerse **antes** de acreditar cualquier bono de bienvenida por la vía CEDU.
@@ -303,6 +309,116 @@ Como **mecanismo complementario** a la capitalización del 5% del Artículo 14, 
 
 ---
 
+## TÍTULO CUARTO BIS — DE LOS ANTICIPOS DE RENDIMIENTOS Y DE LOS BONOS A LOS SOCIOS
+
+> **⚠️ ADVERTENCIA DE ORIGEN — LÉASE ANTES DE VOTAR ESTE TÍTULO.**
+>
+> **1. Los parámetros del Artículo 15 Bis carecen de fuente documental.** No derivan de las Bases Constitutivas, ni de acuerdo previo de Asamblea, ni de resolución de la Administración, ni de documento interno alguno. A la fecha de este borrador **existen exclusivamente en el código de la página pública de socios** (`client/src/pages/socios-landing.tsx`). Se transcriben aquí **tal como hoy se publican**, sin corregirlos, sin completarlos y sin sustituirlos por cifras de mejor apariencia. **Quién los fijó, cuándo y con qué criterio: NO CONSTA.**
+>
+> **2. Los parámetros YA SE ENCUENTRAN PUBLICADOS.** No se trata de una propuesta inédita: están **anunciados al público** en la página de socios, con un simulador que permite a cualquier interesado calcular escenarios con ellos. **La Asamblea debe ponderar expresamente esta circunstancia**: es posible que personas se hayan registrado, o se registren mientras la página siga publicada, **confiando en estas cifras**. Rechazarlas o reducirlas sin más puede generar reclamos de quienes se asociaron sobre esa base; ratificarlas sin análisis las convierte en obligación de la Cooperativa. **Ninguna de las dos consecuencias se resuelve en este borrador.**
+>
+> **3. Este Título es PROPUESTA, no constancia.** La Asamblea **puede ratificarlos, ajustarlos o rechazarlos**. Ninguna disposición de este Título debe interpretarse como afirmación de que tales parámetros sean política vigente de la Cooperativa, ni como reconocimiento de derecho adquirido alguno a favor de socio o aspirante.
+>
+> **4. Mitigación sugerida a considerar por el CLO (no adoptada aquí):** la página pública acompaña hoy cada parámetro de una nota que los declara *"política propuesta, sujeta a ratificación o ajuste por la Asamblea General"* y advierte que el Reglamento está en borrador y sin efectos jurídicos. `[VERIFICAR CON DANIEL: si dicha nota es suficiente para excluir la formación de expectativas exigibles frente a quienes se registraron, o si procede alguna medida adicional — p. ej. retirar las cifras de la página hasta la Asamblea, o recabar acuse expreso de su carácter no vinculante en el alta. NO se cita fundamento porque no fue posible verificar el texto aplicable.]`
+
+### Artículo 15 Bis. Tabulador propuesto de anticipos de rendimientos y bonos
+
+1. **Naturaleza cooperativa de las figuras.** Las cantidades de este artículo se reconocen al socio **en proporción a su propia operación con la Cooperativa** y bajo la denominación que corresponde a una sociedad cooperativa de consumo: **anticipo de rendimientos**, **bono de referido**, **bono de bienvenida** (Art. 14 Bis) y **bono por crecimiento regional** (Art. 15 Ter). **No constituyen comisiones mercantiles ni retribución por venta**, y **ningún socio recibe porcentaje alguno sobre las operaciones de otros socios**: no existen niveles ni cascada.
+
+2. **Tabulador propuesto por perfil de socio.** Se somete a ratificación o ajuste de la Asamblea el siguiente tabulador, **transcrito de los valores hoy publicados**:
+
+   | Perfil de socio | Anticipo de rendimientos (% del fee de administración) | Bono por certificación DC-3 | Bono por certificado SEP | Bono de referido | Vigencia |
+   |---|---|---|---|---|---|
+   | **Trabajador** | **10%** | **20%** | **5%** | **$300.00 M.N.** | **12 meses** |
+   | **Instructor** | **10%** | **40%** | **10%** | **$500.00 M.N.** | **24 meses** |
+   | **Agente** | **15%** | **40%** | **10%** | **$500.00 M.N.** | `[PENDIENTE: vigencia por definir por la Asamblea]` |
+   | **Consultor** | **25%** base; **30%** con 4 o más organizaciones activas; **35%** con 8 o más | **40%** | **10%** | **$500.00 M.N.** | `[PENDIENTE: vigencia por definir por la Asamblea]` |
+
+3. **Bases de cálculo.**
+   a. El **anticipo de rendimientos** se calcula sobre el **fee de administración** que la Cooperativa percibe por cada organización **incorporada por el propio socio**, y **únicamente mientras dicha organización permanezca activa**. No se calcula sobre la aportación de la organización.
+   b. Los **bonos por certificación** se calculan como porcentaje del precio del certificado profesional respectivo, correspondiente a la operación propia del socio.
+   c. El **bono de referido** se reconoce **por una sola vez** por cada organización referida, al momento en que ésta realiza su primer pago/aportación a la Cooperativa.
+   d. La **escalación del perfil Consultor** (25% → 30% → 35%) opera por número de organizaciones activas **de su propia cartera**. Ver **Decisión Pendiente núm. 8**.
+
+4. **Precios de referencia hoy publicados** (se hacen constar como **contexto del tabulador, NO como parámetro que este artículo someta a ratificación**): DC-3 en **$399.00 M.N.**; certificado SEP en **$1,999.00 M.N.**; UMA de **$113.14** diarios; y fee de administración de **20%** (plan Impulsa, 6 UMAs/colaborador/mes), **13%** (plan Transforma, 10 UMAs) y **10%** (plan Lidera, 20 UMAs). `[VERIFICAR CON DANIEL: estos precios y fees tampoco constan en documento alguno de la Cooperativa fuera del código de la landing; determinar si deben ratificarse por Asamblea, fijarse por la Administración, o documentarse en instrumento separado.]`
+
+5. **Vigencias.** Las vigencias de 12 y 24 meses (perfiles Trabajador e Instructor) se transcriben tal como se publican. Las vigencias de los perfiles **Agente** y **Consultor** están hoy publicadas como *"por definir por la Asamblea"*: **este Reglamento NO propone plazo alguno para ellas y no debe inventarse en Asamblea sin criterio.** `[PENDIENTE: vigencia de los perfiles Agente y Consultor — por definir por la Asamblea]`
+
+6. **Carácter ajustable.** De ratificarse, los parámetros de este artículo son **ajustables por acuerdo posterior de la Asamblea General Ordinaria**, dentro de los límites de la LGSC y los Estatutos, sin necesidad de reformar este Reglamento.
+
+7. **Sin garantía de ingreso.** Ninguna disposición de este artículo garantiza ingreso, rendimiento ni resultado alguno a socio o aspirante. El anticipo depende íntegramente de la operación que el propio socio consiga, y la Cooperativa **no promete** que consiga operación alguna.
+
+> ### ⚠️ DECISIÓN PENDIENTE (Daniel) — núm. 8: ¿Es compatible con una cooperativa de consumo una escalera por volumen (Agente → Consultor, 25%/30%/35%)?
+>
+> **Dónde muerde:** Art. 15 Bis.2 y 15 Bis.3.d. **Si la respuesta es negativa, el tabulador publicado no puede ratificarse tal como está.**
+>
+> **El hueco:** una cooperativa de consumo distribuye rendimientos **en proporción a las operaciones que cada socio realiza con la sociedad**. Una **escalera de perfiles** (Trabajador/Instructor/Agente/Consultor) con **porcentajes distintos entre socios** y una **escalación por volumen** (25% → 30% con 4+ organizaciones → 35% con 8+) hace que **dos socios con la misma operación reciban distinto porcentaje** según su perfil, y que el porcentaje **crezca con el volumen**. Esa lógica es propia de un plan de comisiones mercantil, no necesariamente de la proporcionalidad cooperativa.
+>
+> **Opciones y trade-off:**
+> - **A.** **Un solo porcentaje uniforme para todo socio**, aplicado en proporción a su propia operación. *Trade-off:* es la lectura más limpia de la proporcionalidad cooperativa y elimina el riesgo de recalificación; **contradice frontalmente lo hoy publicado y reduce el incentivo del perfil Consultor.**
+> - **B.** **Conservar la escalera** justificando que el porcentaje diferenciado retribuye **aportación de trabajo distinta** (no volumen de venta), y no la mera acumulación. *Trade-off:* preserva la propuesta comercial publicada; **exige sustento jurídico que este borrador NO tiene, y la escalación por número de organizaciones es difícil de explicar como algo distinto del volumen.**
+> - **C.** **Conservar perfiles, eliminar la escalación por volumen** (porcentaje fijo por perfil, sin saltos por 4+/8+). *Trade-off:* punto medio, elimina el elemento más difícil de defender; **obliga a modificar lo publicado.**
+> - **D.** Otro esquema a definir por el CLO.
+>
+> `[VERIFICAR CON DANIEL: si la LGSC exige que el reparto de rendimientos entre socios sea estrictamente proporcional a las operaciones de cada uno, y si admite tabuladores diferenciados por perfil o escalados por volumen. NO se cita artículo porque no fue posible verificar el texto aplicable.]`
+>
+> **No se adopta ninguna opción en este borrador.**
+
+> ### ⚠️ DECISIÓN PENDIENTE (Daniel) — núm. 9: Marco jurídico de la figura del "socio comercial"
+>
+> **Dónde muerde:** todo el TÍTULO CUARTO BIS, y de forma refleja los Arts. 5 (requisitos para ser socio) y 6 (admisión). **Es la cuestión estructural del modelo, no un detalle de redacción.**
+>
+> **El hueco:** Ceduverse es una **cooperativa de CONSUMO**: sus socios se asocian para **consumir** bienes y servicios de la sociedad, y los rendimientos se distribuyen en proporción **al consumo/operación de cada socio**. Sin embargo, el modelo publicado —y este Título— describe a un **"socio comercial"** que **no consume**: **vende a terceros** (incorpora organizaciones ajenas a la plataforma) y **recibe un porcentaje por esa venta**. Quien vende y cobra un porcentaje por vender **no está operando con la Cooperativa en calidad de consumidor**, y llamar "anticipo de rendimientos" a ese porcentaje **no cambia su naturaleza material**. La figura carece hoy de marco jurídico.
+>
+> **Opciones y trade-off:**
+> - **A.** **Relación laboral** (contrato individual de trabajo con parte variable). *Trade-off:* encuadra sin ambigüedad la retribución variable; **carga de IMSS/INFONAVIT/ISR retenido y PTU, y choca con la figura del socio libre y voluntario.**
+> - **B.** **Prestación de servicios independientes** (comisión mercantil o servicios profesionales, con CFDI del socio a la Cooperativa). *Trade-off:* operativamente simple y ya usado en el mercado; **admite expresamente que es una COMISIÓN — lo que contradice el vocabulario cooperativo adoptado y expone a riesgo de subordinación disfrazada / recalificación laboral.**
+> - **C.** **Sección o actividad de producción/servicios dentro de la propia Cooperativa**, en que el socio aporta trabajo y participa de los rendimientos de esa sección. *Trade-off:* es la vía más congruente con el discurso cooperativo; **exige verificar si el objeto social de una cooperativa de CONSUMO admite dicha sección, o si requiere reforma estatutaria (Asamblea Extraordinaria) o incluso otro tipo de cooperativa.**
+> - **D.** **Reformular el modelo**: que el socio comercial **sea también consumidor** y su anticipo derive de su propia operación de consumo, no de la venta a terceros. *Trade-off:* elimina el problema de raíz; **desarma la propuesta comercial hoy publicada.**
+> - **E.** Otro encuadre a definir por el CLO.
+>
+> **Riesgo si queda abierto:** que la autoridad laboral o fiscal **recalifique** los anticipos como salario o como contraprestación por servicios, con las contingencias correspondientes; y que el esquema sea calificado desde fuera como **plan de comisiones ajeno al objeto de una cooperativa de consumo**, pese al vocabulario empleado.
+>
+> `[VERIFICAR CON DANIEL: si el objeto social de una cooperativa de consumo admite que un socio sea retribuido por incorporar clientes/organizaciones terceras, y bajo qué figura. NO se cita artículo porque no fue posible verificar el texto aplicable.]`
+>
+> **No se adopta ninguna opción en este borrador.**
+
+### Artículo 15 Ter. Coordinador Regional y bono por crecimiento regional
+
+1. **Naturaleza — puesto asignado, no nivel alcanzado.** El **Coordinador Regional** es un **puesto que la Cooperativa asigna** y que es **revocable** por el mismo órgano que lo asigna. **No se gana reclutando socios, no se hereda, no se compra y no constituye un nivel jerárquico por encima de otros socios.** Se ocupa mientras se desempeñen efectivamente las funciones del numeral 3.
+
+2. **Zonas y número máximo.** Existe **un (1) Coordinador Regional por zona y máximo cuatro (4) en toda la República**. Las zonas son las **cuatro (4)** que la Cooperativa opera hoy en su plataforma y CRM (`shared/zonas.ts`), y que agrupan los 32 estados:
+   a. **Centro** — Ciudad de México, México, Puebla, Tlaxcala, Morelos, Hidalgo y Querétaro (7 estados).
+   b. **Norte** — Nuevo León, Chihuahua, Coahuila de Zaragoza, Tamaulipas, Sonora, Baja California, Baja California Sur, Sinaloa, Durango, San Luis Potosí, Zacatecas y Nayarit (12 estados).
+   c. **Bajío** — Jalisco, Guanajuato, Aguascalientes, Colima y Michoacán de Ocampo (5 estados).
+   d. **Sur-Sureste** — Veracruz de Ignacio de la Llave, Oaxaca, Chiapas, Guerrero, Tabasco, Campeche, Yucatán y Quintana Roo (8 estados).
+
+   Los nombres de los estados se transcriben como constan en el mapeo operativo (denominaciones del DENUE/INEGI). La modificación de la integración de las zonas corresponde a la Administración, informando a la Asamblea.
+
+3. **Funciones del Coordinador Regional.** Corresponde al Coordinador Regional, respecto de su zona:
+   a. **Capacitar** a los socios de su zona en el uso de la plataforma y en el modelo cooperativo.
+   b. **Dar soporte** a los socios y a las organizaciones de su zona, siendo su primer punto de contacto.
+   c. **Abrir plaza**, desarrollando la presencia de la Cooperativa en los estados de su zona.
+   d. **Promover el cooperativismo y la economía solidaria**, en congruencia con los fines de educación cooperativa de la Cooperativa y de la LGSC.
+   e. **Dar conferencias** y actividades de difusión.
+   f. **Ayudar en el onboarding de las organizaciones** de su zona que se incorporen a la plataforma.
+   g. **Acompañar a las comisiones mixtas de capacitación, adiestramiento y productividad** a **registrar sus actas ante la Secretaría del Trabajo y Previsión Social (STPS)**.
+   `[VERIFICAR CON DANIEL: denominación legal exacta de la comisión mixta y del trámite de registro de sus actas ante la STPS, y si el acompañamiento por parte de la Cooperativa o de un socio genera responsabilidad frente al patrón o requiere registro de agente capacitador. NO se cita fundamento porque no fue posible verificar el texto aplicable.]`
+
+4. **Bono por crecimiento regional — estructura.** El Coordinador Regional percibe un **bono por crecimiento regional** integrado por **dos componentes**:
+   a. **Cuota fija** por el desempeño de la función.
+   b. **Variable** por el cumplimiento de **metas de zona**.
+
+5. **Ausencia de cascada — regla esencial.** El bono por crecimiento regional retribuye **un servicio efectivamente prestado a la Cooperativa**. **No es, ni puede convertirse en, un porcentaje sobre las operaciones de los socios de la zona.** **No existe cascada, ni niveles, ni porcentaje derivado de terceros**, y el Coordinador **no percibe nada por el hecho de que otros socios operen**. Esta regla se establece como **esencial**: su supresión o modificación requiere acuerdo expreso de la Asamblea.
+
+6. **Montos.** `[PENDIENTE: montos por definir por la Asamblea]` — **la cuota fija del numeral 4.a y las metas de zona y su variable del numeral 4.b NO están definidas.** **Este Reglamento no propone cifra alguna y no debe inventarse ninguna**: corresponde a la Asamblea General determinarlas. En congruencia, la Cooperativa **no publica ni simula** cifras de este bono mientras no existan.
+
+7. **Encuadre jurídico de la función.** El marco jurídico bajo el cual se retribuye al Coordinador Regional (relación laboral, prestación de servicios, u otra figura) queda comprendido en la **Decisión Pendiente núm. 9**, y **no se resuelve en este artículo**.
+
+8. **Asignación y revocación.** `[VERIFICAR CON DANIEL: qué órgano asigna y revoca el puesto de Coordinador Regional — Administrador Único/Consejo de Administración o Asamblea —, con qué causas y con qué procedimiento de audiencia previa. Este borrador NO lo define, para no atribuir facultades no verificadas contra el Acta Constitutiva.]`
+
+---
+
 ## TÍTULO QUINTO — CONFIDENCIALIDAD Y GOBIERNO INTERNO
 
 ### Artículo 16. Confidencialidad y protección de datos de socios
@@ -315,7 +431,7 @@ Como **mecanismo complementario** a la capitalización del 5% del Artículo 14, 
 La administración corresponde al **Administrador Único (Ernesto Santa Cruz Aranda**, conforme al Transitorio Segundo del Acta**)** o, en su caso, al Consejo de Administración; la vigilancia al Consejo de Vigilancia; y el gobierno supremo a la Asamblea General, conforme a los Artículos Noveno, Décimo y Décimo Octavo de los Estatutos. Este Reglamento no modifica dichas competencias.
 
 ### Artículo 18. Reformas al Reglamento
-Este Reglamento y sus políticas (incluido el parámetro de capitalización del Artículo 14 y la autorización condicionada del Artículo 14 Ter) pueden ser reformados o revocados por acuerdo de la Asamblea General Ordinaria, dejando constancia en el libro de actas y comunicando la nueva versión a los socios por los medios de notificación registrados y por la plataforma Ceduverse (re-aceptación digital conforme al Plan de Adopción).
+Este Reglamento y sus políticas (incluido el parámetro de capitalización del Artículo 14, el tabulador del Artículo 15 Bis y la autorización condicionada del Artículo 14 Ter) pueden ser reformados o revocados por acuerdo de la Asamblea General Ordinaria, dejando constancia en el libro de actas y comunicando la nueva versión a los socios por los medios de notificación registrados y por la plataforma Ceduverse (re-aceptación digital conforme al Plan de Adopción).
 
 ---
 
@@ -325,13 +441,13 @@ Este Reglamento y sus políticas (incluido el parámetro de capitalización del 
 Este Reglamento entrará en vigor a partir de su aprobación por la Asamblea General de Socios y del asiento del acta respectiva, y será oponible a los socios existentes desde su re-aceptación digital, y a los nuevos socios desde su adhesión.
 
 ### Artículo 20. Cláusula de borrador
-**Mientras conste la marca "BORRADOR" en el encabezado, este documento carece de validez jurídica y sirve exclusivamente como propuesta de trabajo para revisión del CLO (Daniel Zavala) y aprobación de la Asamblea.** **NO se retire esta marca sino hasta que el CLO resuelva las 7 decisiones pendientes y la Asamblea apruebe el texto final.**
+**Mientras conste la marca "BORRADOR" en el encabezado, este documento carece de validez jurídica y sirve exclusivamente como propuesta de trabajo para revisión del CLO (Daniel Zavala) y aprobación de la Asamblea.** **NO se retire esta marca sino hasta que el CLO resuelva las 9 decisiones pendientes y la Asamblea apruebe el texto final.**
 
 ---
 
 ## ANEXO — Índice de puntos abiertos en este borrador
 
-**7 decisiones pendientes (Daniel):**
+**9 decisiones pendientes (Daniel):**
 
 | # | Decisión | Artículo donde muerde |
 |---|---|---|
@@ -342,6 +458,10 @@ Este Reglamento entrará en vigor a partir de su aprobación por la Asamblea Gen
 | 5 | Split contable 5% aportación / 95% servicio — base de IVA y retenciones | Art. 14.1 y 14.3 |
 | 6 | Reserva 1:1 de tesorería para la vía CEDU — custodio, responsable y asiento | Art. 14 Bis.2.a y Art. 14 Ter.3.a |
 | 7 | Valor de reembolso de los certificados capitalizados (nominal vs. contable) | Art. 8 |
+| 8 | Escalera por perfil y escalación por volumen (25%/30%/35%) vs. proporcionalidad de una cooperativa de consumo | Art. 15 Bis.2 y 15 Bis.3.d |
+| 9 | Marco jurídico del "socio comercial" (laboral / servicios / sección de producción) | Todo el Título Cuarto Bis; Arts. 5 y 6 |
+
+> **⚠️ Advertencia de origen — Título Cuarto Bis.** Los parámetros del tabulador del **Art. 15 Bis** **no tienen fuente documental**: existen hoy únicamente en el código de la landing pública de socios (`client/src/pages/socios-landing.tsx`) y **ya están publicados al público**. Se incorporan como **PROPUESTA a ratificar o ajustar**, no como política vigente. Ver la advertencia al inicio de dicho Título.
 
 **`[PENDIENTE]` fiscales/contables no resueltos:** base de IVA/retenciones sobre la porción de servicio (Art. 14.3, Art. 15); **base de IVA del saldo de billetera de $20** (Art. 14 Bis.1.b, Art. 15); asiento del canje CEDU→aportación y beca→aportación (Art. 14 Ter.3, Art. 15); efecto en PTU/ISR y fondos obligatorios del Art. Vigésimo Primero (Art. 15).
 

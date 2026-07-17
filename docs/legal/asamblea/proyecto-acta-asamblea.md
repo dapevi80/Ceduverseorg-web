@@ -2,7 +2,7 @@
 > **Este documento NO es un acta de asamblea.** Es un **proyecto de redacción** para revisión del CLO (Daniel Zavala). **No debe firmarse, ni asentarse en el libro de actas, ni protocolizarse en su estado actual.** Ninguna asamblea se ha celebrado. Los hechos que aquí se narran (asistencia, votación, acuerdos) **no han ocurrido**: son redacción proyectada para que, celebrada la Asamblea, el Secretario cuente con una base a completar con los hechos reales.
 > Versión de borrador: v0.1 (2026-07-16).
 >
-> **⚠️ NO CELEBRAR NI LEVANTAR ESTA ACTA** mientras las **7 decisiones pendientes** sigan abiertas (ver `README.md`).
+> **⚠️ NO CELEBRAR NI LEVANTAR ESTA ACTA** mientras las **9 decisiones pendientes** sigan abiertas (ver `README.md`).
 
 ---
 
@@ -68,9 +68,9 @@ Puesto a consideración el proyecto de **Reglamento Interno de la Cooperativa**,
 
 **Votación:** ☐ A favor: [__] · ☐ En contra: [__] · ☐ Abstenciones: [__] — de **5 votos** (un socio, un voto).
 
-> **PRIMERA RESOLUCIÓN.** *Se **aprueba** el **Reglamento Interno de Ceduverse, S.C. de C. de R.L. de C.V.**, en los términos del ejemplar que, firmado por el Presidente y el Secretario, se agrega al apéndice de esta acta como **ANEXO "A"**, el cual desarrolla las materias que las Bases Constitutivas remiten a reglamentación interna, a saber: procedimiento de admisión de socios, transmisión de certificados de aportación, operación de certificados de aportación en forma digital, política de capitalización de aportaciones, y confidencialidad y gobierno interno. El Reglamento Interno **entrará en vigor** a partir de esta fecha y del asiento de la presente acta, y será oponible a los socios existentes desde su re-aceptación digital y a los nuevos socios desde su adhesión. Se hace constar que el Reglamento Interno **desarrolla y complementa** las Bases Constitutivas y que, en caso de conflicto, **prevalecen la Ley General de Sociedades Cooperativas y las Bases Constitutivas.***
+> **PRIMERA RESOLUCIÓN.** *Se **aprueba** el **Reglamento Interno de Ceduverse, S.C. de C. de R.L. de C.V.**, en los términos del ejemplar que, firmado por el Presidente y el Secretario, se agrega al apéndice de esta acta como **ANEXO "A"**, el cual desarrolla las materias que las Bases Constitutivas remiten a reglamentación interna, a saber: procedimiento de admisión de socios, transmisión de certificados de aportación, operación de certificados de aportación en forma digital, política de capitalización de aportaciones, **tabulador de anticipos de rendimientos y bonos y figura del Coordinador Regional**, y confidencialidad y gobierno interno. El Reglamento Interno **entrará en vigor** a partir de esta fecha y del asiento de la presente acta, y será oponible a los socios existentes desde su re-aceptación digital y a los nuevos socios desde su adhesión. Se hace constar que el Reglamento Interno **desarrolla y complementa** las Bases Constitutivas y que, en caso de conflicto, **prevalecen la Ley General de Sociedades Cooperativas y las Bases Constitutivas.***
 
-> **⚠️ BLOQUEANTE — no votar aún.** El Reglamento sometido conserva **7 decisiones pendientes** sin resolver por el CLO. **No debe someterse a votación un texto con huecos marcados.**
+> **⚠️ BLOQUEANTE — no votar aún.** El Reglamento sometido conserva **9 decisiones pendientes** sin resolver por el CLO. **No debe someterse a votación un texto con huecos marcados.**
 
 ---
 
@@ -85,6 +85,33 @@ Puesto a consideración el proyecto de **Reglamento Interno de la Cooperativa**,
 > *Los parámetros anteriores son **ajustables por acuerdo posterior de la Asamblea General Ordinaria**, dentro de los límites de la Ley General de Sociedades Cooperativas y de las Bases Constitutivas.*
 
 > **TERCERA RESOLUCIÓN (reserva fiscal expresa).** *Se hace constar que **quedan sujetos a validación por el área contable/fiscal y, en su caso, a opinión externa**, sin que la presente resolución prejuzgue criterio alguno: **(a)** el asiento contable del desdoblamiento entre la porción capitalizada (5%) y la porción de servicio (95%) de cada pago; **(b)** la **base de causación del impuesto al valor agregado y de las retenciones** sobre la porción de servicio, y si la porción de capital se detrae antes o después de impuestos indirectos; **(c)** el **tratamiento del saldo de billetera de $20.00 M.N. frente al impuesto al valor agregado**; **(d)** el asiento del bono de bienvenida según su vía de fondeo; y **(e)** los efectos en materia de participación de los trabajadores en las utilidades, impuesto sobre la renta y fondos sociales obligatorios previstos en el Artículo Vigésimo Primero de las Bases Constitutivas. Se **instruye a la Administración** a no aplicar criterio fiscal definitivo sino hasta contar con dicha validación.*
+
+---
+
+### PUNTO IV BIS DEL ORDEN DEL DÍA — TABULADOR DE ANTICIPOS DE RENDIMIENTOS Y BONOS; COORDINADOR REGIONAL
+
+**Votación:** ☐ A favor: [__] · ☐ En contra: [__] · ☐ Abstenciones: [__] — de **5 votos**.
+
+> **TERCERA BIS RESOLUCIÓN (constancia previa de origen — se hace constar ANTES de resolver el fondo).** *Se hace constar, para todos los efectos legales, que los parámetros sometidos en este punto **NO derivan de las Bases Constitutivas, ni de acuerdo previo de esta Asamblea, ni de resolución de la Administración, ni de documento interno alguno de la Cooperativa**, sino que **a esta fecha existen únicamente en el código de la página pública de socios de la plataforma Ceduverse**, sin que conste quién los fijó, en qué fecha ni con qué criterio. Se hace constar asimismo que **dichos parámetros ya se encuentran publicados al público**, acompañados de un simulador de escenarios, y que **esta Asamblea pondera expresamente** que puede haber personas que se hayan registrado, o que se registren mientras la publicación subsista, **confiando en ellos**. La presente Asamblea **no da por acreditado** el origen de tales cifras y las conoce **como propuesta**, en ejercicio de su facultad de **ratificarlas, ajustarlas o rechazarlas**.*
+
+> **CUARTA BIS RESOLUCIÓN (tabulador — a resolver por la Asamblea).** *Se **[☐ ratifica / ☐ ajusta en los términos que se asientan / ☐ rechaza]** el tabulador del **Artículo 15 Bis del Reglamento Interno**, conforme al cuadro siguiente, transcrito de los valores hoy publicados:*
+>
+> | Perfil de socio | Anticipo de rendimientos (% del fee) | DC-3 | SEP | Bono de referido | Vigencia |
+> |---|---|---|---|---|---|
+> | **Trabajador** | 10% | 20% | 5% | $300.00 M.N. | 12 meses |
+> | **Instructor** | 10% | 40% | 10% | $500.00 M.N. | 24 meses |
+> | **Agente** | 15% | 40% | 10% | $500.00 M.N. | `[PENDIENTE — por definir por la Asamblea]` |
+> | **Consultor** | 25% base; 30% con 4 o más organizaciones activas; 35% con 8 o más | 40% | 10% | $500.00 M.N. | `[PENDIENTE — por definir por la Asamblea]` |
+>
+> *Se hace constar como **esencial** que: **(i)** las cantidades anteriores se reconocen al socio **en proporción a su propia operación con la Cooperativa** y **ningún socio percibe porcentaje alguno sobre las operaciones de otros socios**, no existiendo niveles ni cascada; **(ii)** el anticipo de rendimientos se calcula sobre el **fee de administración** que percibe la Cooperativa por cada organización incorporada por el propio socio, **y no sobre la aportación de dicha organización**; **(iii)** el bono de referido se reconoce **por una sola vez** por organización referida, al realizar ésta su primer pago; y **(iv)** **nada de lo aquí resuelto garantiza ingreso, rendimiento ni resultado alguno** a socio o aspirante. Los parámetros son **ajustables por acuerdo posterior de la Asamblea General Ordinaria**.*
+>
+> *Queda **`[PENDIENTE — por definir por la Asamblea]`** la **vigencia de los perfiles Agente y Consultor**, que no se determina en esta resolución.*
+
+> **QUINTA BIS RESOLUCIÓN (Coordinador Regional).** *Se **[☐ aprueba / ☐ ajusta / ☐ rechaza]** la figura del **Coordinador Regional** en los términos del **Artículo 15 Ter del Reglamento Interno**, haciéndose constar como **esencial** que: **(i)** es un **puesto que la Cooperativa asigna y que es revocable** —**no se gana reclutando socios, no se hereda y no constituye nivel jerárquico alguno** sobre otros socios—; **(ii)** existe **un (1) Coordinador Regional por zona y máximo cuatro (4) en toda la República**, siendo las zonas **Centro, Norte, Bajío y Sur-Sureste**, que agrupan los 32 estados conforme al mapeo operativo de la plataforma y del CRM; **(iii)** sus funciones son **capacitar, dar soporte, abrir plaza, promover el cooperativismo y la economía solidaria, dar conferencias, ayudar en el onboarding de las organizaciones y acompañar a las comisiones mixtas de capacitación a registrar sus actas ante la Secretaría del Trabajo y Previsión Social**; **(iv)** su **bono por crecimiento regional** se integra de una **cuota fija por la función** más un **variable por metas de zona**, y retribuye **un servicio efectivamente prestado a la Cooperativa**; y **(v)** **NO existe cascada**: el bono **no es ni puede convertirse en un porcentaje sobre las operaciones de los socios de la zona**, y el Coordinador **no percibe nada por el hecho de que otros socios operen**. La supresión o modificación de lo previsto en los incisos (i), (ii) y (v) **requiere acuerdo expreso de esta Asamblea**.*
+>
+> *Se hace constar que **`[PENDIENTE: montos por definir por la Asamblea]`**: **la cuota fija y las metas de zona con su variable NO se determinan en esta resolución** y **no existe cifra alguna propuesta**. En tanto no se determinen, la Cooperativa **no publicará ni simulará** cifras de este bono.*
+
+> **⚠️ BLOQUEANTE — no votar aún.** Este punto arrastra las **Decisiones Pendientes núms. 8** (compatibilidad de la escalera por perfil y de la escalación por volumen 25%/30%/35% con la proporcionalidad de una **cooperativa de consumo**) y **9** (**marco jurídico de la figura del "socio comercial"**: quien vende a terceros y cobra un porcentaje por vender no opera con la Cooperativa en calidad de consumidor — ¿relación laboral, prestación de servicios, sección de producción?). **Ambas siguen abiertas.** `[VERIFICAR CON DANIEL: si la resolución de la Decisión núm. 9 exige REFORMA ESTATUTARIA, en cuyo caso este punto NO es materia de Asamblea Ordinaria y estas resoluciones no pueden adoptarse aquí.]`
 
 ---
 
