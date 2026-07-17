@@ -708,4 +708,267 @@ export const rwaOnboardingModules: Record<string, RwaModule[]> = {
     },
   ],
 
+  "certificados-aportacion-nft": [
+    {
+      title: "Qué es un certificado de aportación",
+      description: "El título del socio en la cooperativa: nominativo, indivisible, valor nominal $150. La cooperativa detrás de él (acta 6520) y el Artículo Sexto que autoriza que los certificados sean digitales.",
+      durationMinutes: 12,
+      contentHtml: `
+<p>Bienvenido al Curso 5 de Academia RWA. Igual que el anterior, este curso es exclusivo para quienes participan en la parte comercial de Ceduverse: socios comerciales, empresas aliadas y directores. En el Curso 4 hiciste el trabajo conceptual —entendiste que la aportación es patrimonio y no gasto, desarmaste el bono de $170, viste por qué el valor tiene que venir de FUERA y por qué sin reserva 1:1 no se emite nada—. Aquí cambiamos de lente: dejamos de hablar del <em>mecanismo que funda</em> tu certificado y ponemos bajo la lupa <strong>el certificado mismo</strong>. Qué es exactamente, cómo se representa digitalmente, qué derechos te da (y cuáles no), cómo crece y bajo qué reglas —o bajo qué reglas <em>todavía por aprobar</em>— se transmite y se reembolsa.</p>
+
+<h3>La definición precisa</h3>
+<p>Un <strong>certificado de aportación</strong> es el título que documenta la aportación de un socio al capital social de la cooperativa. En Ceduverse tiene tres características que conviene decir despacio, porque cada una tiene consecuencias prácticas.</p>
+
+<p>Es <strong>nominativo</strong>: está a tu nombre. No es un título al portador que valga por el simple hecho de tenerlo en la mano; vale porque tú, identificado, apareces como su titular. Es <strong>indivisible</strong>: no existe medio certificado ni un cuarto de certificado. O tienes uno completo o no lo tienes. Y tiene un <strong>valor nominal de $150 pesos</strong>: esa es la cifra que representa, y no fluctúa con la oferta y la demanda porque no hay oferta ni demanda — no cotiza en ningún lado. Un certificado de aportación de Ceduverse vale $150 el día que se emite y vale $150 como valor nominal el día que lo revises tres años después.</p>
+
+<p>Cuando esos $150 están completamente cubiertos, se dice que el certificado está <strong>totalmente exhibido</strong>: pagado por entero, sin saldo pendiente. Esa expresión, que suena a tecnicismo contable, es en realidad la que marca la frontera entre "tienes un certificado" y "tienes un compromiso de certificado a medio fondear".</p>
+
+<h3>La cooperativa que hay detrás del título</h3>
+<p>Un título no significa nada si la sociedad que lo emite no existe de verdad. Ceduverse existe: es una <strong>sociedad cooperativa de consumo de responsabilidad limitada de capital variable</strong>, constituida mediante el <strong>acta 6520</strong> ante la <strong>Notaría 110 de Quintana Roo</strong>, e inscrita en el Registro Público de Comercio bajo el folio <strong>N-2026009627</strong>. No es un proyecto, no es una marca, no es una comunidad: es una persona moral con instrumento notarial e inscripción registral, y cualquiera puede ir a verificarla.</p>
+
+<p>Su punto de partida son <strong>5 socios fundadores con 20% cada uno</strong> y <strong>100 certificados de $150</strong>, es decir, $15,000 pesos de capital fundacional. Vale la pena que te detengas en la escala: ciento cincuenta pesos por certificado, cien certificados. No estamos hablando de un vehículo de gran capital. Estamos hablando de una figura pensada para que muchas personas quepan dentro con una participación pequeña y sana — que es, exactamente, lo que una cooperativa de consumo debe ser.</p>
+
+<h3>El Artículo Sexto: el permiso que hace posible todo lo demás</h3>
+<p>Y aquí llegamos al corazón de este curso completo. Si de todo el Curso 5 solo pudieras recordar una cosa, que sea esta.</p>
+
+<p>El <strong>Artículo Sexto del acta constitutiva 6520</strong> establece que los certificados de aportación de Ceduverse <strong>podrán ser digitales, nominativos e indivisibles</strong>. Léelo otra vez: <em>digitales</em>. Está escrito en el acta constitutiva, pasada ante notario público e inscrita en el registro. No es una interpretación creativa que estemos forzando, no es un vacío legal que estemos aprovechando, no es una opinión de abogado que alguien podría discutir. <strong>Es el texto del propio instrumento constitutivo de la sociedad, y es la base legal sobre la que se sostiene todo lo que vas a aprender en los siguientes módulos.</strong></p>
+
+<p>Piensa en lo que significa. La gran mayoría de los proyectos que intentan representar digitalmente la participación en una sociedad tienen que hacer malabares: forzar figuras que no encajan, inventar estructuras paralelas, o directamente esperar a que la ley cambie. Ceduverse no tiene ese problema, y no por suerte: porque quien redactó su acta constitutiva previó desde el día uno que los certificados pudieran existir en forma digital. Ese permiso previo, escrito y protocolizado, es lo que convierte la representación digital del certificado en algo <strong>que el acta ya autoriza</strong>, en lugar de algo que habría que ir a pedir.</p>
+
+<p>El mismo Artículo Sexto ordena también que la cooperativa lleve un <strong>Libro de Registro de Certificados de Aportación</strong>, donde se inscriben todas las operaciones sobre certificados: suscripción, adquisición, transmisión o garantía. Retén ese libro en la memoria, porque en el módulo 2 vamos a ver que es, jurídicamente, la pieza más importante de toda la arquitectura — más importante, incluso, que cualquier cosa que ocurra en una blockchain.</p>
+
+<h3>Digital no cambia la naturaleza</h3>
+<p>Una precisión que evita el malentendido más común: que un certificado sea digital <strong>no altera en absoluto su naturaleza jurídica</strong>. Un certificado digital de $150 es exactamente el mismo instrumento que un certificado impreso de $150: mismo valor nominal, mismos derechos, mismas obligaciones, mismo régimen de gobierno. Lo digital cambia el <em>soporte</em>, no la <em>sustancia</em>. Es la misma lógica que ya viste en toda esta academia: primero la sustancia real, después la representación. Nunca al revés.</p>
+
+<p>Queda un punto honesto que vale la pena que conozcas, porque este curso no te va a esconder los cabos sueltos: el Artículo Sexto describe el contenido que debe llevar el título e incluye, entre otros elementos, la firma autógrafa de los administradores. Cómo se satisface ese requisito en un título digital —con firma electrónica avanzada o su equivalente— es un punto que está en revisión legal y que se resolverá antes de que la representación digital se opere en forma. Que el acta autorice lo digital no significa que los detalles de implementación ya estén todos cerrados; significa que la puerta está abierta y que ninguno de esos detalles requiere reformar el acta.</p>
+
+<h3>Los tres avisos</h3>
+<p>Como en todo el Curso 4, y por las mismas razones, los guardrails aparecen desde el primer módulo y se van a repetir en cada uno. <strong>Nada en este curso constituye una oferta de valores</strong>: un certificado de aportación cooperativa no es una acción, ni un bono, ni un título colocable en un mercado, ni está registrado ante autoridad bursátil alguna — porque no lo es ni pretende serlo. <strong>Nada en este curso constituye asesoría de inversión</strong>: no es una recomendación sobre qué hacer con tu dinero; si tienes dudas sobre tu situación patrimonial o fiscal, consulta a tu propio asesor. Y <strong>no hay rendimientos garantizados</strong>: tener certificados no promete que valgan más mañana ni que produzcan retorno alguno.</p>
+
+<p>Ya sabes qué es el instrumento y por qué el acta permite que sea digital. En el siguiente módulo vamos a ver <em>cómo</em> se representa digitalmente — y por qué esa representación, por más tecnología que lleve encima, jamás es el título.</p>
+      `,
+      references: ["Acta constitutiva 6520, Notaría 110 QR, RPC N-2026009627 (Art. Sexto: certificados digitales, nominativos, indivisibles; Libro de Registro)", "Master RAW seal / tokenización 2026-07-15 (§2 realidad legal comparada, §6 tokenización por entidad)", "LGSC (régimen de sociedades cooperativas)"],
+    },
+    {
+      title: "El NFT gemelo registral",
+      description: "El Libro de Registro es la fuente de verdad; el NFT y el sello on-chain son su espejo por hash, nunca el título negociable. El doble sello Opción A (wallet del proyecto + contrafirma de la wallet madre) y la privacidad sin datos personales on-chain.",
+      durationMinutes: 13,
+      contentHtml: `
+<p>En el Curso 4 te presentamos la idea en una frase: el NFT es un <strong>gemelo registral</strong>, no un título negociable. Fue suficiente para cerrar aquel curso. Aquí no lo es: vas a explicar este modelo a otras personas, y para eso necesitas entender la mecánica completa, incluido el punto donde casi todo el mundo se equivoca.</p>
+
+<h3>Quién manda: el Libro de Registro</h3>
+<p>Empecemos por la jerarquía, porque de ella se deriva todo lo demás. La fuente de verdad de tu condición de socio y de tu titularidad sobre los certificados es el <strong>Libro de Registro de Certificados de Aportación</strong> que la cooperativa lleva conforme al Artículo Sexto. No es la blockchain. No es el NFT. No es la pantalla de tu panel de socio. Es el Libro.</p>
+
+<p>La consecuencia es tajante y conviene que la memorices tal cual: <strong>la sociedad reconoce como propietario únicamente a quien aparece inscrito en el Libro de Registro</strong>. Si una operación no está inscrita, no surte efectos frente a la cooperativa — por más que exista un registro digital elegante en algún otro lado. Y si alguna vez hubiera discrepancia entre el Libro y cualquier representación digital, <strong>prevalece el Libro</strong>. Sin excepciones y sin debate.</p>
+
+<p>Esto no es una limitación del diseño: es el diseño. Es lo que impide que el modelo caiga en el error clásico de la industria — creer que porque algo está en una cadena de bloques, es jurídicamente cierto. Una cadena de bloques prueba integridad e inmutabilidad de un dato; no le da validez societaria a nada. La validez societaria la da el Libro, respaldado por el acta y la ley.</p>
+
+<h3>Qué es entonces el gemelo</h3>
+<p>Con esa jerarquía clara, la definición se vuelve fácil. El <strong>gemelo registral</strong> es el espejo del Libro. Cuando ocurre un evento —el alta de un certificado, un cambio en el Libro, la acreditación de una aportación— se construye un <strong>registro canónico</strong> de ese evento y se calcula su <strong>hash SHA-256</strong>: la huella digital única que cambia por completo si el dato se altera en un solo carácter, y que permanece idéntica si no se toca. Esa huella se ancla en la red <strong>Base</strong>.</p>
+
+<p>El resultado es una prueba pública, con fecha cierta, imposible de alterar retroactivamente, de que el Libro decía exactamente eso en ese momento exacto. <strong>El gemelo no crea el derecho: lo atestigua.</strong> Es un testigo con memoria perfecta que no puede mentir sobre lo que vio — pero sigue siendo un testigo, no el hecho.</p>
+
+<h3>El doble sello: la Opción A</h3>
+<p>Aquí viene la pieza de arquitectura que distingue a este consorcio, y que no vimos en el Curso 4. Cada evento sellable no se ancla una vez: se ancla <strong>dos</strong>. Es lo que llamamos el <strong>doble sello, Opción A</strong>.</p>
+
+<p>El primer sello lo pone la <strong>wallet del propio proyecto</strong> —en este caso, la de Ceduverse—, y significa: <em>la entidad actúa</em>. Es la cooperativa la que asienta y sella su propio evento registral. El segundo sello lo pone la <strong>wallet madre de BrainShield</strong>, que <strong>contrafirma el mismo hash</strong> haciendo referencia a la transacción del proyecto, y significa: <em>el originador RWA del consorcio ratifica</em>. Ambos anclajes viven en <strong>Base</strong>, una sola red, con costos de transacción bajos.</p>
+
+<p>Fíjate en la elegancia de la variante elegida: la madre no repite un anclaje independiente desde cero — ancla el hash <em>más un puntero</em> a la transacción del proyecto. Mismo valor probatorio, aproximadamente la mitad del gas. Y el efecto es una <strong>doble cadena de custodia</strong>: cualquier persona puede verificar, sin permiso y sin ver un solo dato personal, dos cosas por separado — que Ceduverse selló, y que BrainShield ratificó. Dos firmas independientes sobre el mismo hecho, imposibles de fabricar una sin la otra.</p>
+
+<h3>Privacidad: hashes, nunca datos personales</h3>
+<p>La regla es absoluta y es uno de los principios rectores del diseño: <strong>on-chain solo va el hash. La información personal nunca toca la cadena.</strong></p>
+
+<p>El registro canónico que se sella contiene el tipo de evento, la entidad, el identificador del certificado, el <strong>hash del titular —no tu nombre—</strong>, el <strong>hash del comprobante —no el comprobante—</strong>, y la fecha en UTC. Tu nombre, tu RFC, tu CURP, tu domicilio y tu correo viven en el Libro de Registro, off-chain, con acceso restringido, tratados conforme a la ley de protección de datos personales. Hacia afuera, tu exposición pública es un <strong>alias</strong> — el mismo patrón que ya conociste en la bóveda de BrainShield.</p>
+
+<p>Esto logra algo que suena contradictorio y no lo es: un tercero puede verificar que tu certificado es auténtico y está vigente, comparando huellas, <strong>sin saber jamás quién eres</strong>. Tú decides si revelas el dato original detrás del hash y ante quién. La cadena prueba integridad sin costar privacidad.</p>
+
+<h3>Lo que el gemelo NO es (la parte que más se malinterpreta)</h3>
+<p>Dilo siempre así, sin matices y sin adornos: <strong>el NFT gemelo NO es un título negociable</strong>. No es un valor. No es un instrumento financiero. No se lista en un exchange, no se vende en un mercado secundario, no se transfiere libremente a quien tú quieras. Y por si quedara duda: <strong>la titularidad on-chain no confiere la calidad de socio</strong> — esa deriva exclusivamente de la inscripción en el Libro de Registro. Si alguien tuviera el NFT y no estuviera en el Libro, no sería socio de nada.</p>
+
+<p>El gemelo <strong>documenta</strong> la titularidad; no la transmite ni la libera. Es un espejo: refleja lo que el Libro dice, y cuando el Libro cambia, el espejo cambia. Nunca al contrario.</p>
+
+<h3>Qué existe hoy, con toda honestidad</h3>
+<p>Y ahora la parte que un curso descuidado se saltaría. Vamos a ser exactos, porque tú vas a repetir esto frente a prospectos y no puedes decir de más.</p>
+
+<p>Lo que <strong>existe y opera hoy</strong> es la red <strong>Base</strong> y el <strong>mecanismo de atestación por hash SHA-256</strong> — el motor de sellado del consorcio, que ya ancla hashes en Base. Eso es real y funciona. Lo que <strong>todavía no existe</strong> es el NFT de tu certificado: <strong>no está acuñado ni desplegado</strong>. La arquitectura de doble sello aplicada a eventos de certificados y aportaciones es la fase de arranque del proyecto, y el NFT visible como gemelo del libro digital es una fase posterior. Incluso las wallets por proyecto están en proceso de constituirse — existe la madre de BrainShield; las demás se están montando.</p>
+
+<p>Así que cuando expliques esto: <strong>habla del NFT como diseño, nunca como algo que un socio pueda tener hoy</strong>. Y recuerda que todos los tokens del consorcio —CEDU incluido— siguen siendo diseño. Como aprendiste en el Curso 4, la honestidad sobre los tiempos no es una debilidad del pitch: es la mejor prueba de que hay sustancia detrás. Quien no tiene nada que esconder no necesita adornar el calendario.</p>
+
+<h3>Los tres avisos</h3>
+<p><strong>Esto no es una oferta de valores</strong> — y en este módulo la frase es casi redundante: un gemelo registral que no es negociable, que no transmite titularidad y que ni siquiera está acuñado difícilmente podría serlo. <strong>Esto no es asesoría de inversión.</strong> <strong>No hay rendimientos garantizados</strong>: el gemelo no promete nada, no rinde nada, no se aprecia. Prueba un hecho. Nada más — y nada menos.</p>
+
+<p>Ya sabes qué documenta el gemelo. Falta la pregunta que todo socio comercial escucha tarde o temprano: <em>"si acumulo certificados, ¿mando más?"</em> La respuesta está en el siguiente módulo, y es un no rotundo.</p>
+      `,
+      references: ["Master RAW seal / tokenización 2026-07-15 (§3 principios, §4 doble sello Opción A, §8 fases F1/F2, §13 gaps abiertos)", "Acta constitutiva 6520, Art. Sexto (Libro de Registro de Certificados de Aportación)", "LFPDPPP (tratamiento de datos personales del socio)"],
+    },
+    {
+      title: "1 socio = 1 voto",
+      description: "Por más certificados que acumules, tu voto sigue siendo uno. La cooperativa es una sociedad de personas, no de capitales — y ningún NFT ni token pondera el voto por tenencia.",
+      durationMinutes: 12,
+      contentHtml: `
+<p>Este es el módulo más corto de explicar y el más difícil de aceptar para quien viene del mundo de las sociedades mercantiles. La regla cabe en cuatro palabras: <strong>1 socio = 1 voto</strong>. Y no tiene asteriscos.</p>
+
+<h3>La regla, sin matices</h3>
+<p>En Ceduverse, cada socio tiene <strong>un (1) voto en la Asamblea General, con independencia del número o del valor de los certificados de aportación de que sea titular</strong>. Así lo establece la <strong>Ley General de Sociedades Cooperativas</strong>, así lo recoge el acta constitutiva de la cooperativa, y así opera en los hechos.</p>
+
+<p>Tengas 1 certificado o tengas 20 —el tope máximo que puedes alcanzar por capitalización, como veremos en el siguiente módulo—, tu voto en la asamblea vale exactamente lo mismo que el de cualquier otro socio. Ni un poquito más. El socio que entró ayer con su primer certificado de $150 pesa, en la asamblea, lo mismo que el socio que lleva tres años y llegó al tope. Y lo mismo que un socio fundador.</p>
+
+<h3>De personas, no de capitales</h3>
+<p>Detrás de esa regla hay una frase que suena a eslogan y que en realidad es la diferencia jurídica de fondo entre dos mundos: <strong>una cooperativa es una sociedad de personas, no de capitales</strong>.</p>
+
+<p>Compárala con una sociedad anónima, que es el modelo que casi todos llevamos en la cabeza por default. En una S.A., la acción es la unidad de poder: cada acción vale un voto, así que quien tiene el 51% del capital decide el 100% de las cosas, y quien tiene el 2% asiste a la asamblea a ver qué le informan. El capital manda. Es un modelo perfectamente legítimo y tiene su lugar en el mundo — pero es un modelo donde <em>la voz sigue al dinero</em>.</p>
+
+<p>En una cooperativa la lógica se invierte por completo. El certificado de aportación representa <strong>tu patrimonio</strong>, no <strong>tu poder de decisión</strong>. Son dos ejes separados que en la S.A. están fusionados y que aquí, deliberadamente, no lo están. Tu dinero dentro de la sociedad puede crecer (hasta el tope); tu voz, no. Tu voz ya está completa desde el primer certificado, y nada de lo que hagas después la aumenta.</p>
+
+<p>Vale la pena notar el caso de los <strong>5 socios fundadores con 20% cada uno</strong> de Ceduverse: ahí la aritmética patrimonial y la del voto coinciden por casualidad —cinco personas, un quinto cada una—. Pero es solo eso: una coincidencia del punto de partida. Aunque uno de ellos tuviera mañana el doble de certificados que otro, seguiría teniendo exactamente un voto. La coincidencia es del arranque; la regla es estructural.</p>
+
+<h3>Y aquí la parte que te toca a ti: el NFT no vota</h3>
+<p>Este es el punto donde todo lo que aprendiste en el módulo anterior se conecta con esta regla, y donde un diseño descuidado habría destruido la naturaleza de la cooperativa sin darse cuenta.</p>
+
+<p>El impulso natural de cualquiera que haya visto proyectos de blockchain es asumir que si tienes un token o un NFT de una organización, ese token te da poder de gobierno proporcional a cuántos tengas. Es literalmente el modelo por defecto de la industria: más tokens, más voto. En Ceduverse, ese modelo es <strong>jurídicamente imposible</strong>.</p>
+
+<p>Por eso el principio de diseño está escrito de forma explícita y sin ambigüedad: <strong>ningún token ni NFT pondera el voto por tenencia</strong>. El gemelo registral no otorga por sí voto ni derecho proporcional alguno. Y ya lo sabes del módulo 2: la titularidad on-chain ni siquiera confiere la calidad de socio — esa deriva exclusivamente de la inscripción en el Libro de Registro. El NFT documenta cuánto patrimonio tienes; el voto no está ahí, y nunca lo estará.</p>
+
+<p>Piénsalo al revés, que es como se ve la gravedad del asunto: si el NFT ponderara el voto, la cooperativa dejaría de ser una cooperativa. Se convertiría, de facto, en una sociedad de capitales operada por tokens, contra su propia acta y contra la LGSC. No sería una mejora tecnológica: sería una violación al régimen societario disfrazada de innovación. Y ese es exactamente el tipo de error que este diseño rechaza por principio, igual que rechazó el NFT sin reserva 1:1 que estudiaste en el Curso 4. La tecnología se adapta al régimen societario. Jamás al revés.</p>
+
+<h3>Por qué esto importa cuando lo explicas</h3>
+<p>Si eres socio comercial, esta regla te va a ahorrar problemas serios — y te va a costar algunas conversaciones incómodas. Vale la pena que las tengas de todas formas.</p>
+
+<p>Habrá prospectos que, al escuchar "certificados," "NFT" y "copropiedad" en la misma frase, empiecen a imaginar que acumular certificados es una forma de escalar dentro de la organización, de ganar influencia, de "tener más peso." <strong>Corrígelo de inmediato, en el momento, sin rodeos.</strong> No lo dejes pasar pensando que es un detalle menor que ya entenderán después. Una persona que se vuelve socia creyendo que compró influencia se va a sentir engañada el día de la primera asamblea, y con razón — y tú vas a ser quien se lo dijo.</p>
+
+<p>La forma correcta de decirlo es directa: <em>"Tus certificados son tu patrimonio dentro de la cooperativa. Tu voto es uno, siempre, igual que el mío y el de todos. Aquí no se compra influencia — se comparte propiedad."</em></p>
+
+<p>Y hay algo más profundo que puedes ofrecer, si el prospecto es de los que escuchan: esta regla es <strong>una protección para él</strong>, no una limitación. En una sociedad de capitales, el socio pequeño está estructuralmente a merced del socio grande. Aquí no puede pasar. Nadie puede comprar el control de Ceduverse acumulando certificados, porque el control no está a la venta — no existe como algo comprable. Esa es una garantía que un socio minoritario de una S.A. simplemente no tiene.</p>
+
+<h3>El puente al siguiente módulo</h3>
+<p>Ahora bien: si el voto no crece con los certificados, ¿para qué querría alguien más certificados? Porque el patrimonio sí crece — con un límite explícito, y sin que salga un peso adicional de tu bolsillo. Es el mecanismo de la <strong>capitalización del 5%</strong>, que ya conociste en su forma general en el Curso 4 y que aquí vamos a desarmar con números en la mano.</p>
+
+<p>Y un recordatorio de los guardrails, que aplican también aquí: <strong>nada de esto es una oferta de valores</strong> — el certificado no es una acción y no lleva voto proporcional, precisamente porque no es una acción. <strong>Nada de esto es asesoría de inversión.</strong> <strong>No hay rendimientos garantizados.</strong> Ser copropietario de una cooperativa de consumo es participar en una sociedad de personas cuyos servicios tú mismo consumes; no es adquirir una posición de control ni un retorno prometido.</p>
+      `,
+      references: ["LGSC (1 socio = 1 voto, independientemente del número de certificados)", "Acta constitutiva 6520 (Estatutos: igualdad de derechos de los socios)", "Master RAW seal / tokenización 2026-07-15 (§3.3 respeto al régimen societario, §6 voto per-socio, no por NFT)"],
+    },
+    {
+      title: "La capitalización del 5%",
+      description: "Cómo tu aportación crece con tu propia actividad: 5% de cada movimiento de valor, el ejemplo del RVOE de $49,900 → $2,495 ≈ 16 certificados, la indivisibilidad y el tope de 20 certificados ($3,000).",
+      durationMinutes: 13,
+      contentHtml: `
+<p>En el Curso 4 conociste la capitalización del 5% como parte del recorrido del bono: te dijimos que existe, cuánto es y dónde está el tope. Aquí la abrimos por dentro. Vas a ver de dónde sale cada peso, qué pasa con los centavos que no alcanzan a formar un certificado, y por qué el tope —que a primera vista parece una restricción molesta— es en realidad la pieza que sostiene todo lo que aprendiste en el módulo anterior.</p>
+
+<h3>El parámetro</h3>
+<p>La regla es esta: se capitaliza el <strong>5% de cada movimiento de valor del socio</strong> —su consumo de cursos y certificaciones, y sus comisiones por referido— convirtiéndolo en <strong>aportación propia</strong>, materializada en certificados de $150 cada uno, hasta un <strong>tope de 20 certificados ($3,000)</strong>.</p>
+
+<p>Y ahora la precisión que separa a quien entendió el modelo de quien memorizó un número. <strong>Ese 5% no es un regalo de la cooperativa. Sale del pago del propio socio.</strong> Cuando tú pagas por un servicio de Ceduverse, una fracción de <em>tu propio pago</em> se reasigna a <em>tu propia cuenta de capital</em>, y el resto se reconoce como consumo. No hay subsidio, no hay dinero externo, no hay desembolso adicional tuyo. Es tu dinero cambiando de casilla: de "pago por un servicio" a "patrimonio tuyo dentro de la sociedad."</p>
+
+<p>Nota la diferencia limpia con el <strong>bono de bienvenida</strong> del Curso 4, porque son dos mecanismos distintos que resuelven cosas distintas. El bono se financia con valor <strong>externo</strong> —beca de empresa o, en el diseño, token respaldado 1:1— y funda tu <em>primer</em> certificado. La capitalización del 5% se financia con <strong>tu propio pago</strong> y hace <em>crecer</em> tu aportación después. Externo para arrancar; propio para crecer. Distinto origen, distinta documentación, misma política coherente: volverte copropietario sin gasto adicional de tu bolsillo.</p>
+
+<h3>El ejemplo grande: el RVOE de $49,900</h3>
+<p>Vamos con la cifra más alta del catálogo, porque es donde la mecánica se ve con claridad. La <strong>certificación RVOE Academy por experiencias laborales cuesta $49,900 pesos</strong>.</p>
+
+<p>El <strong>5% de $49,900 son $2,495 pesos</strong>. Esos $2,495 se asignan a tu cuenta de capital como aportación tuya. Los <strong>$47,405</strong> restantes se reconocen como ingreso por servicio de la cooperativa, con su CFDI correspondiente.</p>
+
+<p>Fíjate en lo que acaba de pasar, porque resuelve un problema real y no es un truco contable: <strong>el mismo pago se parte en dos naturalezas distintas</strong>. La porción de capital es tuya y se documenta con un <strong>recibo o constancia de aportación</strong> — no con un CFDI de ingreso, porque la cooperativa no te vendió esa parte: la recibió como aportación a su capital. La porción de servicio sí es una venta, sí es ingreso gravable de la cooperativa, y sí se factura normalmente. Es exactamente la misma distinción entre capital y consumo que ya dominas desde el Curso 4 con los $150 y los $20 del bono — aplicada ahora dentro de una sola transacción.</p>
+
+<p>Un punto de honestidad: el tratamiento fiscal fino de ese split —la base exacta de IVA y retenciones sobre la porción de servicio, y si la porción de capital se detrae antes o después de los impuestos indirectos— está pendiente de validación con el área fiscal y con el CLO. El parámetro del 5% está definido; el asiento contable exacto se está cerrando con contabilidad. No te inventes ese detalle frente a un prospecto: si te preguntan por el IVA, la respuesta correcta es que ese punto está en revisión fiscal.</p>
+
+<h3>Los certificados que salen de ahí (y el residuo)</h3>
+<p>¿Cuántos certificados son $2,495? Divide entre el valor nominal de $150: son <strong>aproximadamente 16 certificados</strong>. Y aquí aparece, con toda su fuerza práctica, una característica que en el módulo 1 parecía puro tecnicismo: <strong>la indivisibilidad</strong>.</p>
+
+<p>Porque 16 certificados son $2,400 exactos. Y $2,495 menos $2,400 son <strong>$95 pesos</strong> que sobran. ¿Qué pasa con esos $95? No se pierden, y tampoco fabrican dos tercios de certificado — porque medio certificado no existe. El diseño contempla que ese remanente se <strong>acumule en un saldo de aportación pendiente</strong>, esperando. Cuando ese saldo acumulado alcance $150, se emite el certificado número 17, se inscribe en el Libro de Registro y, en su momento, se sella on-chain.</p>
+
+<p>Así que la acreditación es <strong>fraccionada pero nunca fraccionaria</strong>: el saldo se acumula peso por peso; el certificado nace entero o no nace. La indivisibilidad del título obliga a que exista ese saldo intermedio, y el saldo intermedio hace que ningún peso tuyo se desperdicie. Las dos piezas encajan por diseño.</p>
+
+<h3>El tope: 20 certificados, $3,000</h3>
+<p>Ahora el límite: la capitalización tiene un <strong>tope de 20 certificados, es decir, $3,000 pesos</strong> (20 × $150 = $3,000). Al alcanzarlo, la capitalización automática cesa para ese socio. Tu actividad puede seguir creciendo todo lo que quieras; tu capital acumulado por esta vía se detiene ahí.</p>
+
+<p>Haz la cuenta con el producto ancla y vas a ver algo revelador: con una certificación de $49,900 capitalizas ~16 certificados. Con poco más de una sola compra de ese producto <strong>ya estás en el tope</strong>. No hacen falta años ni volumen: el techo está prácticamente al alcance de la mano desde el arranque.</p>
+
+<p>Eso te dice algo importantísimo sobre el modelo, y quiero que lo digas exactamente así: <strong>esto no es un vehículo para acumular capital</strong>. Está diseñado para que las personas que usan la cooperativa sean copropietarias de ella en una proporción sana y acotada — no para que nadie construya una posición grande dentro del capital social.</p>
+
+<h3>Por qué el tope protege lo del módulo anterior</h3>
+<p>Y ahora conecta este módulo con el anterior, porque juntos forman una sola idea.</p>
+
+<p>Ya sabes que <strong>1 socio = 1 voto</strong>, así que técnicamente nadie podría comprar control acumulando certificados: el control no está a la venta. Entonces, ¿para qué el tope? Porque el poder no solo se ejerce por el voto. Un socio que concentrara una porción desproporcionada del capital social tendría, de facto, una influencia económica que la asamblea no le dio y que la estructura no contempla: peso en las decisiones patrimoniales, en el reembolso, en la percepción interna de quién es "el grande" de la cooperativa. La sociedad empezaría a <em>parecerse</em> a una sociedad de capitales aunque su acta dijera lo contrario.</p>
+
+<p>El tope de $3,000 cierra esa puerta desde el otro lado. Es la <strong>salvaguarda económica</strong> del principio de gobierno que estudiaste en el módulo 3: uno impide que el capital compre el voto; el otro impide que el capital se concentre. Los dos juntos, y solo los dos juntos, sostienen que Ceduverse sea de verdad una sociedad de personas.</p>
+
+<p>Una nota de precisión: tanto el porcentaje (5%) como el tope (20 certificados) son <strong>parámetros de política</strong>, no cifras grabadas en piedra en el acta. Están diseñados para poder ajustarse por acuerdo de la Asamblea General, dentro de los límites de la LGSC y de los Estatutos. Hoy son 5% y 20 certificados; explícalos con esas cifras exactas, y explica también que la Asamblea es quien puede moverlas — no la administración, no el equipo comercial, no tú.</p>
+
+<h3>Los tres avisos</h3>
+<p>Y aquí caen con todo su peso, porque este es el módulo donde alguien podría confundirse. <strong>Esto no es una oferta de valores</strong>: los certificados que salen de la capitalización son idénticos a cualquier otro certificado — no negociables, sin mercado, sin cotización. <strong>Esto no es asesoría de inversión</strong>: nada aquí es una recomendación patrimonial para tu caso particular. Y sobre todo: <strong>no hay rendimientos garantizados, y la capitalización del 5% NO es un rendimiento</strong>. Repítelo así de claro cada vez que lo expliques. No es dinero que la cooperativa te promete, ni un interés, ni un retorno sobre tu aportación. Es <em>una fracción de tu propio pago reencauzada hacia tu propio patrimonio</em>, con un tope explícito de $3,000 y sin promesa alguna de que ese patrimonio crezca más allá de eso. Un prospecto que salga de tu conversación pensando "me dan 5% de rendimiento" entendió exactamente lo contrario de lo que dice el modelo.</p>
+
+<p>Ya sabes cómo nace tu certificado y cómo crece. Falta la parte más incómoda y la más honesta del curso: qué pasa cuando quieres <em>salir</em>.</p>
+      `,
+      references: ["Master RAW seal / tokenización 2026-07-15 (§5 aportación capitalizada, §13 gaps abiertos)", "Reglamento Interno Ceduverse DRAFT (política de capitalización — borrador pendiente de aprobación en Asamblea)", "Acta constitutiva 6520, Art. Sexto (valor nominal $150, indivisibilidad)", "Memoria ceduverse-cobros-web3 (§ capitalización 5%, tope 20 certificados)"],
+    },
+    {
+      title: "Transmisión y reembolso: lo que está en firme y lo que está por aprobarse",
+      description: "Qué dicen hoy el acta y la LGSC sobre salir de la cooperativa, qué contempla el proyecto de Reglamento Interno (aún borrador, no aprobado) sobre transmisión restringida y derecho del tanto, y los puntos que siguen abiertos. Cierre del curso.",
+      durationMinutes: 13,
+      contentHtml: `
+<p>Llegamos al último módulo del Curso 5, y es el que más disciplina exige — de nosotros al escribirlo y de ti al explicarlo. Porque aquí vamos a hablar de reglas que <strong>todavía no están aprobadas</strong>, y la tentación de presentarlas como si ya lo estuvieran es enorme. No lo vamos a hacer. Y tú tampoco.</p>
+
+<h3>Primero: la línea entre lo firme y lo pendiente</h3>
+<p>Antes de decir una sola regla, aprende a separar dos categorías, porque de esto depende que no le mientas a nadie sin querer.</p>
+
+<p>Por un lado está lo que <strong>ya está en firme</strong>: la <strong>Ley General de Sociedades Cooperativas</strong> y el <strong>acta constitutiva 6520</strong>. Eso es derecho vigente, protocolizado, inscrito. Manda hoy.</p>
+
+<p>Por el otro está el <strong>Reglamento Interno</strong>, que es donde deberían vivir los detalles de la transmisión de certificados. Y aquí la afirmación central de este módulo: <strong>el Reglamento Interno de Ceduverse es hoy un proyecto en borrador. NO ha sido aprobado por la Asamblea General de Socios y, por lo tanto, NO está vigente ni surte efectos jurídicos.</strong> Todo lo que ese borrador propone es exactamente eso — una propuesta, sujeta a revisión del CLO y a aprobación en Asamblea con el quórum que exigen el acta y la ley.</p>
+
+<p>Así que cuando en los párrafos siguientes leas "el proyecto de Reglamento contempla…", léelo literal. No es un rodeo elegante ni una fórmula de cortesía legal: es la descripción exacta del estatus. Y cuando lo expliques a un prospecto o a un socio, usa esas mismas palabras.</p>
+
+<h3>Lo que sí está en firme hoy</h3>
+<p>Empecemos por lo sólido, que no es poco.</p>
+
+<p>El <strong>Artículo Sexto del acta</strong> ordena que toda operación sobre certificados —suscripción, adquisición, <strong>transmisión</strong> o garantía— se inscriba en el <strong>Libro de Registro</strong>. La transmisión existe como figura y debe registrarse. Lo que el acta <em>no</em> hace es detallar el procedimiento: ese es, reconocidamente, un <strong>hueco estatutario</strong> que el acta misma remite a reglamentación interna. Y ese reglamento aún no existe en forma vigente. Ese es, con toda precisión, el estado de las cosas.</p>
+
+<p>Sobre la salida, el acta y la ley sí son claros en varios puntos. La calidad de socio es <strong>voluntaria y de libre retiro</strong>: nadie está atrapado. Pero el retiro <strong>no surte efectos sino hasta el fin del ejercicio anual</strong> — o hasta el del siguiente ejercicio, si notificas después del último trimestre. No es una salida instantánea; tiene calendario.</p>
+
+<p>La devolución de aportaciones se rige por el acta y por el <strong>artículo 52 de la LGSC</strong>: se practica al cierre del ejercicio, respetando el orden de prelación y a prorrata cuando corresponda. Además, la liquidación al socio se calcula sobre el valor de sus certificados, <strong>deducidas en su caso las pérdidas que proporcionalmente le correspondan</strong> — con responsabilidad limitada al importe de sus certificados, que es lo que significa la "R.L." del nombre de la sociedad. Y hay un piso que no se toca: <strong>la devolución nunca puede afectar el capital mínimo fijo sin derecho a retiro de $15,000</strong>.</p>
+
+<p>Lee esa penúltima frase otra vez, porque es la más honesta del curso: <strong>si la cooperativa tuvo pérdidas, tu reembolso las absorbe en tu proporción</strong>. Un certificado no es una cuenta de ahorro ni un depósito garantizado. Es capital de riesgo de una sociedad real — acotado a $150 por certificado y con responsabilidad limitada, pero capital al fin. Dilo así cuando lo expliques. Un modelo que oculta esto no está protegiendo a nadie; está construyendo un reclamo futuro.</p>
+
+<h3>Lo que el proyecto de Reglamento contempla (y aún no rige)</h3>
+<p>El borrador que está en revisión propone desarrollar el hueco de la transmisión en esta dirección — y todo lo que sigue está <strong>pendiente de aprobación por la Asamblea</strong>:</p>
+
+<p><strong>Carácter restringido.</strong> Que el certificado no sea un instrumento de libre circulación y que su transmisión esté condicionada a que el adquirente sea, o llegue a ser, socio. Esto no es caprichoso: se sigue directamente de la naturaleza cooperativa que ya estudiaste. Una sociedad de personas no puede permitir que sus títulos circulen hacia cualquiera, porque entonces dejaría de ser de personas.</p>
+
+<p><strong>Entre socios existentes.</strong> Que un socio pueda transmitir certificados a otro socio ya inscrito, con notificación por escrito a la administración e <strong>inscripción en el Libro</strong>. Como ambos ya son socios y rige un socio-un voto, la composición del voto no se altera.</p>
+
+<p><strong>Derecho del tanto hacia terceros.</strong> Que cuando un socio quiera transmitir a alguien que aún no es socio, deba notificar su intención, precio y condiciones, y que los demás socios tengan <strong>derecho del tanto</strong> para adquirir en igualdad de condiciones. El borrador <em>propone</em> un plazo de <strong>15 días naturales</strong> para ejercerlo — por analogía con el plazo de preferencia de 15 días que el Artículo Sexto prevé para aumentos de capital. Subraya lo que acabas de leer: <strong>ese plazo es una propuesta del borrador, no una regla vigente</strong>, y está expresamente marcado como pendiente de confirmación. No lo cites como si ya existiera.</p>
+
+<p><strong>Admisión previa.</strong> Que si nadie ejerce el derecho del tanto, el tercero solo pueda adquirir si es <strong>admitido como socio por la Asamblea General</strong>. Sin admisión, la transmisión no surte efectos ni se inscribe.</p>
+
+<p><strong>Inscripción como requisito de eficacia.</strong> Que ninguna transmisión, adjudicación o garantía surta efectos frente a la cooperativa ni frente a terceros mientras no conste inscrita en el Libro. Nota cómo esto cierra el círculo con el módulo 2: el Libro es la fuente de verdad, y el gemelo on-chain <strong>documenta la transmisión; no la ejecuta</strong>. Ningún movimiento de un NFT transmite un certificado. Jamás.</p>
+
+<h3>Los puntos que siguen abiertos — dilos, no los inventes</h3>
+<p>Y ahora la parte que un curso complaciente omitiría. Hay preguntas de fondo que <strong>todavía no tienen respuesta definitiva</strong>, y están marcadas como tales en el propio borrador:</p>
+
+<p>Primero: <strong>si la transmisión puede ser onerosa con lucro para el socio, o si debe limitarse al valor nominal más reservas</strong> para preservar el carácter no especulativo de la cooperativa. Está por definirse.</p>
+
+<p>Segundo: <strong>si los certificados obtenidos por capitalización son transmisibles o quedan afectos</strong> —no negociables— durante cierto periodo, para evitar arbitraje entre socios. Está por definirse.</p>
+
+<p>Tercero: <strong>a qué valor se reembolsan los certificados capitalizados</strong> — valor nominal de $150, o un valor contable ajustado por reservas y pérdidas. Está por definirse.</p>
+
+<p>Fíjate que las tres preguntas apuntan al mismo lugar: al precio. Y no están abiertas por descuido, sino porque responderlas mal convertiría un instrumento cooperativo en un instrumento especulativo. Merecen la Asamblea que les toca. <strong>Si un prospecto te pregunta cualquiera de estas tres cosas, la respuesta correcta —la única honesta— es: "ese punto está pendiente de definirse y aprobarse en Asamblea."</strong> No la adornes. No adivines. No cites el borrador como si fuera ley. Un socio comercial que inventa una regla que no existe le crea a la cooperativa un problema real con una persona real.</p>
+
+<h3>El guardrail comercial que no se negocia</h3>
+<p>De todo este módulo, esto es lo que nunca debes hacer: <strong>jamás le presentes a nadie el certificado de aportación como algo que puede vender, revender, negociar o que se va a apreciar</strong>. No lo es y no puede serlo. No hay mercado secundario. No hay exchange. No hay cotización. No hay comprador esperando. Y el NFT gemelo —cuando exista, porque hoy no está acuñado— tampoco cambia eso ni un milímetro: documenta, no negocia.</p>
+
+<p>Si alguien alguna vez te presenta un certificado de aportación de Ceduverse como una oportunidad de compraventa o de plusvalía, está describiendo algo que este instrumento no es y no puede ser — y da igual si lo dice desde dentro o desde fuera de la cooperativa.</p>
+
+<h3>Cerrando el curso</h3>
+<p>Mira el recorrido completo. Un certificado de aportación es un título <strong>nominativo, indivisible, de valor nominal $150</strong>, emitido por una cooperativa real —<strong>acta 6520, Notaría 110 QR, RPC N-2026009627</strong>— cuyo <strong>Artículo Sexto autoriza expresamente que los certificados sean digitales</strong>: esa autorización, escrita ante notario, es la base legal de todo lo demás. Su representación digital es un <strong>gemelo registral</strong>: el <strong>Libro de Registro</strong> manda, y el hash SHA-256 anclado en <strong>Base</strong> —con <strong>doble sello: la wallet del proyecto sella, la wallet madre de BrainShield contrafirma</strong>— es su espejo, sin un solo dato personal on-chain. No es título negociable, no transmite nada, y <strong>hoy no está acuñado: es diseño</strong>. Tengas 1 certificado o 20, <strong>tu voto es uno</strong>. Tu patrimonio crece con el <strong>5% de tu propia actividad</strong> hasta un <strong>tope de 20 certificados ($3,000)</strong>, que existe justamente para que el capital no se concentre. Y las reglas de transmisión y reembolso: unas ya firmes en el acta y la LGSC, otras <strong>todavía en borrador, esperando Asamblea</strong>.</p>
+
+<h3>Los tres avisos, por última vez</h3>
+<p><strong>Nada en este curso constituye una oferta de valores.</strong> Un certificado de aportación cooperativa no es una acción, ni un bono, ni un título negociable, ni un instrumento colocable en mercado alguno, ni está registrado ante autoridad bursátil — y el gemelo registral que lo espeja tampoco. <strong>Nada en este curso constituye asesoría de inversión.</strong> Si tienes dudas sobre tu situación patrimonial o fiscal, consulta a tu propio asesor profesional. <strong>No hay rendimientos garantizados</strong>, de ningún tipo, en ninguna parte de este modelo: ni el certificado, ni la capitalización, ni el NFT prometen retorno alguno, y el reembolso puede incluso absorber pérdidas proporcionales. Ser copropietario de una cooperativa de consumo no es invertir esperando un retorno — es participar en una sociedad de personas cuyos servicios tú mismo consumes.</p>
+
+<h3>Tu siguiente paso</h3>
+<p><strong>Revisa tu propio certificado en tu panel de socio</strong> y contrástalo con lo que acabas de aprender: su valor nominal, su carácter nominativo, su registro. Y si te toca acompañar la <strong>aprobación del Reglamento Interno en Asamblea</strong>, ahora sabes exactamente qué está en juego en esos tres puntos abiertos — y por qué merecen decidirse bien y no rápido.</p>
+
+<p>Ya dominas el instrumento. Lo que falta es lo que haces con él frente a otra persona: cómo se explica, cómo se vende sin exagerar, qué comisiones lo rodean y qué objeciones vas a enfrentar. Te esperamos en el <strong>Curso 6: Modelo cooperativo comercial</strong>.</p>
+      `,
+      references: ["Acta constitutiva 6520, Art. Sexto (Libro de Registro; retiro al cierre del ejercicio; preferencia de 15 días en aumentos de capital)", "LGSC art. 52 (devolución de aportaciones al cierre del ejercicio, prelación y prorrata)", "Reglamento Interno Ceduverse DRAFT v0.1 — BORRADOR sin aprobación de Asamblea, sin efectos jurídicos (transmisión, derecho del tanto, valor de reembolso: puntos marcados como pendientes)", "Master RAW seal / tokenización 2026-07-15 (§9 plan legal: conseguir el Reglamento Interno, §13 gaps abiertos)"],
+    },
+  ],
+
 };

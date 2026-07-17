@@ -258,4 +258,77 @@ export const rwaOnboardingQuizzes: Record<string, RwaQuiz> = {
     ],
   },
 
+  "certificados-aportacion-nft": {
+    title: "Evaluación: Certificados de aportación NFT",
+    passingScore: 70,
+    questions: [
+      {
+        question: "¿Cuál es la base legal que permite que los certificados de aportación de Ceduverse sean digitales?",
+        options: [
+          "Una interpretación de la LGSC hecha por el equipo legal",
+          "El Artículo Sexto del acta constitutiva 6520, que autoriza expresamente que los certificados sean digitales, nominativos e indivisibles",
+          "Un acuerdo privado entre los socios fundadores",
+          "La Ley Fintech",
+        ],
+        correctIndex: 1,
+        explanation: "El Artículo Sexto del acta constitutiva 6520 (Notaría 110 QR, RPC N-2026009627) autoriza expresamente que los certificados de aportación sean digitales, nominativos e indivisibles. No es una interpretación creativa ni un vacío legal: está escrito en el instrumento constitutivo pasado ante notario, y es la base sobre la que se sostiene toda la representación digital del certificado. Que el certificado sea digital no altera su naturaleza jurídica: mismo valor nominal de $150, mismos derechos, mismo régimen.",
+      },
+      {
+        question: "¿Cuál es la fuente de verdad de tu titularidad como socio, y qué papel juega el NFT gemelo?",
+        options: [
+          "El NFT es la fuente de verdad; el Libro de Registro es solo un respaldo administrativo",
+          "El Libro de Registro de Certificados de Aportación es la fuente de verdad; el NFT es su espejo por hash y, en caso de discrepancia, prevalece el Libro",
+          "Ambos tienen el mismo valor jurídico y cualquiera puede invocarse",
+          "La wallet del socio determina la calidad de socio",
+        ],
+        correctIndex: 1,
+        explanation: "La cooperativa reconoce como propietario únicamente a quien aparece inscrito en el Libro de Registro; la titularidad on-chain NO confiere la calidad de socio. El NFT es un gemelo registral: espeja el Libro mediante el hash SHA-256 del evento y lo atestigua, pero no crea el derecho, no lo transmite y no prevalece sobre el Libro. Es un testigo del hecho, no el hecho.",
+      },
+      {
+        question: "¿En qué consiste el doble sello (Opción A) de un evento de certificado, y qué existe realmente hoy?",
+        options: [
+          "El socio firma dos veces con su wallet personal, y el NFT ya está acuñado y disponible",
+          "La wallet del proyecto ancla el hash ('la entidad actúa') y la wallet madre de BrainShield contrafirma el mismo hash ('el originador ratifica'), todo en Base. Hoy operan Base y la atestación SHA-256; el NFT del certificado NO está acuñado: es diseño",
+          "Se ancla el hash en dos blockchains distintas para tener redundancia",
+          "Un notario firma en papel y luego se sube el PDF completo a la cadena",
+        ],
+        correctIndex: 1,
+        explanation: "El doble sello Opción A ancla un mismo hash canónico dos veces en la red Base: primero la wallet del proyecto (Ceduverse), y luego la wallet madre de BrainShield, que contrafirma por referencia a la tx del proyecto (mismo valor probatorio, ~mitad de gas). Eso da una doble cadena de custodia verificable por cualquiera. Estado real: la red Base y el mecanismo de atestación por hash SHA-256 existen y operan; el NFT gemelo del certificado NO está acuñado ni desplegado — es diseño, igual que todos los tokens del consorcio (CEDU incluido). Explícalo siempre como diseño, nunca como algo que un socio pueda tener hoy.",
+      },
+      {
+        question: "Un socio acumula 20 certificados de aportación. ¿Cuántos votos tiene en la Asamblea?",
+        options: [
+          "20 votos, uno por certificado",
+          "Un (1) voto — igual que cualquier otro socio, sin importar el número o valor de sus certificados",
+          "Depende de cuántos NFTs tenga en su wallet",
+          "4 votos, uno por cada 5 certificados",
+        ],
+        correctIndex: 1,
+        explanation: "1 socio = 1 voto, conforme a la LGSC y al acta constitutiva: cada socio tiene un voto con independencia del número o valor de sus certificados. La cooperativa es una sociedad de personas, no de capitales: el certificado representa tu patrimonio, no tu poder de decisión. Por eso ningún token ni NFT pondera el voto por tenencia — hacerlo convertiría de facto a la cooperativa en una sociedad de capitales, contra su propia acta y contra la LGSC. La tecnología se adapta al régimen societario, nunca al revés.",
+      },
+      {
+        question: "Sobre la capitalización del 5% en una certificación RVOE Academy de $49,900, ¿cuál afirmación es correcta?",
+        options: [
+          "El 5% ($2,495) se asigna a la cuenta de capital del socio ≈ 16 certificados de $150, con el remanente acumulándose porque el certificado es indivisible; el tope es de 20 certificados ($3,000)",
+          "El socio recibe $2,495 en efectivo como rendimiento garantizado de su aportación",
+          "Se capitaliza el 5% sin tope alguno, y cada certificado adicional aumenta su voto",
+          "Los $2,495 los aporta la cooperativa como subsidio, además del pago del socio",
+        ],
+        correctIndex: 0,
+        explanation: "El 5% de $49,900 son $2,495 que se asignan a la cuenta de capital del propio socio (≈16 certificados: 16 × $150 = $2,400, y los $95 restantes se acumulan como saldo de aportación pendiente hasta completar el siguiente certificado, porque el título es indivisible). Los $47,405 restantes son ingreso por servicio con CFDI. El 5% NO es un rendimiento ni un subsidio: sale del pago del propio socio y se reencauza a su propio patrimonio. El tope es de 20 certificados ($3,000), que junto con el principio de 1 socio = 1 voto impide que el capital se concentre. El tratamiento fiscal fino del split (base de IVA y retenciones) está pendiente de validación con el área fiscal. Nada de esto es oferta de valores ni asesoría de inversión, y no hay rendimientos garantizados.",
+      },
+      {
+        question: "Un prospecto te pregunta si puede vender sus certificados a un tercero y a qué precio. ¿Cuál es la respuesta correcta?",
+        options: [
+          "Que sí, libremente, y que el NFT se puede listar en un exchange",
+          "Que el acta remite el procedimiento de transmisión al Reglamento Interno, que hoy es un BORRADOR no aprobado por la Asamblea y sin efectos jurídicos: el carácter restringido, el derecho del tanto y el valor de transmisión/reembolso son propuestas pendientes de aprobarse",
+          "Que se transmite al valor de mercado que fijen las partes",
+          "Que basta con transferir el NFT a la wallet del comprador",
+        ],
+        correctIndex: 1,
+        explanation: "En firme hoy: el Art. Sexto del acta ordena inscribir toda transmisión en el Libro de Registro, pero NO detalla el procedimiento (hueco estatutario que el acta remite a reglamentación interna); la LGSC (art. 52) y el acta rigen la devolución al cierre del ejercicio, con prelación y a prorrata, deducidas las pérdidas proporcionales y sin afectar el capital mínimo fijo. Pendiente: el proyecto de Reglamento Interno contempla carácter restringido, transmisión entre socios con inscripción, derecho del tanto hacia terceros (propone 15 días naturales, plazo aún por confirmar) y admisión previa por Asamblea — pero es un borrador sin aprobar. Siguen abiertos: si la transmisión puede ser onerosa con lucro o limitarse al valor nominal, si los certificados capitalizados quedan afectos, y a qué valor se reembolsan. Nunca presentes el certificado como algo vendible o que se aprecia: no hay mercado secundario, y el NFT documenta la transmisión, no la ejecuta.",
+      },
+    ],
+  },
+
 };
