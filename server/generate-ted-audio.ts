@@ -177,15 +177,8 @@ async function generateTedAudio(entry: CourseEntry): Promise<void> {
     `[ted-audio] Generating ${entry.audioFilename} (${plainText.length} chars, ${chunks.length} chunks, voice: ${entry.voice}${FORCE_REGEN ? ", FORCE_REGEN" : ""})`
   );
 
+  const buffers: Buffer[] = [];
   for (let i = 0; i < chunks.length; i++) {
-    const cp = chunkPath(entry.slug, i);
-    if (!FORCE_REGEN && fs.existsSync(cp)) {
-      console.log(
-        `[ted-audio]   Chunk ${i + 1}/${chunks.length} already cached`
-      );
-      continue;
-    }
-
     console.log(
       `[ted-audio]   Chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)`
     );
@@ -193,8 +186,7 @@ async function generateTedAudio(entry: CourseEntry): Promise<void> {
     let retries = 3;
     while (retries > 0) {
       try {
-        const buffer = await generateChunkAudio(chunks[i], entry.voice);
-        fs.writeFileSync(cp, buffer);
+        buffers.push(await generateChunkAudio(chunks[i], entry.voice));
         break;
       } catch (error: unknown) {
         retries--;
@@ -209,28 +201,15 @@ async function generateTedAudio(entry: CourseEntry): Promise<void> {
     }
   }
 
-  const listFile = path.join(CHUNKS_DIR, `${entry.slug}_list.txt`);
-  const listContent = Array.from({ length: chunks.length }, (_, i) =>
-    `file '${chunkPath(entry.slug, i)}'`
-  ).join("\n");
-  fs.writeFileSync(listFile, listContent);
+  // Concatenar los MP3 en memoria (Buffer.concat) — SIN ffmpeg. Los MP3 de la
+  // API (CBR) se reproducen bien concatenados por bytes; quitar ffmpeg permite
+  // regenerar en cualquier entorno con solo OpenAI + R2 (igual que
+  // server/audio-generator.ts, que tambien hace Buffer.concat).
+  const finalBuffer = Buffer.concat(buffers);
+  fs.writeFileSync(filepath, finalBuffer);
 
-  console.log(`[ted-audio] Concatenating ${chunks.length} MP3 chunks via ffmpeg...`);
-  execFileSync("ffmpeg", [
-    "-y", "-f", "concat", "-safe", "0",
-    "-i", listFile,
-    "-c", "copy",
-    filepath,
-  ], { stdio: "pipe" });
-
-  fs.unlinkSync(listFile);
-  for (let i = 0; i < chunks.length; i++) {
-    fs.unlinkSync(chunkPath(entry.slug, i));
-  }
-
-  const finalSize = fs.statSync(filepath).size;
   console.log(
-    `[ted-audio] Generated ${entry.audioFilename} (${(finalSize / 1024).toFixed(0)}KB)`
+    `[ted-audio] Generated ${entry.audioFilename} (${(finalBuffer.length / 1024).toFixed(0)}KB)`
   );
 
   // Upload to R2 so the regenerated audio actually reaches production.
