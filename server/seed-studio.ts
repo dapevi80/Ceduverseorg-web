@@ -45,6 +45,14 @@ export async function seedStudioCourses() {
   let quizzesCreated = 0;
 
   for (const meta of studioCourseMeta) {
+    // Compuerta de contenido: los seeds corren en cada arranque, así que un curso
+    // marcado como pendiente de sign-off legal NO debe publicarse por el solo
+    // hecho de desplegar. Ver StudioCourseMeta.pendingLegalSignoff.
+    if (meta.pendingLegalSignoff) {
+      console.log(`  ⛔ Course "${meta.slug}" NO se siembra: pendiente de aprobación de Asamblea + sign-off del CLO`);
+      continue;
+    }
+
     const existing = await db.select().from(studioCourses).where(eq(studioCourses.slug, meta.slug));
     let courseId: string;
 

@@ -11,6 +11,24 @@ export interface StudioCourseMeta {
   icon: string;
   color: string;
   source: string;
+  /**
+   * Si es true, `seedStudioCourses()` NO siembra este curso: queda escrito y
+   * versionado, pero fuera de producción hasta que se levante la bandera.
+   *
+   * Se usa para contenido que depende de una aprobación externa al código. Los
+   * seeds corren en CADA arranque (server/index.ts), así que sin esto un deploy
+   * publicaría automáticamente material no autorizado.
+   *
+   * Bloqueados hoy (2026-07-16): los 3 cursos de subcategoría "Comercial"
+   * llevan la capa legal-fiscal (bono, capitalización 5%, certificados NFT) que
+   * la Asamblea General todavía NO ha aprobado —el Reglamento Interno sigue en
+   * borrador, sin efectos jurídicos— y falta el sign-off de Daniel/CLO. Un
+   * socio comercial repetiría ese contenido a prospectos como si fuera firme.
+   *
+   * Para publicarlos: quitar la bandera SOLO cuando la Asamblea haya aprobado
+   * el Reglamento y el CLO haya firmado el copy legal.
+   */
+  pendingLegalSignoff?: boolean;
 }
 
 export const studioCourseMeta: StudioCourseMeta[] = [
@@ -70,7 +88,7 @@ export const studioCourseMeta: StudioCourseMeta[] = [
   { slug: "que-es-un-rwa", title: "¿Qué es un RWA?", description: "Entiende qué es un Real World Asset, el problema que resuelve y cómo BrainShield estructura activos reales verificables on-chain", category: "Onboarding", subcategory: "Para Todos", durationMinutes: 55, level: "basico", tags: ["RWA", "BrainShield", "activos reales", "Base", "onboarding"], dc3Available: false, icon: "🌐", color: "#0ea5e9", source: "brainshield" },
   { slug: "brainshield-boveda-pi", title: "BrainShield y la Bóveda de PI", description: "Conoce a BrainShield como originador de RWA tangibles e intangibles: la bóveda de PI anónima, el alias, el modelo de reparto 80/20 y cómo se valúa y ancla en Base", category: "Onboarding", subcategory: "Para Todos", durationMinutes: 60, level: "basico", tags: ["BrainShield", "propiedad intelectual", "bóveda PI", "RWA", "onboarding"], dc3Available: false, icon: "🔐", color: "#0ea5e9", source: "brainshield" },
   { slug: "cryptovault-24k", title: "CryptoVault 24k", description: "Oro físico 24 kilates con gemelo digital: cómo funciona CryptoVault 24k, la seed de autocustodia, la cotización en vivo y los guardrails de un producto respaldado, no especulativo", category: "Onboarding", subcategory: "Para Todos", durationMinutes: 61, level: "basico", tags: ["CryptoVault", "oro", "autocustodia", "RWA", "onboarding"], dc3Available: false, icon: "🪙", color: "#0ea5e9", source: "brainshield" },
-  { slug: "bono-bienvenida", title: "Bono de Bienvenida: Cómo Te Vuelves Copropietario", description: "Cómo funciona el bono de bienvenida de $170, de dónde sale su valor, la reserva 1:1 y la capitalización del 5% con tope — estatus real y qué es diseño vs. lo ya vigente", category: "Onboarding", subcategory: "Comercial", durationMinutes: 64, level: "intermedio", tags: ["bono bienvenida", "cooperativa", "certificados de aportación", "capitalización", "onboarding"], dc3Available: false, icon: "🎁", color: "#0ea5e9", source: "brainshield" },
-  { slug: "certificados-aportacion-nft", title: "Certificados de Aportación NFT", description: "Certificados de aportación digitales: base legal (Art. Sexto acta 6520), el Libro de Registro como fuente de verdad, el NFT gemelo registral, 1 socio = 1 voto y transmisión/reembolso", category: "Onboarding", subcategory: "Comercial", durationMinutes: 63, level: "intermedio", tags: ["certificados de aportación", "NFT", "Libro de Registro", "cooperativa", "onboarding"], dc3Available: false, icon: "📜", color: "#0ea5e9", source: "brainshield" },
-  { slug: "modelo-cooperativo-comercial", title: "Modelo Cooperativo Comercial: Cómo Vender", description: "Cómo vender el modelo cooperativo: comisiones (15% + $500 por referido), manejo de objeciones y los guardrails de venta — qué sí y qué no puedes prometer a un prospecto", category: "Onboarding", subcategory: "Comercial", durationMinutes: 68, level: "intermedio", tags: ["ventas", "comisiones", "objeciones", "modelo cooperativo", "onboarding"], dc3Available: false, icon: "🤝", color: "#0ea5e9", source: "brainshield" },
+  { slug: "bono-bienvenida", title: "Bono de Bienvenida: Cómo Te Vuelves Copropietario", description: "Cómo funciona el bono de bienvenida de $170, de dónde sale su valor, la reserva 1:1 y la capitalización del 5% con tope — estatus real y qué es diseño vs. lo ya vigente", category: "Onboarding", subcategory: "Comercial", durationMinutes: 64, level: "intermedio", tags: ["bono bienvenida", "cooperativa", "certificados de aportación", "capitalización", "onboarding"], dc3Available: false, icon: "🎁", color: "#0ea5e9", source: "brainshield", pendingLegalSignoff: true },
+  { slug: "certificados-aportacion-nft", title: "Certificados de Aportación NFT", description: "Certificados de aportación digitales: base legal (Art. Sexto acta 6520), el Libro de Registro como fuente de verdad, el NFT gemelo registral, 1 socio = 1 voto y transmisión/reembolso", category: "Onboarding", subcategory: "Comercial", durationMinutes: 63, level: "intermedio", tags: ["certificados de aportación", "NFT", "Libro de Registro", "cooperativa", "onboarding"], dc3Available: false, icon: "📜", color: "#0ea5e9", source: "brainshield", pendingLegalSignoff: true },
+  { slug: "modelo-cooperativo-comercial", title: "Modelo Cooperativo Comercial: Cómo Vender", description: "Cómo vender el modelo cooperativo: comisiones (15% + $500 por referido), manejo de objeciones y los guardrails de venta — qué sí y qué no puedes prometer a un prospecto", category: "Onboarding", subcategory: "Comercial", durationMinutes: 68, level: "intermedio", tags: ["ventas", "comisiones", "objeciones", "modelo cooperativo", "onboarding"], dc3Available: false, icon: "🤝", color: "#0ea5e9", source: "brainshield", pendingLegalSignoff: true },
 ];
