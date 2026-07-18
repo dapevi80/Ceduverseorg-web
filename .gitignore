@@ -54,3 +54,6 @@ AUDITORIA-*.md
 
 # Documentos legales confidenciales — solo local, NUNCA a GitHub (CURP, estrategia fiscal, paquete Daniel)
 docs/legal/
+
+# Claude Code worktrees (transitorios)
+.claude/worktrees/
