@@ -129,10 +129,12 @@ INSTRUCCIONES PARA reflections:
 - NO genéricas: "¿Qué opinas de la comunicación?" ❌
 - SÍ específicas: "Como ${jobTitle} en ${industry}, ¿cómo manejas..." ✅
 
-INSTRUCCIONES PARA suggestedSources:
-- 5-8 fuentes REALES (NOMs del DOF, artículos LFT, guías STPS)
-- Formato: {title, url, type: "NOM"|"LFT"|"guia"|"articulo"}
-- URLs reales cuando sea posible, si no estás seguro de la URL usa "Consultar en dof.gob.mx" o "Disponible en stps.gob.mx"
+INSTRUCCIONES PARA suggestedSources (REGLA ANTI-ALUCINACIÓN — CRÍTICA):
+- SOLO incluye fuentes que REALMENTE citaste en lectureHtml (las NOMs, artículos de ley, normas y estándares que mencionaste en el texto) MÁS las "Referencias base" de arriba. NO agregues NINGUNA fuente que no aparezca en el contenido que escribiste.
+- PROHIBIDO INVENTAR URLs. NUNCA pongas una URL con código, número de nota, folio o ruta específica (ej. PROHIBIDO: "dof.gob.mx/nota_detalle.php?codigo=..."). Solo inventar esos links es una falta grave.
+- Para el campo "url" usa ÚNICAMENTE el dominio oficial RAÍZ según el tipo: NOM/LFT/normas → "https://www.dof.gob.mx", guías/normatividad STPS → "https://www.gob.mx/stps". Si no hay dominio oficial claro, deja "url": "".
+- El "title" debe ser el nombre EXACTO de la norma o artículo tal como lo citaste (ej. "NOM-006-STPS-2014", "LFT Art. 153-A"), no una descripción vaga.
+- Formato: {title, url, type: "NOM"|"LFT"|"guia"|"articulo"}. Mejor pocas fuentes reales del texto que muchas inventadas.
 
 RESPONDE SOLO JSON VÁLIDO (sin markdown, sin backticks):
 {
