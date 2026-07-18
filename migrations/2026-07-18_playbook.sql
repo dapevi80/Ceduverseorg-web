@@ -21,6 +21,14 @@ CREATE TABLE IF NOT EXISTS course_playbooks (
   generated_at  timestamptz NOT NULL DEFAULT now()
 );
 
+-- IMPRESCINDIBLE: si course_playbooks YA existía (se creó con una versión previa
+-- de este archivo, sin `source`), el CREATE TABLE IF NOT EXISTS de arriba se
+-- salta ENTERO y la columna nunca se crea. Drizzle pide las columnas por nombre,
+-- así que TODAS las rutas del playbook responderían 500 con
+-- "column course_playbooks.source does not exist". Este ALTER lo cubre y es
+-- inofensivo si la tabla se acaba de crear.
+ALTER TABLE course_playbooks ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'ai';
+
 CREATE TABLE IF NOT EXISTS playbook_evidence (
   id             uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   user_id        uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
