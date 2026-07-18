@@ -605,6 +605,7 @@ export const studioCourses = pgTable("studio_courses", {
   icon: text("icon"),
   color: text("color"),
   source: text("source").default("studio"),
+  instructor: text("instructor"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
 });

@@ -1,7 +1,12 @@
 import OpenAI from "openai";
 import fs from "fs";
 import path from "path";
+import { eq } from "drizzle-orm";
+import { db } from "./db";
+import { studioCourses } from "@shared/schema";
 import { storage } from "./storage";
+import { voiceForInstructor } from "@shared/instructor-voice";
+import { r2Storage } from "./services/r2-storage";
 
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -54,6 +59,20 @@ export async function generateAudioAsync(
     const filename = `${courseSlug}_m${moduleIndex}_${userId.slice(0, 8)}.mp3`;
     const filepath = path.join(AUDIO_DIR, filename);
 
+    // Resolve the TTS voice from the course's instructor (shared/instructor-voice.ts).
+    // Falls back to the "ash" default when the course or its instructor isn't found.
+    let instructor: string | null = null;
+    try {
+      const [course] = await db.select({ instructor: studioCourses.instructor })
+        .from(studioCourses)
+        .where(eq(studioCourses.slug, courseSlug));
+      instructor = course?.instructor ?? null;
+    } catch (lookupError: any) {
+      console.warn(`[audio] Could not look up instructor for ${courseSlug}:`, lookupError?.message || lookupError);
+    }
+    const { voice } = voiceForInstructor(instructor);
+    console.log(`[audio] Using voice "${voice}" for instructor "${instructor ?? "(none)"}" (${courseSlug})`);
+
     const chunks = splitTextIntoChunks(cleanScript, 4000);
     const audioBuffers: Buffer[] = [];
 
@@ -65,9 +84,9 @@ export async function generateAudioAsync(
         // Steerable TTS: unlike tts-1-hd, gpt-4o-mini-tts honors `instructions`,
         // giving a human, TED-talk-style delivery that holds the learner's attention.
         model: "gpt-4o-mini-tts",
-        // Voice identity (character/gender). Chosen after A/B: "ash" (warm male) —
-        // alternatives: "onyx" (deep male), "echo"/"ballad" (male), "nova"/"coral"/"sage" (female).
-        voice: "ash",
+        // Voice identity (character/gender) — resolved per the course's instructor via
+        // shared/instructor-voice.ts. Defaults to "ash" (warm male) when unmapped.
+        voice,
         input: chunks[i],
         // Delivery direction — tone/pacing/emphasis, NOT content. Tune this string to
         // reshape how the class *sounds* without touching the script prompt.
@@ -82,6 +101,19 @@ export async function generateAudioAsync(
 
     const finalBuffer = Buffer.concat(audioBuffers);
     fs.writeFileSync(filepath, finalBuffer);
+
+    // Upload to R2 so the audio survives Render redeploys (local disk is ephemeral).
+    // Local write above is kept as a fallback for when R2 isn't configured.
+    if (r2Storage.isConfigured) {
+      try {
+        await r2Storage.uploadBuffer(finalBuffer, `audio/${filename}`, "audio/mpeg");
+        console.log(`[audio] Uploaded ${filename} to R2`);
+      } catch (uploadError: any) {
+        console.error(`[audio] R2 upload failed for ${filename}:`, uploadError?.message || uploadError);
+      }
+    } else {
+      console.warn(`[audio] R2 not configured — ${filename} only saved to local disk (ephemeral on Render)`);
+    }
 
     const durationSeconds = Math.round(finalBuffer.length / 16000);
 

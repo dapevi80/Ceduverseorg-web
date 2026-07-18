@@ -15,6 +15,7 @@ interface OnboardingCourse {
   icon: string;
   color: string;
   source: string;
+  instructor: string;
   modules: {
     title: string;
     description: string;
@@ -43,6 +44,7 @@ const ONBOARDING_COURSES: OnboardingCourse[] = [
     icon: "🚀",
     color: "#1b5adf",
     source: "studio",
+    instructor: "Psic. Yuridia Iturriaga",
     modules: [
       {
         title: "¿Qué es Ceduverse?",
@@ -96,6 +98,7 @@ const ONBOARDING_COURSES: OnboardingCourse[] = [
     icon: "🏢",
     color: "#f28023",
     source: "studio",
+    instructor: "Psic. Yuridia Iturriaga",
     modules: [
       {
         title: "¿Por qué capacitar con Ceduverse?",
@@ -151,6 +154,7 @@ const ONBOARDING_COURSES: OnboardingCourse[] = [
     icon: "🤝",
     color: "#7c3aed",
     source: "studio",
+    instructor: "Psic. Yuridia Iturriaga",
     modules: [
       {
         title: "El Programa de Socios Ceduverse",
@@ -202,6 +206,7 @@ const ONBOARDING_COURSES: OnboardingCourse[] = [
     icon: "⚖️",
     color: "#00b87a",
     source: "studio",
+    instructor: "Daniel Zavala",
     modules: [
       {
         title: "¿Qué es una Cooperativa de Educación?",
@@ -257,6 +262,7 @@ const ONBOARDING_COURSES: OnboardingCourse[] = [
     icon: "💰",
     color: "#16a34a",
     source: "studio",
+    instructor: "Psic. Yuridia Iturriaga",
     modules: [
       {
         title: "Tabla de Comisiones por Perfil",
@@ -313,6 +319,7 @@ const ONBOARDING_COURSES: OnboardingCourse[] = [
     icon: "👑",
     color: "#f59e0b",
     source: "studio",
+    instructor: "Psic. Yuridia Iturriaga",
     modules: [
       {
         title: "Los 5 Niveles del Programa Elite",
@@ -364,6 +371,7 @@ const ONBOARDING_COURSES: OnboardingCourse[] = [
     icon: "🔗",
     color: "#8b5cf6",
     source: "studio",
+    instructor: "David Pérez",
     modules: [
       {
         title: "¿Qué son las criptomonedas?",
@@ -483,10 +491,16 @@ export async function seedOnboardingCourses() {
   let quizzesCreated = 0;
 
   for (const courseData of ONBOARDING_COURSES) {
-    const existing = await db.select({ id: studioCourses.id }).from(studioCourses).where(sql`${studioCourses.slug} = ${courseData.slug}`);
+    const existing = await db.select({ id: studioCourses.id, instructor: studioCourses.instructor }).from(studioCourses).where(sql`${studioCourses.slug} = ${courseData.slug}`);
 
     if (existing.length > 0) {
       console.log(`  ↳ Onboarding course "${courseData.slug}" already exists, skipping`);
+      if (!existing[0].instructor && courseData.instructor) {
+        await db.update(studioCourses)
+          .set({ instructor: courseData.instructor })
+          .where(sql`${studioCourses.slug} = ${courseData.slug}`);
+        console.log(`  ✓ Backfilled instructor for "${courseData.slug}": ${courseData.instructor}`);
+      }
       continue;
     }
 
@@ -503,6 +517,7 @@ export async function seedOnboardingCourses() {
       icon: courseData.icon,
       color: courseData.color,
       source: courseData.source,
+      instructor: courseData.instructor,
     }).returning();
     coursesCreated++;
 
