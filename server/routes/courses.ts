@@ -600,7 +600,7 @@ export function registerCourseRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
-  app.get("/api/courses/:id/modules", optionalAuth, async (req, res, next) => {
+  app.get("/api/courses/:id/modules", requireAuth, async (req, res, next) => {
     try {
       const courseId = String((req.params.id as string));
       const modules = await storage.getCourseModules(courseId);
@@ -616,7 +616,7 @@ export function registerCourseRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
-  app.get("/api/courses/:courseId/modules/:moduleId", optionalAuth, async (req, res, next) => {
+  app.get("/api/courses/:courseId/modules/:moduleId", requireAuth, async (req, res, next) => {
     try {
       const courseId = String((req.params.courseId as string));
       const mod = await storage.getCourseModule(String((req.params.moduleId as string)));
@@ -633,7 +633,7 @@ export function registerCourseRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
-  app.get("/api/courses/:id/quiz", optionalAuth, async (req, res, next) => {
+  app.get("/api/courses/:id/quiz", requireAuth, async (req, res, next) => {
     try {
       const courseId = String((req.params.id as string));
       const quiz = await storage.getQuizByCourse(courseId);

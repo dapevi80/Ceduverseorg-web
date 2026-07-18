@@ -868,7 +868,7 @@ export default function CursoVirtual() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug || "";
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
   const [completedModules, setCompletedModules] = useState<Set<number>>(() => {
@@ -885,6 +885,16 @@ export default function CursoVirtual() {
   const [showOnboarding, setShowOnboarding] = useState(() => {
     try { return !localStorage.getItem(`aula_virtual_onboarding_${slug}`); } catch { return true; }
   });
+
+  // Anonymous visitors must never see conference content — only redirect once
+  // auth is SETTLED (authLoading === false); redirecting while auth is still
+  // resolving would bounce a logged-in user on refresh, since `user` starts
+  // out null until /api/auth/me resolves.
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [authLoading, user, navigate]);
 
   const { data: allCourses = [] } = useQuery<CourseInfo[]>({
     queryKey: ["/api/courses"],
@@ -989,6 +999,18 @@ export default function CursoVirtual() {
       saveCompleted(hydrated);
     }
   }, [userEnrollment?.completed, modules.length]);
+
+  if (authLoading || !user) {
+    // Covers two states with the same loader: auth still resolving (don't
+    // flash content before we know) and auth settled with no user (the
+    // redirect effect above is about to navigate away — render nothing
+    // meanwhile instead of the course).
+    return (
+      <div className="min-h-screen bg-cedu-cream flex items-center justify-center">
+        <Loader2 className="animate-spin text-cedu-blue" size={32} />
+      </div>
+    );
+  }
 
   if (!course) {
     if (allCourses.length === 0) {
