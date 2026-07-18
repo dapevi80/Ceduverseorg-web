@@ -23,6 +23,7 @@ import { ContributionsTab } from "@/pages/contributions-tab";
 import { WalletTab } from "@/pages/wallet-tab";
 import { CertificatesTab } from "@/pages/certificates-tab";
 import { AfiliacionMasivaTab, SamMensualTab } from "@/pages/empresa-excel-tab";
+import { TeamPlaybookEvidenceTab } from "@/pages/team-playbook-evidence-tab";
 import MembershipCertificate from "@/components/MembershipCertificate";
 import {
   LayoutDashboard,
@@ -67,6 +68,7 @@ import {
   FileSpreadsheet,
   CalendarDays,
   Download,
+  Camera,
 } from "lucide-react";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 
@@ -1759,6 +1761,7 @@ export default function Dashboard() {
       { id: "contributions", label: "Aportaciones", icon: DollarSign },
       { id: "afiliacion-masiva", label: "Afiliación Masiva", icon: FileSpreadsheet },
       { id: "sam-mensual", label: "SAM Mensual", icon: CalendarDays },
+      { id: "playbook-evidencias", label: "Evidencias del Equipo", icon: Camera },
     ] : []),
   ];
 
@@ -1904,6 +1907,9 @@ export default function Dashboard() {
           )}
           {activeTab === "sam-mensual" && isOrgAdmin && (
             <SamMensualTab />
+          )}
+          {activeTab === "playbook-evidencias" && isOrgAdmin && (
+            <TeamPlaybookEvidenceTab teamId={userTeams.filter(t => t.role === "admin")[0]?.team.id} />
           )}
           {activeTab === "profile" && (
             <ProfileTab profile={profile || null} />
