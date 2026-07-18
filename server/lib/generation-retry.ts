@@ -6,9 +6,11 @@
  *  pero pasar de aquí sólo encarece el reintento sin mejorar el resultado. */
 export const MAX_OUTPUT_TOKENS = 64000;
 
-/** Presupuesto inicial de la Call 1 (lectura 3-5k palabras + mindMap + fuentes,
- *  todo dentro de UN string JSON escapado del tool_use). 16000 truncaba. */
-export const CALL1_MAX_TOKENS = 32000;
+/** Presupuesto inicial de la Call 1 (lectura 2.3-3k palabras + mindMap + fuentes,
+ *  todo dentro de UN string JSON escapado del tool_use). Con la lectura acortada
+ *  (antes 3-5k), 22000 deja margen de sobra sin esperar por un techo enorme; si
+ *  aun así se trunca, el reintento sube el techo (nextMaxTokens). */
+export const CALL1_MAX_TOKENS = 22000;
 
 /** Presupuesto inicial de la Call 2 (quiz de 7 preguntas + guion de clase). */
 export const CALL2_MAX_TOKENS = 12000;
@@ -192,6 +194,11 @@ export function shouldServeCache(cached: CachedGeneration, regenerate: boolean):
   if (!cached) return false;
   if (regenerate) return false;
   if (cached.generationStatus === "generating") return false;
+  // 'content_ready' es un estado INTERMEDIO (lectura lista, quiz/audio en curso),
+  // nunca un final servible. Uno fresco ya se maneja aguas arriba (202, sigue en
+  // curso); si llega aquí es porque quedó viejo (proceso caído a medio Call 2),
+  // y entonces hay que regenerar, no servir una fila a medias como definitiva.
+  if (cached.generationStatus === "content_ready") return false;
   if (isPoisonedGeneration(cached)) return false;
   return true;
 }

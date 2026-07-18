@@ -90,6 +90,30 @@ async function runModuleGeneration(
       result.module.description || undefined,
       result.module.references ? (result.module.references as string[]).join("; ") : undefined,
       { userId, courseSlug: slug, moduleIndex },
+      // Progresivo: apenas la lectura está lista (fin de Call 1), la persistimos
+      // como 'content_ready' para que el cliente la muestre YA mientras el quiz y
+      // el audio (Call 2 + TTS) siguen generándose. El poll del cliente sigue
+      // activo en 'content_ready' hasta que la fila pase a 'complete'/'partial'.
+      async (partial) => {
+        await storage.saveGeneratedContent({
+          userId,
+          courseSlug: slug,
+          moduleIndex,
+          lectureHtml: partial.lectureHtml,
+          mindMap: partial.mindMap,
+          reflections: partial.reflections,
+          adaptiveQuiz: null,
+          suggestedSources: partial.suggestedSources,
+          classScript: null,
+          personalizedFor: profile ? { jobTitle: profile.jobTitle, industry: profile.industry } : null,
+          generationStatus: "content_ready",
+          isStub: false,
+          // Racha intacta: el valor definitivo (reset o +1) lo escribe el save
+          // final de abajo cuando la generación completa resuelve.
+          consecutiveFailures: previousConsecutiveFailures,
+        });
+        console.log(`[studio-gen] ${slug}#${moduleIndex} lectura lista (content_ready), generando quiz+audio…`);
+      },
     );
     // ai-engine.ts swallows every internal failure (missing key, 401, 429,
     // truncation, timeout) and returns a stub instead of throwing — so this
@@ -1077,6 +1101,14 @@ export function registerCourseRoutes(app: Express) {
       const generatingAge = cached?.generatedAt ? Date.now() - new Date(cached.generatedAt).getTime() : Infinity;
       const isFresh = generatingAge < STALE_GENERATION_MS;
       if (cached?.generationStatus === "generating" && isFresh) {
+        return res.status(202).json(cached);
+      }
+      // 'content_ready': la lectura ya se puede leer, pero el quiz y el audio
+      // siguen generándose (Call 2 + TTS) en el mismo proceso en curso. Se sirve
+      // la fila (con la lectura) y se responde 202 para que el cliente la muestre
+      // y siga haciendo poll hasta que pase a 'complete'/'partial'. NO se
+      // re-dispara la generación (ya está corriendo).
+      if (cached?.generationStatus === "content_ready" && isFresh) {
         return res.status(202).json(cached);
       }
 

@@ -40,7 +40,9 @@ describe("isTruncatedResponse", () => {
 describe("nextMaxTokens", () => {
   it("duplica el presupuesto para que el reintento tenga margen real", () => {
     expect(nextMaxTokens(16000)).toBe(32000);
-    expect(nextMaxTokens(CALL1_MAX_TOKENS)).toBe(64000);
+    // Duplica el presupuesto de la Call 1 (queda bajo el techo). El cap duro se
+    // prueba aparte ("no rebasa el techo"), así este test no se acopla al valor.
+    expect(nextMaxTokens(CALL1_MAX_TOKENS)).toBe(CALL1_MAX_TOKENS * 2);
   });
 
   it("no rebasa el techo duro", () => {
@@ -110,6 +112,10 @@ describe("shouldServeCache", () => {
 
   it("parcial no es veneno -> sí se sirve (hay lectura real, falta quiz/guion)", () => {
     expect(shouldServeCache({ generationStatus: "partial", isStub: false }, false)).toBe(true);
+  });
+
+  it("content_ready (intermedio) NO se sirve como final -> un fresco va por 202 arriba; uno viejo regenera", () => {
+    expect(shouldServeCache({ generationStatus: "content_ready", isStub: false }, false)).toBe(false);
   });
 });
 
