@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { authUrlWithNext } from "@/lib/next-destination";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -701,7 +702,14 @@ function StepQuizView({ questions, onQuizComplete, courseSlug, moduleIndex, onNe
   const submitQuizMutation = useMutation({
     mutationFn: async (data: { answers: number[]; score: number }) => {
       const res = await apiRequest("POST", `/api/studio/courses/${courseSlug}/modules/${moduleIndex}/quiz/submit`, data);
-      return res.json();
+      return res.json() as Promise<{ score: number; total: number; scorePercent: number; passed: boolean }>;
+    },
+    onSuccess: (result) => {
+      // Report the result only AFTER the server records the attempt, and use
+      // the server's verdict (result.passed). Firing on click — before this
+      // POST resolves — raced the quiz-attempts refetch against the write and
+      // left the next module locked until a manual reload.
+      onQuizComplete?.(result.score, result.total, result.passed);
     },
   });
 
@@ -727,7 +735,6 @@ function StepQuizView({ questions, onQuizComplete, courseSlug, moduleIndex, onNe
     } else {
       setFinished(true);
       submitQuizMutation.mutate({ answers: [...answers], score: correctCount });
-      onQuizComplete?.(correctCount, total, Math.round((correctCount / total) * 100) >= 70);
     }
   };
 
@@ -1249,7 +1256,8 @@ export default function StudioCoursePage() {
   // since `user` starts out null until /api/auth/me resolves.
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      // Lleva el destino para volver a este curso tras iniciar sesión.
+      navigate(authUrlWithNext(window.location.pathname + window.location.search));
     }
   }, [authLoading, user, navigate]);
 
@@ -1339,6 +1347,10 @@ export default function StudioCoursePage() {
     refetchInterval: (query) => {
       const data = query.state.data;
       if (data?.generationStatus === "generating") return 5000;
+      // content_ready = la lectura ya llegó y se muestra, pero el quiz y el audio
+      // siguen generándose (Call 2 + TTS). Seguimos haciendo poll para traerlos
+      // en cuanto la fila pase a 'complete'/'partial'.
+      if (data?.generationStatus === "content_ready") return 5000;
       if (data?.generationStatus === "failed" && !data.ceilingReached && data.nextRetryAt) {
         const waitMs = new Date(data.nextRetryAt).getTime() - Date.now();
         return Math.max(waitMs, 1000);
@@ -1943,7 +1955,11 @@ export default function StudioCoursePage() {
                       <HelpCircle size={40} className="mx-auto text-cedu-ink-muted/30 dark:text-gray-600 mb-4" />
                       <h3 className="font-serif text-lg text-cedu-ink dark:text-white mb-2">Quiz</h3>
                       <p className="text-sm text-cedu-ink-muted dark:text-gray-500">
-                        {user ? "El quiz se generará con el contenido del módulo." : "Inicia sesión para acceder al quiz."}
+                        {!user
+                          ? "Inicia sesión para acceder al quiz."
+                          : generatedContent?.generationStatus === "content_ready"
+                            ? "Preparando tu quiz… ya puedes ir leyendo la clase mientras tanto."
+                            : "El quiz se generará con el contenido del módulo."}
                       </p>
                     </div>
                   )

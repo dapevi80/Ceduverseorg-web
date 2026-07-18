@@ -51,6 +51,16 @@ export interface GeneratedModuleContent {
   isStub?: boolean;
 }
 
+/** Lo que ya está listo apenas termina la Call 1 (lectura), ANTES de la Call 2
+ *  (quiz + guion de audio). Se persiste de inmediato para que el alumno empiece
+ *  a leer sin esperar el quiz ni el audio (~mitad del tiempo percibido). */
+export interface PartialLecture {
+  lectureHtml: string;
+  mindMap: GeneratedModuleContent["mindMap"];
+  reflections: string[];
+  suggestedSources: GeneratedModuleContent["suggestedSources"];
+}
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -93,7 +103,7 @@ Empresa de: ${companySize} personas
 Experiencia: ${experienceLevel}
 Objetivo: ${learningGoal}
 
-INSTRUCCIONES PARA lectureHtml (3,000-5,000 palabras en HTML):
+INSTRUCCIONES PARA lectureHtml (2,300-3,000 palabras en HTML):
 
 ESTRUCTURA OBLIGATORIA:
 1. <h2>Introducción personalizada</h2> — Conecta el tema con el puesto e industria del estudiante. "Como ${jobTitle} en ${industry}, esto te afecta directamente porque..."
@@ -109,7 +119,7 @@ ESTRUCTURA OBLIGATORIA:
 6. <h2>Aplicación Inmediata</h2> — "Mañana en tu trabajo puedes..." con 3-5 acciones concretas para su puesto.
 
 REGLAS DE CALIDAD:
-- MÍNIMO 3,000 palabras. Si escribes menos, NO cumples.
+- MÍNIMO 2,300 palabras, ideal 2,500-3,000. Prioriza claridad y que sea digerible por encima de la extensión: mejor concisa y bien explicada que larga y repetitiva.
 - Usa <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <table>, <blockquote>, <hr>
 - Incluir al menos 1 tabla comparativa o de datos
 - Incluir al menos 2 ejemplos específicos al puesto del estudiante
@@ -520,7 +530,7 @@ const CONTENT_TOOL: AnthropicTool = {
     properties: {
       lectureHtml: {
         type: "string",
-        description: "Lectura completa en HTML (mínimo 3,000 palabras), personalizada al puesto e industria del estudiante. Usa <h2>, <p>, <ul>, <table>, etc.",
+        description: "Lectura completa en HTML (2,300-3,000 palabras), personalizada al puesto e industria del estudiante. Usa <h2>, <p>, <ul>, <table>, etc.",
       },
       mindMap: {
         type: "object",
@@ -604,6 +614,10 @@ export async function generateModuleContent(
   moduleDescription?: string,
   moduleReferences?: string,
   ctx?: GenerationLogContext,
+  // Se invoca en cuanto la lectura está lista (fin de Call 1), antes de generar
+  // el quiz y el guion. Permite persistir la lectura y mostrarla ya. Si lanza,
+  // se registra y se continúa: no debe tumbar la generación completa.
+  onLectureReady?: (partial: PartialLecture) => Promise<void>,
 ): Promise<GeneratedModuleContent> {
   const client = getAnthropicClient();
   if (!client) {
@@ -635,7 +649,7 @@ export async function generateModuleContent(
     const call1Result = await callAnthropicWithRetry(
       client,
       call1System,
-      `Genera el contenido personalizado completo para este módulo y entrégalo con la herramienta. Recuerda: MÍNIMO 3,000 palabras en la lectura, y TODO personalizado para el perfil del estudiante.`,
+      `Genera el contenido personalizado completo para este módulo y entrégalo con la herramienta. Recuerda: MÍNIMO 2,300 palabras (ideal 2,500-3,000), concisa y digerible, y TODO personalizado para el perfil del estudiante.`,
       CALL1_MAX_TOKENS,
       "Call1-Content",
       CONTENT_TOOL,
@@ -651,6 +665,26 @@ export async function generateModuleContent(
 
     const sanitizedLecture = sanitizeLectureHtml(call1Result.lectureHtml);
     console.log(`[ai-engine] Lecture length: ${sanitizedLecture.length} chars`);
+
+    // Progresivo: la lectura ya está lista; publícala antes de la Call 2 (quiz +
+    // guion, ~1.5 min más). El alumno empieza a leer de inmediato y el quiz/audio
+    // llegan por poll. Un fallo al persistir aquí NO aborta la generación.
+    const readyMindMap = call1Result.mindMap || { central: moduleTitle, branches: [] };
+    if (onLectureReady) {
+      try {
+        await onLectureReady({
+          lectureHtml: sanitizedLecture,
+          mindMap: readyMindMap,
+          reflections: call1Result.reflections || [],
+          suggestedSources: call1Result.suggestedSources || [],
+        });
+      } catch (persistErr: any) {
+        console.error(
+          `[ai-engine] onLectureReady (persistencia parcial) falló, se continúa con Call 2: ` +
+          `${persistErr?.message}${fmtCtx(ctx)}`,
+        );
+      }
+    }
 
     let adaptiveQuiz: any[] = [];
     let classScript: string | undefined = undefined;
@@ -701,10 +735,7 @@ export async function generateModuleContent(
 
     return {
       lectureHtml: sanitizedLecture,
-      mindMap: call1Result.mindMap || {
-        central: moduleTitle,
-        branches: [],
-      },
+      mindMap: readyMindMap,
       reflections: call1Result.reflections || [],
       adaptiveQuiz,
       suggestedSources: call1Result.suggestedSources || [],

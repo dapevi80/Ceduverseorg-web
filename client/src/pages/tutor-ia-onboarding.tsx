@@ -26,7 +26,9 @@ import {
   User,
   Building2,
   BarChart3,
+  Loader2,
 } from "lucide-react";
+import { authUrlWithNext } from "@/lib/next-destination";
 import { motion, AnimatePresence } from "framer-motion";
 
 const INDUSTRIES = [
@@ -79,7 +81,7 @@ export default function TutorIaOnboarding() {
   useForceLightMode();
   const { slug } = useParams<{ slug: string }>();
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [step, setStep] = useState(1);
   const [jobTitle, setJobTitle] = useState("");
   const [industry, setIndustry] = useState("");
@@ -119,6 +121,14 @@ export default function TutorIaOnboarding() {
     }
   }, [profile]);
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      // Lleva a dónde iba (incluido el ?ref= del link compartido) para volver
+      // aquí después de iniciar sesión o crear la cuenta.
+      navigate(authUrlWithNext(window.location.pathname + window.location.search));
+    }
+  }, [authLoading, user, navigate]);
+
   const saveProfileMutation = useMutation({
     mutationFn: async () => {
       const finalIndustry = industry === "Otro" ? customIndustry : industry;
@@ -137,9 +147,17 @@ export default function TutorIaOnboarding() {
     },
   });
 
-  if (!user) {
-    navigate("/auth");
-    return null;
+  // Sólo se rebota al login una vez que la sesión está RESUELTA. Antes esto era
+  // `if (!user) navigate("/auth")` en pleno render: como `user` arranca en null
+  // hasta que responde /api/auth/me, a un usuario CON sesión que abría un link
+  // compartido lo mandaba al login (y de ahí al dashboard), sin llegar nunca al
+  // curso. Además el rebote ahora lleva el destino, para volver aquí al entrar.
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-cedu-cream flex items-center justify-center">
+        <Loader2 className="animate-spin text-cedu-blue" size={32} />
+      </div>
+    );
   }
 
   const course = courseData?.course;

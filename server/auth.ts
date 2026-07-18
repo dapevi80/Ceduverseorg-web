@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { sendOtpEmail } from "./email";
 import { getEffectiveRole } from "./lib/effective-role";
+import { ensureReferralCode } from "./lib/ensure-referral-code";
 
 // Cap how many OTP requests/verifications a single IP can make. Belt-and-suspenders
 // alongside the existing 30s send cooldown and progressive verify lockout in this file.
@@ -404,6 +405,9 @@ export function setupAuth(app: Express): void {
           await db.update(accounts)
             .set({ referralCode: membershipNumber })
             .where(eq(accounts.id, userId));
+          // El folio tambien debe existir como codigo de referido, o sus links
+          // de invitacion salen como "link incorrecto" y no acreditan nada.
+          await ensureReferralCode(userId, membershipNumber);
         } else {
           membershipNumber = existingMembership.membershipNumber;
         }

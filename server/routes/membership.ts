@@ -9,6 +9,7 @@ import {
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import { createOrUpdateContactCard } from "./helpers";
+import { ensureReferralCode } from "../lib/ensure-referral-code";
 
 export function registerMembershipRoutes(app: Express) {
   app.get("/api/membership/me", requireAuth, async (req, res, next) => {
@@ -53,6 +54,9 @@ export function registerMembershipRoutes(app: Express) {
       await db.update(accounts)
         .set({ referralCode: membershipNumber })
         .where(eq(accounts.id, userId));
+      // El folio tambien debe existir como codigo de referido, o sus links de
+      // invitacion salen como "link incorrecto" y no acreditan nada.
+      await ensureReferralCode(userId, membershipNumber);
 
       createOrUpdateContactCard(userId, { title: "Socio Cooperativo" }).catch(() => {});
 
