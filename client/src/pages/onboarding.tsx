@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
+import { consumeNextDestination } from "@/lib/next-destination";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -734,7 +735,8 @@ export default function Onboarding() {
         sessionStorage.removeItem("cedu_registro_empresa");
         sessionStorage.removeItem("cedu_plan");
         sessionStorage.removeItem("cedu_collaborators");
-        setLocation("/dashboard");
+        // Si venia de un link compartido, se le devuelve ahi en vez del dashboard.
+        setLocation(consumeNextDestination() || "/dashboard");
         return;
       }
       if (step < account.accountSetup) {
@@ -779,7 +781,7 @@ export default function Onboarding() {
         {step === 1 && <ProfileStep profile={profile || null} onNext={() => setStep(2)} onBack={() => setStep(0)} userType={userType} />}
         {step === 2 && <WalletStep profile={profile || null} onNext={() => setStep(3)} onBack={() => setStep(1)} />}
         {step === 3 && <InterestsStep profile={profile || null} onNext={() => setStep(4)} onBack={() => setStep(2)} />}
-        {step === 4 && <CompletionStep onFinish={() => setLocation("/dashboard")} />}
+        {step === 4 && <CompletionStep onFinish={() => setLocation(consumeNextDestination() || "/dashboard")} />}
       </div>
     </div>
   );

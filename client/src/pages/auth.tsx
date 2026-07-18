@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { safeNextDestination } from "@/lib/next-destination";
+import { safeNextDestination, rememberNextDestination, consumeNextDestination } from "@/lib/next-destination";
 import { useForceLightMode } from "@/components/ThemeProvider";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -100,6 +100,10 @@ function AuthPageContent() {
     // así también funciona en links que no apuntan a /auth (ej. /empresas?ref=).
     // Esta llamada queda como red de seguridad redundante pero inofensiva.
     captureReferralFromUrl(window.location.search);
+    // Una cuenta NUEVA no va del login al destino: la desvian al alta
+    // (/welcome) y para cuando termina, la URL con ?next= ya quedo atras.
+    // Guardarlo aqui deja que el final del alta la lleve a donde iba.
+    rememberNextDestination(safeNextDestination(window.location.search));
     if (invite) {
       setInviteToken(invite);
       fetch(`/api/invitations/validate/${invite}`)
@@ -141,7 +145,7 @@ function AuthPageContent() {
     // Antes esto mandaba SIEMPRE a /dashboard, así que quien se registraba desde
     // un link de curso nunca veía el curso que le compartieron.
     // safeNextDestination sólo acepta rutas internas (ver next-destination.ts).
-    const destino = safeNextDestination(window.location.search) || "/dashboard";
+    const destino = safeNextDestination(window.location.search) || consumeNextDestination() || "/dashboard";
     if (user && inviteToken && !inviteAcceptedRef.current) {
       inviteAcceptedRef.current = true;
       fetch(`/api/invitations/accept/${inviteToken}`, {
