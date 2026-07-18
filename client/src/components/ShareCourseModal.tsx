@@ -26,30 +26,30 @@ interface ShareCourseModalProps {
 const courseTypeConfig = {
   "aula-virtual": {
     label: "Conferencia pregrabada con expertos",
-    sublabel: "Aula Virtual \u2014 Capacitaci\u00f3n STPS",
+    sublabel: "Aula Virtual — Capacitación STPS",
     icon: Video,
     color: "cedu-blue",
     bgClass: "bg-cedu-blue-light/50 border-cedu-blue/10",
-    shareIntro: "\u00a1Te comparto esta conferencia pregrabada con expertos en",
-    shareBody: "Es parte del Aula Virtual de Ceduverse \u2014 conferencias profesionales con especialistas certificados en cumplimiento STPS y desarrollo laboral.",
+    shareIntro: "¡Te comparto esta conferencia pregrabada con expertos en",
+    shareBody: "Es parte del Aula Virtual de Ceduverse — conferencias profesionales con especialistas certificados en cumplimiento STPS y desarrollo laboral.",
   },
   "tutor-ia": {
     label: "Curso con Tutor de Inteligencia Artificial",
-    sublabel: "Tutor IA \u2014 Aprendizaje personalizado",
+    sublabel: "Tutor IA — Aprendizaje personalizado",
     icon: Sparkles,
     color: "cedu-violet",
     bgClass: "bg-cedu-violet/[0.06] border-cedu-violet/10",
-    shareIntro: "\u00a1Mira nada m\u00e1s! \ud83d\udc40 Encontr\u00e9 un curso con tutor de IA que te va a encantar, sobre",
-    shareBody: "Tienes un tutor de inteligencia artificial de Ceduverse que responde tus dudas al instante, avanzas a tu propio ritmo desde el cel y terminas con una certificaci\u00f3n profesional. \u00a1Te lo dejo por si te late! \ud83d\ude80",
+    shareIntro: "¡Mira nada más! 👀 Encontré un curso con tutor de IA que te va a encantar, sobre",
+    shareBody: "Tienes un tutor de inteligencia artificial de Ceduverse que responde tus dudas al instante, avanzas a tu propio ritmo desde el cel y terminas con una certificación profesional. ¡Te lo dejo por si te late! 🚀",
   },
   "academy": {
     label: "Curso profesional certificado",
-    sublabel: "Ceducap Academy \u2014 Certificaci\u00f3n formal",
+    sublabel: "Ceducap Academy — Certificación formal",
     icon: GraduationCap,
     color: "cedu-green",
     bgClass: "bg-cedu-green-light/50 border-cedu-green/10",
-    shareIntro: "\u00a1Te comparto este curso certificado sobre",
-    shareBody: "Es parte de Ceducap Academy de Ceduverse \u2014 formaci\u00f3n profesional con certificaci\u00f3n v\u00e1lida ante STPS para Latinoam\u00e9rica.",
+    shareIntro: "¡Te comparto este curso certificado sobre",
+    shareBody: "Es parte de Ceducap Academy de Ceduverse — formación profesional con certificación válida ante STPS para Latinoamérica.",
   },
 };
 
@@ -97,12 +97,19 @@ export default function ShareCourseModal({
     : `${baseUrl}${getCoursePath()}`;
 
   const shareMessage = `${config.shareIntro} "${courseTitle}"!\n\n${config.shareBody}\n\n${shareUrl}`;
+  // Same intro/body as shareMessage but WITHOUT the trailing url — used for
+  // navigator.share(), which already gets the link via its own `url` field.
+  // Passing the url in both `text` and `url` made WhatsApp (and others)
+  // render the link twice.
+  const shareMessageNoUrl = `${config.shareIntro} "${courseTitle}"!\n\n${config.shareBody}`;
+
+  const hasNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareMessage);
       setCopied(true);
-      toast({ title: "\u00a1Mensaje copiado!", description: "Incluye la descripci\u00f3n y el link de invitaci\u00f3n" });
+      toast({ title: "¡Mensaje copiado!", description: "Incluye la descripción y el link de invitación" });
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast({ title: "Error al copiar", variant: "destructive" });
@@ -116,10 +123,10 @@ export default function ShareCourseModal({
 
   const handleEmail = () => {
     const subjectText = courseType === "aula-virtual"
-      ? `Conferencia con expertos: ${courseTitle} \u2014 Ceduverse`
+      ? `Conferencia con expertos: ${courseTitle} — Ceduverse`
       : courseType === "tutor-ia"
-        ? `Curso con Tutor IA: ${courseTitle} \u2014 Ceduverse`
-        : `Curso certificado: ${courseTitle} \u2014 Ceduverse`;
+        ? `Curso con Tutor IA: ${courseTitle} — Ceduverse`
+        : `Curso certificado: ${courseTitle} — Ceduverse`;
     const subject = encodeURIComponent(subjectText);
     const body = encodeURIComponent(shareMessage);
     window.open(`mailto:?subject=${subject}&body=${body}`);
@@ -130,9 +137,9 @@ export default function ShareCourseModal({
       try {
         await navigator.share({
           title: courseType === "aula-virtual"
-            ? `Conferencia: ${courseTitle} \u2014 Ceduverse`
-            : `Curso: ${courseTitle} \u2014 Ceduverse`,
-          text: shareMessage,
+            ? `Conferencia: ${courseTitle} — Ceduverse`
+            : `Curso: ${courseTitle} — Ceduverse`,
+          text: shareMessageNoUrl,
           url: shareUrl,
         });
       } catch {}
@@ -141,48 +148,35 @@ export default function ShareCourseModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-serif">
-            <Share2 className="h-5 w-5 text-cedu-blue" />
+          <DialogTitle className="flex items-center gap-2 font-serif text-base">
+            <Share2 className="h-4 w-4 text-cedu-blue" />
             Compartir {courseType === "aula-virtual" ? "conferencia" : "curso"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 pt-2">
-          <div className={`border rounded-xl p-3 ${config.bgClass}`}>
-            <div className="flex items-start gap-2.5">
-              <div className={`flex-shrink-0 w-9 h-9 rounded-lg bg-white/80 flex items-center justify-center`}>
-                <TypeIcon className={`h-4.5 w-4.5 text-${config.color}`} size={18} />
+        <div className="space-y-3 pt-1">
+          <div className={`border rounded-xl p-2.5 ${config.bgClass}`}>
+            <div className="flex items-center gap-2.5">
+              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/80 flex items-center justify-center">
+                <TypeIcon className={`h-4 w-4 text-${config.color}`} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-cedu-ink line-clamp-2" data-testid="text-share-course-title">{courseTitle}</p>
-                <p className="text-[11px] font-medium text-cedu-ink-muted mt-0.5">{config.label}</p>
-                <p className="text-[10px] text-cedu-ink-muted/70 mt-0.5">{config.sublabel}</p>
-              </div>
+              <p className="text-sm font-semibold text-cedu-ink line-clamp-1 flex-1 min-w-0" data-testid="text-share-course-title">
+                {courseTitle}
+              </p>
             </div>
           </div>
 
-          <div className="bg-amber-50/60 border border-amber-200/40 rounded-xl p-3">
-            <p className="text-xs font-medium text-amber-900/80 leading-relaxed" data-testid="text-share-preview">
-              {config.shareIntro} &ldquo;{courseTitle}&rdquo;
-            </p>
-            <p className="text-[11px] text-amber-800/60 mt-1 leading-relaxed">
-              {config.shareBody}
-            </p>
-          </div>
-
           {referralData && (
-            <div className="flex items-center gap-2 bg-cedu-green-light/50 border border-cedu-green/10 rounded-xl p-3">
+            <div className="flex items-center gap-2 bg-cedu-green-light/50 border border-cedu-green/10 rounded-xl px-3 py-2">
               <Gift className="h-4 w-4 text-cedu-green flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-cedu-ink">Tu c\u00f3digo de referido</p>
-                <p className="text-sm font-mono font-bold text-cedu-green" data-testid="text-referral-code">
-                  {referralData.code}
-                </p>
-              </div>
+              <span className="text-xs font-semibold text-cedu-ink whitespace-nowrap">Tu código:</span>
+              <span className="text-sm font-mono font-bold text-cedu-green truncate" data-testid="text-referral-code">
+                {referralData.code}
+              </span>
               {referralData.usageCount > 0 && (
-                <div className="flex items-center gap-1 bg-white/80 px-2 py-1 rounded-lg">
+                <div className="flex items-center gap-1 bg-white/80 px-2 py-0.5 rounded-lg ml-auto flex-shrink-0">
                   <Users className="h-3 w-3 text-cedu-ink-muted" />
                   <span className="text-xs font-semibold text-cedu-ink">{referralData.usageCount}</span>
                 </div>
@@ -190,69 +184,72 @@ export default function ShareCourseModal({
             </div>
           )}
 
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-cedu-ink-muted">Copiar mensaje completo</label>
-            <div className="flex gap-2">
-              <Input
-                value={shareUrl}
-                readOnly
-                className="text-xs bg-gray-50 font-mono"
-                data-testid="input-share-url"
-              />
-              <Button
-                onClick={handleCopy}
-                variant="outline"
-                size="icon"
-                className="flex-shrink-0"
-                data-testid="button-copy-link"
-              >
-                {copied ? (
-                  <Check className="h-4 w-4 text-cedu-green" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
+          <div className="flex gap-2">
+            <Input
+              value={shareUrl}
+              readOnly
+              className="text-xs bg-gray-50 font-mono"
+              data-testid="input-share-url"
+            />
+            <Button
+              onClick={handleCopy}
+              variant="outline"
+              size="icon"
+              className="flex-shrink-0"
+              data-testid="button-copy-link"
+            >
+              {copied ? (
+                <Check className="h-4 w-4 text-cedu-green" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-cedu-ink-muted">Compartir por</label>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                onClick={handleWhatsApp}
-                variant="outline"
-                className="h-11 gap-2 text-sm font-semibold hover:bg-green-50 hover:border-green-300 hover:text-green-700"
-                data-testid="button-share-whatsapp"
-              >
-                <SiWhatsapp className="h-4 w-4" />
-                WhatsApp
-              </Button>
-              <Button
-                onClick={handleEmail}
-                variant="outline"
-                className="h-11 gap-2 text-sm font-semibold hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
-                data-testid="button-share-email"
-              >
-                <Mail className="h-4 w-4" />
-                Email
-              </Button>
-            </div>
-            {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+          <div className={`grid gap-2 ${hasNativeShare ? "grid-cols-3" : "grid-cols-2"}`}>
+            <Button
+              onClick={handleWhatsApp}
+              variant="outline"
+              className="h-10 gap-1.5 text-xs font-semibold px-1.5 hover:bg-green-50 hover:border-green-300 hover:text-green-700"
+              data-testid="button-share-whatsapp"
+            >
+              <SiWhatsapp className="h-4 w-4 flex-shrink-0" />
+              WhatsApp
+            </Button>
+            <Button
+              onClick={handleEmail}
+              variant="outline"
+              className="h-10 gap-1.5 text-xs font-semibold px-1.5 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
+              data-testid="button-share-email"
+            >
+              <Mail className="h-4 w-4 flex-shrink-0" />
+              Email
+            </Button>
+            {hasNativeShare && (
               <Button
                 onClick={handleNativeShare}
                 variant="outline"
-                className="w-full h-11 gap-2 text-sm font-semibold"
+                className="h-10 gap-1.5 text-xs font-semibold px-1.5"
                 data-testid="button-share-native"
               >
-                <Share2 className="h-4 w-4" />
-                M\u00e1s opciones
+                <Share2 className="h-4 w-4 flex-shrink-0" />
+                Más opciones
               </Button>
             )}
           </div>
 
-          <p className="text-[11px] text-cedu-ink-muted text-center leading-relaxed">
-            Cuando alguien se registre con tu link, quedar\u00e1 vinculado a tu red de referidos.
+          <p className="text-[11px] text-cedu-ink-muted text-center">
+            Al registrarse con tu link, quedará vinculado a tu red de referidos.
           </p>
+
+          <Button
+            onClick={() => onOpenChange(false)}
+            variant="ghost"
+            className="w-full h-9 text-sm text-cedu-ink-muted"
+            data-testid="button-close-share"
+          >
+            Cerrar
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
