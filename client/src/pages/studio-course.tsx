@@ -46,6 +46,7 @@ import {
   RotateCcw,
   LogOut,
   Share2,
+  Lock,
 } from "lucide-react";
 import ShareCourseModal from "@/components/ShareCourseModal";
 import { certTabMessage, type CertTabState, type PaidCertType } from "@shared/cert-eligibility";
@@ -161,22 +162,30 @@ const LOADING_TIPS = [
   "Cada módulo tiene mapa mental, quiz y fuentes de consulta",
 ];
 
-function ModulePill({ index, title, active, completed, onClick }: {
-  index: number; title: string; active: boolean; completed: boolean; onClick: () => void;
+function ModulePill({ index, title, active, completed, locked, onClick }: {
+  index: number; title: string; active: boolean; completed: boolean; locked: boolean; onClick: () => void;
 }) {
+  const lockHint = "Aprueba el quiz del módulo anterior para desbloquear.";
   return (
     <button
-      onClick={onClick}
+      onClick={locked ? undefined : onClick}
+      disabled={locked}
+      aria-disabled={locked}
+      title={locked ? lockHint : undefined}
       className={`flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-        active
-          ? "bg-cedu-blue text-white shadow-sm"
-          : completed
-            ? "bg-cedu-green-light dark:bg-cedu-green/10 text-cedu-green border border-cedu-green/20"
-            : "bg-white dark:bg-gray-800 text-cedu-ink-soft dark:text-gray-300 border border-black/[0.06] dark:border-white/[0.08] hover:border-cedu-blue/30"
+        locked
+          ? "bg-gray-50 dark:bg-gray-900 text-cedu-ink-muted/60 dark:text-gray-600 border border-black/[0.04] dark:border-white/[0.06] cursor-not-allowed"
+          : active
+            ? "bg-cedu-blue text-white shadow-sm"
+            : completed
+              ? "bg-cedu-green-light dark:bg-cedu-green/10 text-cedu-green border border-cedu-green/20"
+              : "bg-white dark:bg-gray-800 text-cedu-ink-soft dark:text-gray-300 border border-black/[0.06] dark:border-white/[0.08] hover:border-cedu-blue/30"
       }`}
       data-testid={`button-module-${index}`}
     >
-      {completed ? (
+      {locked ? (
+        <Lock size={14} />
+      ) : completed ? (
         <CheckCircle2 size={14} />
       ) : (
         <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -493,6 +502,27 @@ function GenerationFailedBanner({
       >
         {isRegenerating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
         Regenerar
+      </Button>
+    </div>
+  );
+}
+
+/** Shown instead of generating content when the module isn't unlocked yet
+ *  (normally unreachable via the sidebar/nav, which are locked — this covers
+ *  edge cases like a deep link or a resumed session landing on a module
+ *  whose previous quiz hasn't been passed). Never silently generates. */
+function LockedModuleState({ onGoToPrevious }: { onGoToPrevious: () => void }) {
+  return (
+    <div className="text-center py-16 px-4" data-testid="locked-module-state">
+      <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <Lock size={24} className="text-cedu-ink-muted dark:text-gray-500" />
+      </div>
+      <h3 className="font-serif text-lg text-cedu-ink dark:text-white mb-2">Módulo bloqueado</h3>
+      <p className="text-sm text-cedu-ink-muted dark:text-gray-400 max-w-sm mx-auto mb-6">
+        Módulo bloqueado — aprueba el quiz del módulo anterior para desbloquearlo.
+      </p>
+      <Button variant="outline" onClick={onGoToPrevious} className="gap-2 rounded-xl" data-testid="button-locked-go-prev">
+        <ArrowLeft size={16} /> Ir al módulo anterior
       </Button>
     </div>
   );
@@ -1246,6 +1276,32 @@ export default function StudioCoursePage() {
     enabled: !!user,
   });
 
+  // Which modules of THIS course this user has PASSED a quiz for. Drives
+  // sequential unlocking: a module's personalized content must not
+  // auto-generate — and its nav must stay locked — until the previous
+  // module's quiz is passed. Module 0 is always unlocked. Refetched whenever
+  // a quiz is passed (see onQuizComplete below) so the next module unlocks
+  // immediately without a manual refresh.
+  const { data: quizAttempts } = useQuery<{ moduleIndex: number; passed: boolean }[]>({
+    queryKey: ["/api/studio/courses", slug, "quiz-attempts"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/studio/courses/${slug}/quiz-attempts`);
+      return res.json();
+    },
+    enabled: !!user && !!slug,
+  });
+
+  const passedModules = useMemo(() => {
+    const set = new Set<number>();
+    (quizAttempts || []).forEach(a => { if (a.passed) set.add(a.moduleIndex); });
+    return set;
+  }, [quizAttempts]);
+
+  const isModuleUnlocked = useCallback(
+    (i: number) => i === 0 || passedModules.has(i - 1),
+    [passedModules]
+  );
+
   const { data: generatedContent, isLoading: isGenerating } = useQuery<GeneratedContent>({
     queryKey: ["studio-generated", slug, activeModule],
     queryFn: async () => {
@@ -1256,7 +1312,11 @@ export default function StudioCoursePage() {
     // this, a logged-in visitor merely previewing a course (before clicking
     // "Comenzar curso") would fire this billable generate call on every mount,
     // even though the UI below shows an enroll gate instead of content.
-    enabled: !!user && !!courseData && !!enrollment?.id,
+    // Also gated on the module being unlocked: the owner's explicit request
+    // is that a locked module must never fire /generate — so we don't have
+    // the agent generating personalized content for multiple modules at
+    // once before the student has even passed the previous quiz.
+    enabled: !!user && !!courseData && !!enrollment?.id && isModuleUnlocked(activeModule),
     // Generation runs async server-side (~3-5 min). While in progress the server
     // returns a "generating" placeholder; poll until the real content lands.
     // While "failed" and backing off, DON'T poll every 5s forever — that would
@@ -1670,6 +1730,7 @@ export default function StudioCoursePage() {
               title={mod.title}
               active={activeModule === i}
               completed={isModuleCompleted(i)}
+              locked={!isModuleUnlocked(i)}
               onClick={() => { setActiveModule(i); setActiveTab("lectura"); }}
             />
           ))}
@@ -1701,7 +1762,11 @@ export default function StudioCoursePage() {
           </div>
 
           <div className="max-w-4xl mx-auto px-3 sm:px-6 md:px-8 py-4 sm:py-6">
-            {(isGenerating && !generatedContent) || generatedContent?.generationStatus === "generating" ? (
+            {!isModuleUnlocked(activeModule) ? (
+              <LockedModuleState
+                onGoToPrevious={() => { setActiveModule(activeModule - 1); setActiveTab("lectura"); window.scrollTo(0, 0); }}
+              />
+            ) : (isGenerating && !generatedContent) || generatedContent?.generationStatus === "generating" ? (
               <LoadingState profile={studentProfile || undefined} />
             ) : (
               <>
@@ -1793,14 +1858,23 @@ export default function StudioCoursePage() {
                           </Button>
                         )}
                         {activeModule < modules.length - 1 ? (
-                          <Button
-                            size="lg"
-                            onClick={() => { setActiveModule(activeModule + 1); setActiveTab("lectura"); window.scrollTo(0, 0); }}
-                            className="rounded-xl gap-2 min-h-11 bg-cedu-blue hover:bg-cedu-blue/90"
-                            data-testid="button-next-module"
-                          >
-                            Siguiente <ChevronRight size={16} />
-                          </Button>
+                          <div className="flex flex-col items-end gap-1.5">
+                            <Button
+                              size="lg"
+                              onClick={() => { setActiveModule(activeModule + 1); setActiveTab("lectura"); window.scrollTo(0, 0); }}
+                              disabled={!passedModules.has(activeModule)}
+                              title={!passedModules.has(activeModule) ? "Aprueba el quiz de este módulo para desbloquear el siguiente." : undefined}
+                              className="rounded-xl gap-2 min-h-11 bg-cedu-blue hover:bg-cedu-blue/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                              data-testid="button-next-module"
+                            >
+                              Siguiente <ChevronRight size={16} />
+                            </Button>
+                            {!passedModules.has(activeModule) && (
+                              <p className="text-xs text-cedu-ink-muted dark:text-gray-500 text-right max-w-[220px]" data-testid="hint-next-locked">
+                                Aprueba el quiz de este módulo para desbloquear el siguiente.
+                              </p>
+                            )}
+                          </div>
                         ) : (
                           <Button
                             size="lg"
@@ -1843,6 +1917,10 @@ export default function StudioCoursePage() {
                       onQuizComplete={(score, total, passed) => {
                         if (passed) {
                           toast({ title: "¡Quiz aprobado!", description: `Obtuviste ${Math.round((score / total) * 100)}%` });
+                          // Unlocks the next module immediately: refetch this
+                          // course's passed-modules so isModuleUnlocked() and
+                          // the nav lock update without a manual page refresh.
+                          queryClient.invalidateQueries({ queryKey: ["/api/studio/courses", slug, "quiz-attempts"] });
                         }
                       }}
                     />

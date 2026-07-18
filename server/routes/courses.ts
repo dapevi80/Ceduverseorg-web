@@ -1399,6 +1399,20 @@ export function registerCourseRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
+  // Used by the client to sequentially gate module unlocking: a module's
+  // personalized content must not auto-generate (and its nav must stay
+  // locked) until the PREVIOUS module's quiz was passed. Returns every
+  // attempt (append-only, most recent first) so the client can derive which
+  // module indexes have at least one passed attempt.
+  app.get("/api/studio/courses/:slug/quiz-attempts", requireAuth, async (req, res, next) => {
+    try {
+      const userId = req.supabaseUserId!;
+      const slug = String((req.params.slug as string));
+      const attempts = await storage.getStudioQuizAttempts(userId, slug);
+      res.json(attempts.map(a => ({ moduleIndex: a.moduleIndex, passed: a.passed })));
+    } catch (err) { next(err); }
+  });
+
   app.get("/api/studio/courses/:slug/modules/:index/chat/history", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
