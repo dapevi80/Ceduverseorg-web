@@ -1259,10 +1259,31 @@ interface PlaybookTabData {
   progress: { done: number; total: number; complete: boolean };
 }
 
+// apiRequest (client/src/lib/queryClient.ts) lanza `Error(`${status}: ${bodyText}`)`
+// en respuestas no-ok, donde bodyText es el JSON crudo que mandó el servidor
+// (p.ej. `{"message":"No se pudo generar el playbook..."}`). Esta función recupera
+// ese mensaje real para mostrarlo tal cual; si el cuerpo no es JSON parseable
+// (error de red, HTML genérico de un proxy, etc.) cae a un mensaje honesto genérico
+// en vez de mostrarle al usuario el string crudo "404: {...}".
+function playbookErrorMessage(error: unknown): string {
+  const fallback = "No pudimos cargar el Playbook. Recarga la página o inténtalo en unos minutos.";
+  if (!(error instanceof Error)) return fallback;
+  const bodyText = error.message.replace(/^\d+:\s*/, "");
+  try {
+    const parsed = JSON.parse(bodyText);
+    if (parsed && typeof parsed.message === "string" && parsed.message.trim()) {
+      return parsed.message;
+    }
+  } catch {
+    // cuerpo no era JSON — se queda con el fallback genérico.
+  }
+  return fallback;
+}
+
 function PlaybookTab({ slug }: { slug: string }) {
   const [, navigate] = useLocation();
 
-  const { data, isLoading } = useQuery<PlaybookTabData>({
+  const { data, isLoading, isError, error } = useQuery<PlaybookTabData>({
     queryKey: ["/api/playbook", slug],
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/playbook/${slug}`);
@@ -1270,11 +1291,25 @@ function PlaybookTab({ slug }: { slug: string }) {
     },
   });
 
-  if (isLoading || !data) {
+  if (isLoading) {
     return (
       <div className="py-12 text-center text-cedu-ink-muted dark:text-gray-500" data-testid="view-playbook-loading">
         <Loader2 className="animate-spin mx-auto mb-3" size={28} />
         Cargando Playbook…
+      </div>
+    );
+  }
+
+  // Sin degradación silenciosa: un fallo real de la consulta (404 curso no
+  // encontrado, 503 playbook no generado, error de red) no debe quedarse como
+  // spinner infinito ni confundirse con "playbook vacío".
+  if (isError || !data) {
+    return (
+      <div className="max-w-sm mx-auto rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 p-4 flex items-start gap-2" data-testid="view-playbook-error">
+        <AlertTriangle size={16} className="text-red-600 shrink-0 mt-0.5" />
+        <p className="text-xs text-red-800 dark:text-red-300 text-left">
+          {playbookErrorMessage(error)}
+        </p>
       </div>
     );
   }

@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getAuthToken } from "@/lib/auth-token";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Camera, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
+import { Camera, CheckCircle2, Loader2, ArrowLeft, AlertTriangle } from "lucide-react";
 import { PLAYBOOK_COMPLETION_BONUS } from "@shared/playbook-points";
 
 interface PlaybookExerciseInfo {
@@ -48,7 +48,7 @@ export default function PlaybookExercisePage() {
     }
   }, [authLoading, user, navigate]);
 
-  const { data, isLoading } = useQuery<PlaybookApiResponse>({
+  const { data, isLoading, isError, error } = useQuery<PlaybookApiResponse>({
     queryKey: ["/api/playbook", slug],
     queryFn: async () => {
       const token = getAuthToken();
@@ -115,6 +115,25 @@ export default function PlaybookExercisePage() {
     );
   }
 
+  // Sin degradación silenciosa: 404 "curso no encontrado" y 503 "no se pudo generar
+  // el playbook" son estados honestos y distintos que el servidor ya manda con
+  // mensaje propio (ver queryFn arriba) — no deben caer en la misma tarjeta genérica
+  // que un índice de ejercicio fuera de rango (ese caso sigue siendo el suyo, abajo).
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-cedu-cream flex items-center justify-center p-6">
+        <Card className="p-8 text-center max-w-sm border-red-200" data-testid="view-playbook-fetch-error">
+          <AlertTriangle size={40} className="mx-auto text-red-600 mb-3" />
+          <h2 className="font-serif text-xl text-cedu-ink mb-2">No se pudo cargar el Playbook</h2>
+          <p className="text-sm text-cedu-ink-soft mb-4">
+            {error instanceof Error && error.message ? error.message : "Intenta de nuevo en unos minutos."}
+          </p>
+          <Button onClick={() => navigate(`/tutor-ia/${slug}`)} className="mt-4">Volver al curso</Button>
+        </Card>
+      </div>
+    );
+  }
+
   const exercise = data?.playbook.exercises.find((e) => e.index === exerciseIndex);
 
   if (!exercise) {
@@ -159,10 +178,14 @@ export default function PlaybookExercisePage() {
             </div>
           ) : (
             <>
+              {/* Allowlist explícito, no "image/*": debe reflejar exactamente
+                  ALLOWED_EVIDENCE_MIMETYPES en server/lib/playbook-upload.ts. Un
+                  wildcard le ofrecería al picker SVG/GIF/BMP que el servidor rechaza
+                  (SVG en particular, por riesgo de stored-XSS). */}
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                 capture="environment"
                 className="hidden"
                 onChange={(e) => {
