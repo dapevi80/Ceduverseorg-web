@@ -134,13 +134,29 @@ async function generateWithClaude(course: StudioCourse, modules: StudioModule[])
       return null;
     }
 
+    const content: PlaybookContent = {
+      objetivos: raw.objetivos || [],
+      resumen: raw.resumen || [],
+      estrategias: raw.estrategias || [],
+      preguntas: raw.preguntas || [],
+    };
+
+    // Aunque los ejercicios cuenten bien, un cuerpo pedagógico totalmente vacío
+    // NO es una generación exitosa: aceptarla sería un "éxito" fabricado con un
+    // playbook hueco. Mejor caer al mínimo real (derivado del contenido del
+    // curso) que guardar vacío (regla §5: falla IA → versión mínima real, no vacía).
+    const contentIsEmpty =
+      content.objetivos.length === 0 &&
+      content.resumen.length === 0 &&
+      content.estrategias.length === 0 &&
+      content.preguntas.length === 0;
+    if (contentIsEmpty) {
+      console.error(`[playbook-generator] Claude devolvió contenido pedagógico vacío para "${course.slug}": usando playbook mínimo real.`);
+      return null;
+    }
+
     return {
-      content: {
-        objetivos: raw.objetivos || [],
-        resumen: raw.resumen || [],
-        estrategias: raw.estrategias || [],
-        preguntas: raw.preguntas || [],
-      },
+      content,
       exercises,
       // Las referencias NUNCA vienen del LLM: siempre las verbatim del curso.
       references: assembleReferences(modules),
