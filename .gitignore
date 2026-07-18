@@ -10,6 +10,8 @@ server/public/
 .env
 .env.local
 .env.production
+.env.*
+!.env.example
 
 # OS files
 .DS_Store
