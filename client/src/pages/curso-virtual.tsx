@@ -32,13 +32,10 @@ import {
   Pause,
   Volume2,
   Clock,
-  Award,
   AlertCircle,
-  PartyPopper,
   RotateCcw,
   ExternalLink,
   GraduationCap,
-  FileCheck,
   Lock,
   UserPlus,
   Sparkles,
@@ -53,7 +50,6 @@ import {
   ArrowRight,
   Download,
   Headphones,
-  Video,
 } from "lucide-react";
 import ShareCourseModal from "@/components/ShareCourseModal";
 import InfographicView from "@/components/InfographicView";
@@ -828,7 +824,7 @@ function StpsSessionView({
             </div>
             <h3 className="font-serif text-xl text-cedu-ink mb-2">Sigue escuchando</h3>
             <p className="text-sm text-cedu-ink-muted mb-2">
-              Escucha la conferencia completa para completar el curso y obtener tu diploma digital.
+              Escucha la clase completa para obtener tu diploma digital de asistencia.
             </p>
             <p className="text-xs text-cedu-ink-muted">
               {completedModules.size} de {modules.length} secciones completadas
@@ -844,103 +840,24 @@ function StpsSessionView({
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-[#7c3aed]">
               <Sparkles size={28} className="text-white" />
             </div>
-            <h3 className="font-serif text-xl text-cedu-ink mb-2">¡Conferencia completada!</h3>
+            <h3 className="font-serif text-xl text-cedu-ink mb-2">¡Clase completada!</h3>
             <p className="text-sm text-cedu-ink-muted mb-4">
-              Continúa tu capacitación con el Tutor IA para obtener un segundo diploma digital y tu certificado DC-3 o SEP.
+              Obtuviste tu diploma digital de asistencia. Para tu certificado <strong>DC-3</strong> o <strong>SEP</strong> con validez oficial, toma este curso en el Tutor IA y aprueba su evaluación.
             </p>
-            <div className="flex gap-3 justify-center flex-wrap">
-              <Link href={`/tutor-ia/${slug}`}>
-                <Button className="bg-[#7c3aed] hover:bg-[#7c3aed]/90 text-white" data-testid="stps-button-go-tutor-ia">
-                  <Sparkles size={16} className="mr-2" /> Ir al Tutor IA de este curso
-                </Button>
-              </Link>
-              <Link href="/tutor-ia-vivo">
-                <Button className="bg-[#1b5adf] hover:bg-[#1b5adf]/90 text-white" data-testid="stps-button-go-tutor-vivo">
-                  <Video size={16} className="mr-2" /> Tutor IA en Vivo
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {user && allCompleted && (
-        <div className="rounded-2xl overflow-hidden" data-testid="stps-next-steps">
-          <div className="bg-gradient-to-r from-[#7c3aed] to-[#1b5adf] p-6 sm:p-8">
-            <div className="text-center mb-6">
-              <PartyPopper size={36} className="text-white/80 mx-auto mb-3" />
-              <h2 className="font-serif text-2xl sm:text-3xl text-white mb-2" data-testid="text-congrats-title">
-                ¡Felicidades! Completaste {course.title}
-              </h2>
-              <p className="text-white/70 text-sm">Ahora puedes obtener tu certificación oficial</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10 text-center" data-testid="cert-option-nft">
-                <div className="w-12 h-12 rounded-full bg-[#00b87a]/20 flex items-center justify-center mx-auto mb-3">
-                  <Award size={24} className="text-[#00b87a]" />
-                </div>
-                <h3 className="font-semibold text-white text-sm mb-1">Diploma NFT</h3>
-                <p className="text-white/60 text-xs mb-3">Gratis — Se emite automáticamente</p>
-                <Badge className="bg-[#00b87a] text-white border-0 text-xs">Incluido</Badge>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10 text-center" data-testid="cert-option-dc3">
-                <div className="w-12 h-12 rounded-full bg-[#f28023]/20 flex items-center justify-center mx-auto mb-3">
-                  <FileCheck size={24} className="text-[#f28023]" />
-                </div>
-                <h3 className="font-semibold text-white text-sm mb-1">Constancia DC-3 STPS</h3>
-                <p className="text-white/60 text-xs mb-3">$499 MXN — Validez oficial ante STPS</p>
-                <div className="flex flex-col gap-1.5">
-                  <Link href="/dashboard?tab=certificados">
-                    <Button size="sm" className="bg-white/20 hover:bg-white/30 text-white border-0 text-xs w-full" data-testid="button-request-dc3">
-                      Solicitar DC-3
-                    </Button>
-                  </Link>
-                  <Link href={`/tutor-ia/${slug}`}>
-                    <Button size="sm" variant="ghost" className="text-white/60 hover:text-white text-[10px] w-full" data-testid="button-dc3-tutor-ia">
-                      Profundiza con Tutor IA
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/10 text-center" data-testid="cert-option-sep">
-                <div className="w-12 h-12 rounded-full bg-[#1b5adf]/20 flex items-center justify-center mx-auto mb-3">
-                  <GraduationCap size={24} className="text-[#60a5fa]" />
-                </div>
-                <h3 className="font-semibold text-white text-sm mb-1">Certificado SEP</h3>
-                <p className="text-white/60 text-xs mb-3">$1,999 MXN — Validez federal vía INEC</p>
-                <Link href="/dashboard?tab=certificados">
-                  <Button size="sm" className="bg-white/20 hover:bg-white/30 text-white border-0 text-xs" data-testid="button-request-sep">
-                    Solicitar SEP
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-cedu-cream border-t border-black/[0.06] p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles size={18} className="text-cedu-violet" />
-                <span className="text-sm text-cedu-ink">¿Quieres profundizar?</span>
-              </div>
-              <Link href={`/tutor-ia/${slug}`}>
-                <Button variant="outline" size="sm" className="gap-1 text-cedu-violet border-cedu-violet/30 hover:bg-cedu-violet/5" data-testid="button-tutor-ia-deepdive">
-                  Toma este curso con el Tutor IA <ArrowRight size={14} />
-                </Button>
-              </Link>
-            </div>
-            <div className="flex items-center justify-between pt-2 border-t border-black/[0.06]">
+            <Link href={`/tutor-ia/${slug}`}>
+              <Button className="bg-[#7c3aed] hover:bg-[#7c3aed]/90 text-white" data-testid="stps-button-go-tutor-ia">
+                <Sparkles size={16} className="mr-2" /> Cursa este curso en el Tutor IA para tu DC-3
+              </Button>
+            </Link>
+            <div className="mt-5 pt-4 border-t border-black/[0.06] flex items-center justify-center gap-3">
               <div className="flex items-center gap-2">
                 <Download size={18} className="text-cedu-blue" />
                 <span className="text-sm text-cedu-ink">Material del curso</span>
               </div>
               <PdfDownloadButton courseTitle={course.title} />
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
@@ -1338,7 +1255,7 @@ export default function CursoVirtual() {
               saveCompleted(allIndices);
               queryClient.invalidateQueries({ queryKey: ["/api/me/courses"] });
               queryClient.invalidateQueries({ queryKey: ["/api/me/achievements"] });
-              toast({ title: "🎉 ¡Conferencia completada!", description: "Has obtenido tu diploma digital de participación. Continúa con el Tutor IA para tu certificado DC-3 o SEP." });
+              toast({ title: "🎉 ¡Clase completada!", description: "Has obtenido tu diploma digital de participación. Continúa con el Tutor IA para tu certificado DC-3 o SEP." });
             }}
             slug={slug}
             activeModuleIndex={activeModuleIndex}
