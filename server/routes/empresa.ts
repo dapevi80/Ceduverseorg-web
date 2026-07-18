@@ -23,6 +23,30 @@ import { sendEmployeeInvitationEmail, sendSamPartnerNotificationEmail } from "..
 import crypto from "crypto";
 import { determinePlan, UMA_VALUE_2026 } from "./admin";
 
+export async function getEmpresaTeam(userId: string) {
+  const membership = await db.select({ teamId: teamUsers.teamId, role: teamUsers.role })
+    .from(teamUsers)
+    .where(and(
+      eq(teamUsers.userId, userId),
+      or(eq(teamUsers.role, "admin"), eq(teamUsers.role, "empresa_rh"))
+    ));
+  if (membership.length === 0) {
+    const [account] = await db.select({ userRole: accounts.userRole })
+      .from(accounts).where(eq(accounts.id, userId));
+    if (account && (account.userRole === "empresa" || account.userRole === "empresa_rh")) {
+      const anyMembership = await db.select({ teamId: teamUsers.teamId })
+        .from(teamUsers).where(eq(teamUsers.userId, userId)).limit(1);
+      if (anyMembership.length > 0) {
+        const team = await db.select().from(teams).where(eq(teams.id, anyMembership[0].teamId));
+        return team[0] || null;
+      }
+    }
+    return null;
+  }
+  const team = await db.select().from(teams).where(eq(teams.id, membership[0].teamId));
+  return team[0] || null;
+}
+
 export function registerEmpresaRoutes(app: Express) {
   app.get("/api/empresa/invoices", requireAuth, async (req, res, next) => {
     try {
@@ -66,30 +90,6 @@ export function registerEmpresaRoutes(app: Express) {
     } catch (err) { next(err); }
   });
   const excelUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
-
-  async function getEmpresaTeam(userId: string) {
-    const membership = await db.select({ teamId: teamUsers.teamId, role: teamUsers.role })
-      .from(teamUsers)
-      .where(and(
-        eq(teamUsers.userId, userId),
-        or(eq(teamUsers.role, "admin"), eq(teamUsers.role, "empresa_rh"))
-      ));
-    if (membership.length === 0) {
-      const [account] = await db.select({ userRole: accounts.userRole })
-        .from(accounts).where(eq(accounts.id, userId));
-      if (account && (account.userRole === "empresa" || account.userRole === "empresa_rh")) {
-        const anyMembership = await db.select({ teamId: teamUsers.teamId })
-          .from(teamUsers).where(eq(teamUsers.userId, userId)).limit(1);
-        if (anyMembership.length > 0) {
-          const team = await db.select().from(teams).where(eq(teams.id, anyMembership[0].teamId));
-          return team[0] || null;
-        }
-      }
-      return null;
-    }
-    const team = await db.select().from(teams).where(eq(teams.id, membership[0].teamId));
-    return team[0] || null;
-  }
 
   app.get("/api/empresa/invitations/template", requireAuth, async (req, res, next) => {
     try {

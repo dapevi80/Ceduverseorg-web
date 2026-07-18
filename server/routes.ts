@@ -56,6 +56,7 @@ import bcrypt from "bcryptjs";
 
 // Route modules
 import { registerCourseRoutes } from "./routes/courses";
+import { registerPlaybookRoutes } from "./routes/playbook";
 import { registerAdminRoutes } from "./routes/admin";
 import { registerCrmRoutes } from "./routes/crm";
 import { registerGoogleMeetRoutes } from "./routes/google-meet";
@@ -405,6 +406,7 @@ export async function registerRoutes(
   // ==================== Route Modules ====================
   registerCourseRoutes(app);
   registerCertificateRoutes(app);
+  registerPlaybookRoutes(app);
   registerVaultRoutes(app);
   registerAdminRoutes(app);
 
