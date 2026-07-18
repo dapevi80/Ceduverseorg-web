@@ -1909,7 +1909,7 @@ export default function Dashboard() {
             <SamMensualTab />
           )}
           {activeTab === "playbook-evidencias" && isOrgAdmin && (
-            <TeamPlaybookEvidenceTab teamId={userTeams.filter(t => t.role === "admin")[0]?.team.id} />
+            <TeamPlaybookEvidenceTab />
           )}
           {activeTab === "profile" && (
             <ProfileTab profile={profile || null} />

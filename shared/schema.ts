@@ -651,6 +651,15 @@ export const coursePlaybooks = pgTable("course_playbooks", {
   }>(),
   exercises: jsonb("exercises").notNull().$type<{ index: number; title: string; instruction: string }[]>(),
   references: jsonb("references").notNull().$type<string[]>(),
+  // Procedencia del contenido: 'ai' = generación real de Claude; 'fallback' =
+  // playbook mínimo derivado del contenido del curso (server/playbook-generator.ts
+  // cayó a fallbackPlaybook() por falta de API key, cero módulos, error de la API,
+  // conteo de ejercicios inválido o cuerpo pedagógico vacío). Sin esta columna una
+  // fila fallback era indistinguible de una real y quedaba cacheada para siempre
+  // (C1 — [[feedback_no_silent_degradation]]). El lector (server/routes/playbook.ts)
+  // usa esto para reintentar la generación real tras un cooldown en vez de servir
+  // el fallback como si fuera definitivo.
+  source: text("source").notNull().default("ai").$type<"ai" | "fallback">(),
   generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -13,6 +13,11 @@ CREATE TABLE IF NOT EXISTS course_playbooks (
   content       jsonb NOT NULL,
   exercises     jsonb NOT NULL,
   "references"  jsonb NOT NULL,
+  -- 'ai' (generación real de Claude) | 'fallback' (playbook mínimo derivado
+  -- del contenido del curso, cuando la generación falló). Ver shared/schema.ts
+  -- y server/playbook-generator.ts — sin esto un fallback quedaba cacheado
+  -- para siempre, indistinguible de una generación real (C1).
+  source        text NOT NULL DEFAULT 'ai',
   generated_at  timestamptz NOT NULL DEFAULT now()
 );
 

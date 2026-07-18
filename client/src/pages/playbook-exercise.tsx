@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useEffect, useRef, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { authUrlWithNext } from "@/lib/next-destination";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +35,7 @@ export default function PlaybookExercisePage() {
   const [, navigate] = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<EvidenceUploadResponse | null>(null);
 
@@ -83,6 +84,13 @@ export default function PlaybookExercisePage() {
       return res.json() as Promise<EvidenceUploadResponse>;
     },
     onSuccess: (data) => {
+      // I1: sin esto, la caché de ["/api/playbook", slug] (staleTime: Infinity,
+      // refetchOnWindowFocus: false) quedaba obsoleta hasta un hard reload —
+      // "Volver al curso" mostraba "Pendiente" y el álbum sin la foto nueva
+      // aunque el servidor ya la tuviera. Esta clave la comparten esta página
+      // y el tab del curso (client/src/pages/studio-course.tsx), así que
+      // invalidarla refresca ambas superficies.
+      queryClient.invalidateQueries({ queryKey: ["/api/playbook", slug] });
       setResult(data);
       toast({
         title: `¡Evidencia registrada! +${data.pointsAwarded} puntos`,

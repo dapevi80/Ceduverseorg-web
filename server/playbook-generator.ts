@@ -15,6 +15,11 @@ export interface BuiltPlaybook {
   content: PlaybookContent;
   exercises: PlaybookExercise[];
   references: string[];
+  /** 'ai' = generación real de Claude; 'fallback' = playbook mínimo derivado
+   *  del contenido del curso (ver fallbackPlaybook abajo). Persistido en
+   *  course_playbooks.source para que el lector (server/routes/playbook.ts)
+   *  pueda distinguir un resultado degradado de uno real (C1). */
+  source: "ai" | "fallback";
 }
 
 const PLAYBOOK_TOOL = {
@@ -82,6 +87,7 @@ function fallbackPlaybook(course: StudioCourse, modules: StudioModule[]): BuiltP
     },
     exercises,
     references: assembleReferences(modules),
+    source: "fallback",
   };
 }
 
@@ -160,6 +166,7 @@ async function generateWithClaude(course: StudioCourse, modules: StudioModule[])
       exercises,
       // Las referencias NUNCA vienen del LLM: siempre las verbatim del curso.
       references: assembleReferences(modules),
+      source: "ai",
     };
   } catch (err: any) {
     console.error(`[playbook-generator] Generación falló para "${course.slug}" [status=${err?.status ?? "n/a"}]: ${err?.message}. Usando playbook mínimo real.`);
@@ -182,6 +189,7 @@ export async function buildPlaybook(courseSlug: string): Promise<BuiltPlaybook> 
       content: built.content,
       exercises: built.exercises,
       references: built.references,
+      source: built.source,
     })
     .onConflictDoUpdate({
       target: coursePlaybooks.courseSlug,
@@ -189,6 +197,10 @@ export async function buildPlaybook(courseSlug: string): Promise<BuiltPlaybook> 
         content: built.content,
         exercises: built.exercises,
         references: built.references,
+        source: built.source,
+        // Siempre se reescribe, incluso si el reintento volvió a caer en
+        // 'fallback' — así el cooldown de reintento (server/lib/playbook-retry.ts)
+        // reinicia desde este intento en vez de quedar congelado en el primero.
         generatedAt: new Date(),
       },
     });

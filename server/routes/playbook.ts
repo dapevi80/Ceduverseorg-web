@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import multer from "multer";
 import crypto from "crypto";
-import { requireAuth, optionalAuth } from "../auth";
+import { requireAuth } from "../auth";
 import { storage } from "../storage";
 import { db } from "../db";
 import { coursePlaybooks, playbookEvidence, teamUsers, users, profiles } from "@shared/schema";
@@ -12,8 +12,9 @@ import { renderPlaybookPdf } from "../playbook-pdf";
 import { isPlaybookComplete, playbookProgress } from "@shared/playbook-progress";
 import { PLAYBOOK_EVIDENCE_POINTS, PLAYBOOK_COMPLETION_BONUS } from "@shared/playbook-points";
 import { getEmpresaTeam } from "./empresa";
-import { EVIDENCE_MAX_MB, isImageMimetype, extensionForMimetype, safeEvidenceContentType, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "../lib/playbook-upload";
+import { EVIDENCE_MAX_MB, isImageMimetype, extensionForMimetype, safeEvidenceContentType, validateEvidenceFile, shouldAwardCompletionBonus, evidencePointsToAward, isUniqueViolation } from "../lib/playbook-upload";
 import { canViewEvidence } from "../lib/playbook-evidence-access";
+import { shouldRetryFallbackPlaybook } from "../lib/playbook-retry";
 
 /** UUID v4-ish check para no golpear la DB con un id de evidencia con formato inválido
  * (evita depender de que Postgres tire un error de sintaxis que llegaría como 500). */
@@ -70,16 +71,36 @@ async function getTeamMemberIds(teamId: string): Promise<string[]> {
   return members.map((m) => m.userId);
 }
 
+/** Lee (o genera) el playbook cacheado de un curso. C1: una fila cacheada con
+ * source = 'fallback' NUNCA se trata como definitiva — se reintenta la
+ * generación real cuando la fila lleva más del cooldown
+ * (PLAYBOOK_FALLBACK_RETRY_COOLDOWN_MS) sin actualizarse, para no convertir un
+ * fallo transitorio de Anthropic en contenido genérico permanente. El
+ * cooldown evita reintentar (billable) en cada request mientras la falla
+ * sigue vigente; buildPlaybook() siempre reescribe generatedAt, así que si el
+ * reintento vuelve a caer en fallback el cooldown reinicia solo. */
 async function getOrGeneratePlaybook(slug: string) {
   const [existing] = await db.select().from(coursePlaybooks).where(eq(coursePlaybooks.courseSlug, slug));
-  if (existing) return existing;
-  await buildPlaybook(slug);
-  const [created] = await db.select().from(coursePlaybooks).where(eq(coursePlaybooks.courseSlug, slug));
-  return created;
+  if (!existing) {
+    await buildPlaybook(slug);
+    const [created] = await db.select().from(coursePlaybooks).where(eq(coursePlaybooks.courseSlug, slug));
+    return created;
+  }
+  if (shouldRetryFallbackPlaybook(existing)) {
+    await buildPlaybook(slug);
+    const [retried] = await db.select().from(coursePlaybooks).where(eq(coursePlaybooks.courseSlug, slug));
+    return retried;
+  }
+  return existing;
 }
 
 export function registerPlaybookRoutes(app: Express) {
-  app.get("/api/playbook/:slug", optionalAuth, async (req, res, next) => {
+  // requireAuth (I3): el playbook destila objetivos/resumen/estrategias del
+  // contenido de los módulos del curso, y GET .../modules/:index ya exige
+  // login para ese mismo contenido — dejar esta ruta anónima permitía leer
+  // ese resumen sin cuenta/inscripción, y además dejaba disparar una
+  // generación real (billable) por cualquier slug sin autenticar.
+  app.get("/api/playbook/:slug", requireAuth, async (req, res, next) => {
     try {
       const slug = String(req.params.slug);
       const course = await storage.getStudioCourse(slug);
@@ -114,6 +135,10 @@ export function registerPlaybookRoutes(app: Express) {
           exercises,
           references: playbook.references,
           generatedAt: playbook.generatedAt,
+          // C1: expone la procedencia para que el UI pueda distinguir un
+          // playbook real de un fallback degradado (nunca lo trata como
+          // silenciosamente equivalente).
+          source: playbook.source,
         },
         evidenceByExercise,
         progress,
@@ -140,6 +165,21 @@ export function registerPlaybookRoutes(app: Express) {
         return res.status(503).json({ message: "Almacenamiento de evidencia no configurado" });
       }
 
+      // I2 (antifarming): se decide ANTES de insertar si esta es la primera
+      // evidencia de este (userId, courseSlug, exerciseIndex) — solo esa
+      // otorga puntos (evidencePointsToAward, server/lib/playbook-upload.ts).
+      // Subidas adicionales del mismo ejercicio se guardan igual (el álbum
+      // muestra varias fotos por diseño) pero con points=0, así el endpoint
+      // no puede loopearse para inflar puntos sin tope escribiendo objetos de
+      // hasta 8MB en R2.
+      const existingForExercise = await db.select().from(playbookEvidence)
+        .where(and(
+          eq(playbookEvidence.userId, userId),
+          eq(playbookEvidence.courseSlug, slug),
+          eq(playbookEvidence.exerciseIndex, exerciseIndex),
+        ));
+      const pointsToAward = evidencePointsToAward(existingForExercise.length === 0, PLAYBOOK_EVIDENCE_POINTS);
+
       // Sube primero, inserta después: si el upload falla, la excepción se propaga a
       // next(err) (500 explícito) y NUNCA se crea una fila de evidencia apuntando a un
       // archivo que no se guardó ([[feedback_no_silent_degradation]]).
@@ -156,7 +196,7 @@ export function registerPlaybookRoutes(app: Express) {
         courseSlug: slug,
         exerciseIndex,
         photoKey: key,
-        points: PLAYBOOK_EVIDENCE_POINTS,
+        points: pointsToAward,
       }).returning();
 
       const allEvidence = await db.select().from(playbookEvidence)
@@ -215,7 +255,10 @@ export function registerPlaybookRoutes(app: Express) {
 
       res.status(201).json({
         evidence: { exerciseIndex: evidence.exerciseIndex, photoUrl: evidencePhotoPath(evidence.id), points: evidence.points, createdAt: evidence.createdAt },
-        pointsAwarded: PLAYBOOK_EVIDENCE_POINTS,
+        // I2: refleja honestamente lo que de verdad se otorgó (evidence.points,
+        // ya decidido por evidencePointsToAward) — 0 en subidas adicionales del
+        // mismo ejercicio, nunca el máximo fijo aunque no se haya otorgado.
+        pointsAwarded: evidence.points,
         completed: complete,
         bonusAwarded,
       });
@@ -237,7 +280,13 @@ export function registerPlaybookRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
-  app.get("/api/playbook/:slug/export.pdf", optionalAuth, async (req, res, next) => {
+  // requireAuth (I3): mismo motivo que GET /:slug — además de exponer
+  // contenido gateado sin login, dejar esto anónimo permitía forzar el
+  // render de pdfkit+QR (no cacheado) en cada request, CPU sin costo alguno
+  // para quien lo dispara. El navegador manda la cookie de sesión en
+  // window.open (mismo origen), así que un alumno logueado sigue
+  // descargando el PDF sin fricción.
+  app.get("/api/playbook/:slug/export.pdf", requireAuth, async (req, res, next) => {
     try {
       const slug = String(req.params.slug);
       const course = await storage.getStudioCourse(slug);
@@ -246,7 +295,7 @@ export function registerPlaybookRoutes(app: Express) {
       if (!playbook) return res.status(503).json({ message: "No se pudo generar el playbook" });
 
       const pdf = await renderPlaybookPdf(
-        { content: playbook.content as any, exercises: playbook.exercises as any, references: playbook.references as any },
+        { content: playbook.content as any, exercises: playbook.exercises as any, references: playbook.references as any, source: playbook.source as any },
         { slug: course.slug, title: course.title, icon: course.icon },
       );
       res.setHeader("Content-Type", "application/pdf");

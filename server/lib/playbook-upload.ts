@@ -75,6 +75,19 @@ export function shouldAwardCompletionBonus(complete: boolean, alreadyAwarded: bo
   return complete && !alreadyAwarded;
 }
 
+/** Decide cuántos puntos otorga ESTA subida de evidencia (I2 — antifarming).
+ * Solo la PRIMERA evidencia de un (userId, courseSlug, exerciseIndex) otorga
+ * `evidencePoints`; subidas adicionales del mismo ejercicio se siguen
+ * guardando (el álbum muestra varias fotos por ejercicio por diseño — ver
+ * playbook-progress.ts) pero otorgan 0. Sin este límite, un alumno podía
+ * loopear el endpoint de subida para inflar puntos sin tope y escribir
+ * objetos de hasta 8MB ilimitados a R2 a cambio de nada real. El bono de
+ * finalización (shouldAwardCompletionBonus arriba) ya estaba dedupeado; este
+ * es el mismo tipo de regla para los puntos por evidencia individual. */
+export function evidencePointsToAward(isFirstEvidenceForExercise: boolean, evidencePoints: number): number {
+  return isFirstEvidenceForExercise ? evidencePoints : 0;
+}
+
 /** Detecta un unique-violation de Postgres (código 23505) en un error lanzado por el
  * driver `pg`. Dos requests concurrentes pueden ambos leer "todavía no existe" y
  * colisionar en el INSERT (achievements.slug o uq_achievement_users_cert) — en ese
