@@ -47,6 +47,12 @@ export async function seedStudioCourses() {
     if (existing.length > 0) {
       courseId = existing[0].id;
       console.log(`  ↳ Course "${meta.slug}" already exists, skipping course insert`);
+      if (!existing[0].instructor && meta.instructor) {
+        await db.update(studioCourses)
+          .set({ instructor: meta.instructor })
+          .where(eq(studioCourses.id, courseId));
+        console.log(`  ✓ Backfilled instructor for "${meta.slug}": ${meta.instructor}`);
+      }
     } else {
       const [course] = await db.insert(studioCourses).values({
         slug: meta.slug,
@@ -61,6 +67,7 @@ export async function seedStudioCourses() {
         icon: meta.icon,
         color: meta.color,
         source: meta.source,
+        instructor: meta.instructor,
       }).returning();
       courseId = course.id;
       coursesCreated++;
