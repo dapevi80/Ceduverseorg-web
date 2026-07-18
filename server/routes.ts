@@ -58,6 +58,7 @@ import bcrypt from "bcryptjs";
 import { registerCourseRoutes } from "./routes/courses";
 import { registerAdminRoutes } from "./routes/admin";
 import { registerCrmRoutes } from "./routes/crm";
+import { ensureReferralCode } from "./lib/ensure-referral-code";
 import { registerGoogleMeetRoutes } from "./routes/google-meet";
 import { registerMembershipRoutes } from "./routes/membership";
 import { registerCertificateRoutes } from "./routes/certificates";
@@ -286,6 +287,9 @@ export async function registerRoutes(
             await db.update(accounts)
               .set({ referralCode: membershipNumber })
               .where(eq(accounts.id, userId));
+            // El folio tambien debe existir como codigo de referido, o sus links
+            // de invitacion salen como "link incorrecto" y no acreditan nada.
+            await ensureReferralCode(userId, membershipNumber);
 
             createOrUpdateContactCard(userId, { title: "Socio Cooperativo" }).catch(() => {});
           } else {
@@ -1276,11 +1280,17 @@ export async function registerRoutes(
 
       const account = await storage.getAccount(userId);
       if (account?.referralCode) {
-        const existing = await db.select().from(referralCodes).where(
-          and(eq(referralCodes.code, account.referralCode), eq(referralCodes.isActive, true))
-        ).limit(1);
-        const usageCount = existing.length > 0 ? existing[0].usageCount : 0;
-        return res.json({ code: account.referralCode, usageCount });
+        // Antes esto devolvía el folio SIN comprobar que existiera como código
+        // activo en referral_codes (la consulta sólo servía para el contador).
+        // Como los socios cooperativos reciben folio sin fila en esa tabla, la
+        // app entregaba a compartir un código que luego rechazaba al validarlo
+        // ("link incorrecto") y no acreditaba el referido. ensureReferralCode
+        // crea la fila faltante.
+        const ensured = await ensureReferralCode(userId, account.referralCode);
+        return res.json({
+          code: ensured?.code ?? account.referralCode,
+          usageCount: ensured?.usageCount ?? 0,
+        });
       }
 
       const existing = await db.select().from(referralCodes).where(
