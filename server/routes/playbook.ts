@@ -12,7 +12,7 @@ import { renderPlaybookPdf } from "../playbook-pdf";
 import { isPlaybookComplete, playbookProgress } from "@shared/playbook-progress";
 import { PLAYBOOK_EVIDENCE_POINTS, PLAYBOOK_COMPLETION_BONUS } from "@shared/playbook-points";
 import { getEmpresaTeam } from "./empresa";
-import { EVIDENCE_MAX_MB, isImageMimetype, extensionForMimetype, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "../lib/playbook-upload";
+import { EVIDENCE_MAX_MB, isImageMimetype, extensionForMimetype, safeEvidenceContentType, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "../lib/playbook-upload";
 import { canViewEvidence } from "../lib/playbook-evidence-access";
 
 /** UUID v4-ish check para no golpear la DB con un id de evidencia con formato inválido
@@ -58,6 +58,16 @@ function handleEvidenceUpload(req: any, res: any, next: any) {
     }
     return next(err);
   });
+}
+
+/** IDs de usuarios miembros de un equipo — única fuente compartida para las dos
+ * decisiones de PRIVACY que dependen de "quién es parte de este equipo": la lista de
+ * evidencia de /api/empresa/playbook-evidencias y el proxy autenticado de foto. Antes
+ * esta query vivía duplicada en ambos endpoints; una sola copia evita que diverjan. */
+async function getTeamMemberIds(teamId: string): Promise<string[]> {
+  const members = await db.select({ userId: teamUsers.userId })
+    .from(teamUsers).where(eq(teamUsers.teamId, teamId));
+  return members.map((m) => m.userId);
 }
 
 async function getOrGeneratePlaybook(slug: string) {
@@ -254,9 +264,7 @@ export function registerPlaybookRoutes(app: Express) {
       const team = await getEmpresaTeam(userId);
       if (!team) return res.status(403).json({ message: "No tienes una organización" });
 
-      const members = await db.select({ userId: teamUsers.userId })
-        .from(teamUsers).where(eq(teamUsers.teamId, team.id));
-      const memberIds = members.map((m) => m.userId);
+      const memberIds = await getTeamMemberIds(team.id);
       if (memberIds.length === 0) return res.json({ team: { id: team.id, name: team.name }, evidence: [] });
 
       // Privacidad: SOLO evidencia de userIds que son miembros de team.id (obtenido de
@@ -310,9 +318,7 @@ export function registerPlaybookRoutes(app: Express) {
       if (requesterId !== row.userId) {
         const team = await getEmpresaTeam(requesterId);
         if (team) {
-          const members = await db.select({ userId: teamUsers.userId })
-            .from(teamUsers).where(eq(teamUsers.teamId, team.id));
-          requesterTeamMemberIds = members.map((m) => m.userId);
+          requesterTeamMemberIds = await getTeamMemberIds(team.id);
         }
       }
 
@@ -326,12 +332,31 @@ export function registerPlaybookRoutes(app: Express) {
       const obj = await r2Storage.getObject(row.photoKey);
       if (!obj) return res.status(404).json({ message: "Foto no encontrada" });
 
-      res.set("Content-Type", obj.contentType);
+      // El Content-Type nunca se refleja tal cual desde lo guardado en DB — solo se
+      // sirve un valor del mismo allowlist de subida (o application/octet-stream), y
+      // nosniff evita que el navegador "adivine" un tipo ejecutable a partir de los
+      // bytes aunque el Content-Type declarado sea otro (defensa en profundidad contra
+      // el shape de stored-XSS descrito en playbook-upload.ts).
+      res.set("Content-Type", safeEvidenceContentType(obj.contentType));
+      res.set("X-Content-Type-Options", "nosniff");
       if (obj.contentLength) res.set("Content-Length", String(obj.contentLength));
       // Privada: nunca cacheable por proxies/CDNs compartidos ni por el navegador en
       // disco compartido — a diferencia de /audio/:filename, esto es contenido personal.
       res.set("Cache-Control", "private, no-store");
-      (obj.body as any).pipe(res);
+      const stream = obj.body as any;
+      stream.on("error", (streamErr: unknown) => {
+        // Una falla de R2 a mitad de stream no debe quedar como un 'error' sin manejar
+        // en el proceso. Si ya se mandaron headers/bytes no hay forma de convertir esto
+        // en un 5xx limpio (la respuesta ya empezó) — el error handler global también
+        // chequea res.headersSent, pero se evita aquí ya el intento redundante de
+        // responder dos veces.
+        if (res.headersSent) {
+          console.error("R2 stream error after headers sent (foto de evidencia):", streamErr);
+          return;
+        }
+        next(streamErr);
+      });
+      stream.pipe(res);
     } catch (err) { next(err); }
   });
 }

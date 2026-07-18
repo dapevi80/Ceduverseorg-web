@@ -6,26 +6,54 @@
 
 export const EVIDENCE_MAX_MB = 8;
 
-/** multer fileFilter predicate: solo imágenes se aceptan como evidencia. */
+/** Allowlist explícito de mimetypes de evidencia aceptados — solo formatos raster de
+ * foto. image/svg+xml (y cualquier otro image/* no listado) queda deliberadamente
+ * excluido: un SVG es XML capaz de traer <script>, y GET
+ * /api/playbook/evidencia/:id/foto lo serviría inline desde el propio origen de la
+ * app — el shape clásico de stored-XSS. Confiar en el prefijo "image/" que manda el
+ * cliente (wildcard) no es suficiente; solo estos 5 valores exactos se aceptan. */
+export const ALLOWED_EVIDENCE_MIMETYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+] as const;
+
+/** multer fileFilter predicate: solo el allowlist de imágenes raster se acepta como
+ * evidencia (ver ALLOWED_EVIDENCE_MIMETYPES). */
 export function isImageMimetype(mimetype: string): boolean {
-  return mimetype.startsWith("image/");
+  return (ALLOWED_EVIDENCE_MIMETYPES as readonly string[]).includes(mimetype?.toLowerCase());
 }
 
 /** Extensión de archivo a partir del mimetype subido — el key en R2 debe reflejar el
  * formato real (png/webp) en vez de asumir siempre .jpg, que rompe el Content-Type al
- * servir la foto de vuelta. Cualquier image/* no listado cae a "jpg" como default
- * seguro (isImageMimetype ya garantiza que el mimetype empieza con "image/"). */
+ * servir la foto de vuelta. El mapa refleja exactamente ALLOWED_EVIDENCE_MIMETYPES;
+ * cualquier valor fuera del allowlist ya fue rechazado por isImageMimetype antes de
+ * llegar aquí, así que "jpg" es solo un default seguro por si acaso. */
 export function extensionForMimetype(mimetype: string): string {
   const map: Record<string, string> = {
     "image/jpeg": "jpg",
-    "image/jpg": "jpg",
     "image/png": "png",
     "image/webp": "webp",
-    "image/gif": "gif",
     "image/heic": "heic",
     "image/heif": "heif",
   };
   return map[mimetype.toLowerCase()] || "jpg";
+}
+
+/** Content-Type seguro para servir de vuelta una foto de evidencia ya subida (GET
+ * /api/playbook/evidencia/:evidenceId/foto). Defensa en profundidad: nunca refleja
+ * ciegamente el valor guardado en DB como Content-Type de la respuesta — solo un
+ * mimetype que esté en el mismo allowlist de subida se sirve tal cual; cualquier otro
+ * valor (fila vieja, drift futuro en el filtro de subida, dato corrupto) cae a
+ * application/octet-stream en vez de arriesgar que el navegador lo interprete como
+ * HTML/SVG ejecutable. */
+export function safeEvidenceContentType(storedMimetype: string | null | undefined): string {
+  const normalized = storedMimetype?.toLowerCase();
+  return normalized && (ALLOWED_EVIDENCE_MIMETYPES as readonly string[]).includes(normalized)
+    ? normalized
+    : "application/octet-stream";
 }
 
 /** Chequeo post-upload (defensa en profundidad; multer's limits ya aplica el límite de

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EVIDENCE_MAX_MB, isImageMimetype, extensionForMimetype, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "./playbook-upload";
+import { EVIDENCE_MAX_MB, ALLOWED_EVIDENCE_MIMETYPES, isImageMimetype, extensionForMimetype, safeEvidenceContentType, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "./playbook-upload";
 
 describe("EVIDENCE_MAX_MB", () => {
   it("es 8", () => {
@@ -8,10 +8,10 @@ describe("EVIDENCE_MAX_MB", () => {
 });
 
 describe("isImageMimetype", () => {
-  it("acepta jpeg/png/webp", () => {
-    expect(isImageMimetype("image/jpeg")).toBe(true);
-    expect(isImageMimetype("image/png")).toBe(true);
-    expect(isImageMimetype("image/webp")).toBe(true);
+  it("acepta cada mimetype del allowlist (jpeg/png/webp/heic/heif)", () => {
+    for (const mt of ALLOWED_EVIDENCE_MIMETYPES) {
+      expect(isImageMimetype(mt)).toBe(true);
+    }
   });
 
   it("rechaza pdf/video/texto", () => {
@@ -19,21 +19,62 @@ describe("isImageMimetype", () => {
     expect(isImageMimetype("video/mp4")).toBe(false);
     expect(isImageMimetype("text/plain")).toBe(false);
   });
+
+  it("rechaza image/svg+xml (stored-XSS: SVG puede traer <script> y se sirve inline)", () => {
+    expect(isImageMimetype("image/svg+xml")).toBe(false);
+  });
+
+  it("rechaza otros image/* fuera del allowlist explícito (gif, wildcard genérico)", () => {
+    expect(isImageMimetype("image/gif")).toBe(false);
+    expect(isImageMimetype("image/x-made-up")).toBe(false);
+  });
+
+  it("es insensible a mayúsculas", () => {
+    expect(isImageMimetype("IMAGE/PNG")).toBe(true);
+    expect(isImageMimetype("IMAGE/SVG+XML")).toBe(false);
+  });
 });
 
 describe("extensionForMimetype", () => {
-  it("mapea jpeg/png/webp a su extensión real (no todo a .jpg)", () => {
+  it("mapea cada mimetype del allowlist a su extensión real (no todo a .jpg)", () => {
     expect(extensionForMimetype("image/jpeg")).toBe("jpg");
     expect(extensionForMimetype("image/png")).toBe("png");
     expect(extensionForMimetype("image/webp")).toBe("webp");
+    expect(extensionForMimetype("image/heic")).toBe("heic");
+    expect(extensionForMimetype("image/heif")).toBe("heif");
   });
 
   it("es insensible a mayúsculas", () => {
     expect(extensionForMimetype("IMAGE/PNG")).toBe("png");
   });
 
-  it("un image/* desconocido cae a jpg como default seguro", () => {
+  it("un mimetype fuera del allowlist cae a jpg como default seguro", () => {
     expect(extensionForMimetype("image/x-made-up")).toBe("jpg");
+    expect(extensionForMimetype("image/svg+xml")).toBe("jpg");
+  });
+});
+
+describe("safeEvidenceContentType (Content-Type servido de vuelta al proxy de foto)", () => {
+  it("sirve cada mimetype del allowlist tal cual", () => {
+    for (const mt of ALLOWED_EVIDENCE_MIMETYPES) {
+      expect(safeEvidenceContentType(mt)).toBe(mt);
+    }
+  });
+
+  it("normaliza mayúsculas a la forma del allowlist", () => {
+    expect(safeEvidenceContentType("IMAGE/PNG")).toBe("image/png");
+  });
+
+  it("image/svg+xml guardado (dato viejo/corrupto) NUNCA se refleja tal cual → octet-stream", () => {
+    expect(safeEvidenceContentType("image/svg+xml")).toBe("application/octet-stream");
+  });
+
+  it("cualquier valor fuera del allowlist cae a application/octet-stream", () => {
+    expect(safeEvidenceContentType("text/html")).toBe("application/octet-stream");
+    expect(safeEvidenceContentType("application/javascript")).toBe("application/octet-stream");
+    expect(safeEvidenceContentType(null)).toBe("application/octet-stream");
+    expect(safeEvidenceContentType(undefined)).toBe("application/octet-stream");
+    expect(safeEvidenceContentType("")).toBe("application/octet-stream");
   });
 });
 
@@ -50,6 +91,19 @@ describe("validateEvidenceFile", () => {
     const result = validateEvidenceFile({ mimetype: "application/pdf", size: 1000 });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.message).toMatch(/imágenes/i);
+  });
+
+  it("image/svg+xml → rechazo explícito (stored-XSS: no basta con el prefijo image/*)", () => {
+    const result = validateEvidenceFile({ mimetype: "image/svg+xml", size: 1000 });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toMatch(/imágenes/i);
+  });
+
+  it("cada mimetype del allowlist, dentro del límite → aceptado", () => {
+    for (const mt of ALLOWED_EVIDENCE_MIMETYPES) {
+      const result = validateEvidenceFile({ mimetype: mt, size: MAX_BYTES - 1 });
+      expect(result.ok).toBe(true);
+    }
   });
 
   it("imagen dentro del límite → aceptado", () => {
