@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import AudioClassPlayer from "@/components/AudioClassPlayer";
-import TextReader, { useTextReader } from "@/components/TextReader";
 import { useTheme } from "@/components/ThemeProvider";
 import {
   ArrowLeft,
@@ -32,8 +31,6 @@ import {
   ChevronDown,
   X,
   Award,
-  Volume2,
-  VolumeX,
   Download,
   FileText,
   Scale,
@@ -515,29 +512,10 @@ function LectureView({ html, reflections, isStub, onRegenerate, isRegenerating, 
   moduleTitle?: string;
 }) {
   const lectureContentRef = useRef<HTMLDivElement>(null);
-  const [readerActive, setReaderActive] = useState(false);
   const headings = useMemo(() => extractHeadings(html), [html]);
   const processedHtml = useMemo(() => addIdsToHeadings(html), [html]);
   const plainText = useMemo(() => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim(), [html]);
   const readingTime = useMemo(() => Math.ceil(plainText.split(/\s+/).length / 200), [plainText]);
-
-  const toggleSpeech = () => {
-    if (readerActive) {
-      speechSynthesis.cancel();
-      setReaderActive(false);
-      const marks = lectureContentRef.current?.querySelectorAll("[data-reader-highlight]");
-      marks?.forEach(m => {
-        const parent = m.parentNode;
-        if (parent) {
-          const text = document.createTextNode(m.textContent || "");
-          parent.replaceChild(text, m);
-          parent.normalize();
-        }
-      });
-    } else {
-      setReaderActive(true);
-    }
-  };
 
   const handleDownload = async () => {
     const html2pdf = (await import("html2pdf.js")).default;
@@ -592,9 +570,6 @@ function LectureView({ html, reflections, isStub, onRegenerate, isRegenerating, 
           <span className="text-sm text-cedu-ink-muted flex items-center gap-1">
             <Clock size={14} /> ~{readingTime} min de lectura
           </span>
-          <Button variant="outline" size="sm" onClick={toggleSpeech} className="h-8 text-xs gap-1" data-testid="button-listen">
-            {readerActive ? <><VolumeX size={14} /> Detener lectura</> : <><Volume2 size={14} /> Leer en voz alta</>}
-          </Button>
           <Button variant="outline" size="sm" onClick={handleDownload} className="h-8 text-xs gap-1" data-testid="button-download">
             <Download size={14} /> Descargar
           </Button>
@@ -612,8 +587,6 @@ function LectureView({ html, reflections, isStub, onRegenerate, isRegenerating, 
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processedHtml) }}
           data-testid="content-lecture"
         />
-
-        {readerActive && <TextReader contentRef={lectureContentRef} autoStart />}
 
         {reflections && reflections.length > 0 && (
           <div className="mt-8 p-5 bg-cedu-violet-light dark:bg-cedu-violet/10 rounded-xl border border-cedu-violet/10">
@@ -1272,14 +1245,6 @@ export default function StudioCoursePage() {
   const [activeTab, setActiveTab] = useState<ContentTab>("lectura");
   const [showChat, setShowChat] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const staticContentReader = useTextReader();
-
-  useEffect(() => {
-    if (staticContentReader.active) {
-      speechSynthesis.cancel();
-      staticContentReader.setActive(false);
-    }
-  }, [activeModule]);
 
   const { data: courseData, isLoading } = useQuery<{
     course: StudioCourse;
@@ -1780,23 +1745,12 @@ export default function StudioCoursePage() {
                               <span className="text-sm text-cedu-ink-muted dark:text-gray-400 flex items-center gap-1">
                                 <Clock size={14} /> ~{Math.ceil((currentModule.contentHtml.replace(/<[^>]*>/g, " ").split(/\s+/).length) / 200)} min de lectura
                               </span>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={staticContentReader.toggle}
-                                className="h-8 text-xs gap-1"
-                                data-testid="button-static-listen"
-                              >
-                                {staticContentReader.active ? <><VolumeX size={14} /> Detener lectura</> : <><Volume2 size={14} /> Leer en voz alta</>}
-                              </Button>
                             </div>
                             <div
-                              ref={staticContentReader.contentRef}
                               className="prose prose-base max-w-none prose-headings:font-serif prose-headings:text-cedu-ink dark:prose-headings:text-white prose-p:text-cedu-ink-soft dark:prose-p:text-gray-300 prose-p:leading-[1.8] prose-li:text-cedu-ink-soft dark:prose-li:text-gray-300 prose-strong:text-cedu-ink dark:prose-strong:text-white"
                               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentModule.contentHtml) }}
                               data-testid="content-lecture"
                             />
-                            {staticContentReader.active && <TextReader contentRef={staticContentReader.contentRef} autoStart />}
                           </>
                         )}
                       </div>
@@ -1818,23 +1772,12 @@ export default function StudioCoursePage() {
                           <span className="text-sm text-cedu-ink-muted dark:text-gray-400 flex items-center gap-1">
                             <Clock size={14} /> ~{Math.ceil((currentModule.contentHtml.replace(/<[^>]*>/g, " ").split(/\s+/).length) / 200)} min de lectura
                           </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={staticContentReader.toggle}
-                            className="h-8 text-xs gap-1"
-                            data-testid="button-static-listen"
-                          >
-                            {staticContentReader.active ? <><VolumeX size={14} /> Detener lectura</> : <><Volume2 size={14} /> Leer en voz alta</>}
-                          </Button>
                         </div>
                         <div
-                          ref={staticContentReader.contentRef}
                           className="prose prose-base max-w-none prose-headings:font-serif prose-headings:text-cedu-ink dark:prose-headings:text-white prose-p:text-cedu-ink-soft dark:prose-p:text-gray-300 prose-p:leading-[1.8] prose-li:text-cedu-ink-soft dark:prose-li:text-gray-300 prose-strong:text-cedu-ink dark:prose-strong:text-white"
                           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentModule.contentHtml) }}
                           data-testid="content-lecture"
                         />
-                        {staticContentReader.active && <TextReader contentRef={staticContentReader.contentRef} autoStart />}
                       </div>
                     ) : (
                       <LoadingState profile={studentProfile || undefined} />
