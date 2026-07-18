@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EVIDENCE_MAX_MB, isImageMimetype, validateEvidenceFile, shouldAwardCompletionBonus } from "./playbook-upload";
+import { EVIDENCE_MAX_MB, isImageMimetype, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "./playbook-upload";
 
 describe("EVIDENCE_MAX_MB", () => {
   it("es 8", () => {
@@ -65,5 +65,32 @@ describe("shouldAwardCompletionBonus (dedupe del logro)", () => {
   it("incompleto → nunca se otorga, sin importar el historial", () => {
     expect(shouldAwardCompletionBonus(false, false)).toBe(false);
     expect(shouldAwardCompletionBonus(false, true)).toBe(false);
+  });
+});
+
+describe("isUniqueViolation (tolerancia de carrera en awardAchievement/createAchievement)", () => {
+  it("error de pg con code 23505 → true", () => {
+    expect(isUniqueViolation({ code: "23505" })).toBe(true);
+  });
+
+  it("Error real con code 23505 adjunto (forma típica del driver pg) → true", () => {
+    const err = new Error("duplicate key value violates unique constraint");
+    (err as unknown as { code: string }).code = "23505";
+    expect(isUniqueViolation(err)).toBe(true);
+  });
+
+  it("otro código de error de pg (p.ej. FK violation 23503) → false, no se tolera", () => {
+    expect(isUniqueViolation({ code: "23503" })).toBe(false);
+  });
+
+  it("error sin code → false", () => {
+    expect(isUniqueViolation(new Error("boom"))).toBe(false);
+  });
+
+  it("valores no-error (null, undefined, string, number) → false", () => {
+    expect(isUniqueViolation(null)).toBe(false);
+    expect(isUniqueViolation(undefined)).toBe(false);
+    expect(isUniqueViolation("boom")).toBe(false);
+    expect(isUniqueViolation(42)).toBe(false);
   });
 });

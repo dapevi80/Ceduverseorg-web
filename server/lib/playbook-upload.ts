@@ -29,3 +29,13 @@ export function validateEvidenceFile(file: { mimetype: string; size: number } | 
 export function shouldAwardCompletionBonus(complete: boolean, alreadyAwarded: boolean): boolean {
   return complete && !alreadyAwarded;
 }
+
+/** Detecta un unique-violation de Postgres (código 23505) en un error lanzado por el
+ * driver `pg`. Dos requests concurrentes pueden ambos leer "todavía no existe" y
+ * colisionar en el INSERT (achievements.slug o uq_achievement_users_cert) — en ese
+ * caso el resultado correcto ya quedó persistido por el request que ganó la carrera,
+ * así que el perdedor no debe reportar un 500. Cualquier otro error (código distinto,
+ * o sin código) sigue propagándose tal cual — nunca se silencia una falla real. */
+export function isUniqueViolation(err: unknown): boolean {
+  return typeof err === "object" && err !== null && (err as { code?: unknown }).code === "23505";
+}

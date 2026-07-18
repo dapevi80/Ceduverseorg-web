@@ -11,29 +11,39 @@ import { renderPlaybookPdf } from "../playbook-pdf";
 import { isPlaybookComplete, playbookProgress } from "@shared/playbook-progress";
 import { PLAYBOOK_EVIDENCE_POINTS, PLAYBOOK_COMPLETION_BONUS } from "@shared/playbook-points";
 import { getEmpresaTeam } from "./empresa";
-import { EVIDENCE_MAX_MB, isImageMimetype, validateEvidenceFile, shouldAwardCompletionBonus } from "../lib/playbook-upload";
+import { EVIDENCE_MAX_MB, isImageMimetype, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "../lib/playbook-upload";
+
+const EVIDENCE_FILE_FILTER_ERROR = "Solo se aceptan imágenes";
 
 const evidenceUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: EVIDENCE_MAX_MB * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (isImageMimetype(file.mimetype)) cb(null, true);
-    else cb(new Error("Solo se aceptan imágenes"));
+    else cb(new Error(EVIDENCE_FILE_FILTER_ERROR));
   },
 });
 
 /** Wraps multer's single-file upload so file-filter/size-limit failures come back as an
  * explicit 4xx instead of falling through to the app's generic 500 error handler
  * (multer.MulterError doesn't set err.status, so it would otherwise 500 — see
- * [[feedback_no_silent_degradation]]). */
+ * [[feedback_no_silent_degradation]]). Only the known rejection shapes (MulterError,
+ * the fileFilter rejection above) become a 400 — any other error (e.g. a genuine
+ * busboy/stream failure) still propagates to next(err) instead of being swallowed as
+ * a generic 400. */
 function handleEvidenceUpload(req: any, res: any, next: any) {
   evidenceUpload.single("photo")(req, res, (err: unknown) => {
     if (!err) return next();
     if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({ message: `La foto no puede pesar más de ${EVIDENCE_MAX_MB}MB` });
     }
-    const message = err instanceof Error ? err.message : "Archivo inválido";
-    return res.status(400).json({ message });
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ message: err.message || "Archivo inválido" });
+    }
+    if (err instanceof Error && err.message === EVIDENCE_FILE_FILTER_ERROR) {
+      return res.status(400).json({ message: err.message });
+    }
+    return next(err);
   });
 }
 
@@ -131,29 +141,47 @@ export function registerPlaybookRoutes(app: Express) {
         const playbookCourse = await storage.getStudioCourse(slug);
         let achievement = await storage.getAchievementBySlug(achSlug);
         if (!achievement) {
-          achievement = await storage.createAchievement({
-            slug: achSlug,
-            name: `Playbook completado: ${playbookCourse?.title || slug}`,
-            shortDescription: "Completaste todos los ejercicios de campo del Playbook",
-            description: "Aplicaste en tu trabajo real todos los ejercicios de campo del Playbook del curso, documentados con evidencia fotográfica.",
-            category: "Academy",
-            value: PLAYBOOK_COMPLETION_BONUS,
-            icon: "flame",
-          });
+          try {
+            achievement = await storage.createAchievement({
+              slug: achSlug,
+              name: `Playbook completado: ${playbookCourse?.title || slug}`,
+              shortDescription: "Completaste todos los ejercicios de campo del Playbook",
+              description: "Aplicaste en tu trabajo real todos los ejercicios de campo del Playbook del curso, documentados con evidencia fotográfica.",
+              category: "Academy",
+              value: PLAYBOOK_COMPLETION_BONUS,
+              icon: "flame",
+            });
+          } catch (err) {
+            if (!isUniqueViolation(err)) throw err;
+            // Carrera: otro request concurrente ganó la creación del logro (colisión
+            // en achievements.slug, único). Releer el que ya quedó persistido en vez
+            // de convertir esto en un 500 — la evidencia de este request ya se guardó.
+            achievement = await storage.getAchievementBySlug(achSlug);
+            if (!achievement) throw err;
+          }
         }
         const alreadyAwarded = (await storage.getUserAchievements(userId))
           .some((a) => a.achievementId === achievement.id);
         // Dedupe: el bono se otorga a lo más una vez por usuario+curso — volver a
         // subir evidencia (p.ej. re-subir un ejercicio ya completado) nunca lo repite.
         if (shouldAwardCompletionBonus(complete, alreadyAwarded)) {
-          await storage.awardAchievement({
-            userId,
-            achievementId: achievement.id,
-            isActive: true,
-            status: "active",
-            certType: "diploma",
-          });
-          bonusAwarded = true;
+          try {
+            await storage.awardAchievement({
+              userId,
+              achievementId: achievement.id,
+              isActive: true,
+              status: "active",
+              certType: "diploma",
+            });
+            bonusAwarded = true;
+          } catch (err) {
+            if (!isUniqueViolation(err)) throw err;
+            // Carrera: otro request concurrente ya otorgó el bono (colisión en
+            // uq_achievement_users_cert). El DB ya garantiza que no hay doble bono;
+            // este request simplemente perdió la carrera — no es un error real, y la
+            // fila de evidencia ya se insertó y comitió con éxito arriba.
+            bonusAwarded = false;
+          }
         }
       }
 
