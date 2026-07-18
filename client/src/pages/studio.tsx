@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useForceLightMode } from "@/components/ThemeProvider";
+import { useAuth } from "@/hooks/use-auth";
 import { getAuthToken } from "@/lib/auth-token";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,9 +67,14 @@ const LEVEL_COLORS: Record<string, string> = {
   avanzado: "bg-red-100 text-red-700",
 };
 
-function CourseCard({ course }: { course: StudioCourse }) {
+function CourseCard({ course, profileComplete }: { course: StudioCourse; profileComplete: boolean }) {
+  // The one-time profile questionnaire (job title + industry) only needs to
+  // run once, globally — not on every course. Once it's set, go straight to
+  // the course (which has its own "Comenzar curso" enroll gate); only route
+  // through /onboarding while the profile is still missing.
+  const href = profileComplete ? `/tutor-ia/${course.slug}` : `/tutor-ia/${course.slug}/onboarding`;
   return (
-    <Link href={`/tutor-ia/${course.slug}/onboarding`} className="no-underline">
+    <Link href={href} className="no-underline">
       <div
         className="bg-white rounded-2xl border border-black/[0.06] overflow-hidden shadow-sm hover:shadow-md hover:border-cedu-blue/20 transition-all cursor-pointer h-full flex flex-col"
         data-testid={`card-studio-course-${course.slug}`}
@@ -130,9 +136,10 @@ function CourseCard({ course }: { course: StudioCourse }) {
   );
 }
 
-function OnboardingCard({ course }: { course: StudioCourse }) {
+function OnboardingCard({ course, profileComplete }: { course: StudioCourse; profileComplete: boolean }) {
+  const href = profileComplete ? `/tutor-ia/${course.slug}` : `/tutor-ia/${course.slug}/onboarding`;
   return (
-    <Link href={`/tutor-ia/${course.slug}/onboarding`} className="no-underline">
+    <Link href={href} className="no-underline">
       <div
         className="bg-white rounded-2xl border border-cedu-blue/15 overflow-hidden shadow-sm hover:shadow-md hover:border-cedu-blue/30 transition-all cursor-pointer h-full flex flex-col"
         data-testid={`card-onboarding-${course.slug}`}
@@ -186,11 +193,21 @@ function SkeletonCard() {
 export default function StudioPage() {
   useForceLightMode();
   const [, navigate] = useLocation();
+  const { user } = useAuth();
   const [category, setCategory] = useState("");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
   const LIMIT = 12;
+
+  // Global personalization profile (job title + industry). Set once, reused
+  // by every course — course cards route to /onboarding only while this is
+  // still missing, so a returning student never gets the questionnaire again.
+  const { data: studentProfile } = useQuery<{ jobTitle?: string; industry?: string } | null>({
+    queryKey: ["/api/me/student-profile"],
+    enabled: !!user,
+  });
+  const profileComplete = !!studentProfile?.jobTitle;
 
   const { data, isLoading } = useQuery<StudioResponse>({
     queryKey: ["/api/studio/courses", { category, search, page, limit: LIMIT }],
@@ -326,7 +343,7 @@ export default function StudioPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {onboardingData.courses.map((course) => (
-                <OnboardingCard key={course.id} course={course} />
+                <OnboardingCard key={course.id} course={course} profileComplete={profileComplete} />
               ))}
             </div>
           </div>
@@ -356,7 +373,7 @@ export default function StudioPage() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {data?.courses.map((course) => (
-                <CourseCard key={course.id} course={course} />
+                <CourseCard key={course.id} course={course} profileComplete={profileComplete} />
               ))}
             </div>
 

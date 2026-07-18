@@ -1265,13 +1265,31 @@ export default function StudioCoursePage() {
     enabled: !!user,
   });
 
+  // Enrollment must be known BEFORE the generation query below decides whether
+  // to fire: generation is billable (real Claude calls), so it may only start
+  // once the student has actually enrolled/started the course — never from
+  // merely opening/browsing it. See `enabled` on the query right below.
+  const { data: enrollment } = useQuery<any>({
+    queryKey: ["/api/studio/enrollments", slug],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/studio/enrollments");
+      const enrollments = await res.json();
+      return enrollments.find((e: any) => e.courseIdentifier === slug) || null;
+    },
+    enabled: !!user,
+  });
+
   const { data: generatedContent, isLoading: isGenerating } = useQuery<GeneratedContent>({
     queryKey: ["studio-generated", slug, activeModule],
     queryFn: async () => {
       const res = await apiRequest("POST", `/api/studio/courses/${slug}/modules/${activeModule}/generate`);
       return res.json();
     },
-    enabled: !!user && !!courseData,
+    // Gated on enrollment, not just on having opened the course page: without
+    // this, a logged-in visitor merely previewing a course (before clicking
+    // "Comenzar curso") would fire this billable generate call on every mount,
+    // even though the UI below shows an enroll gate instead of content.
+    enabled: !!user && !!courseData && !!enrollment?.id,
     // Generation runs async server-side (~3-5 min). While in progress the server
     // returns a "generating" placeholder; poll until the real content lands.
     // While "failed" and backing off, DON'T poll every 5s forever — that would
@@ -1339,16 +1357,6 @@ export default function StudioCoursePage() {
     onError: () => {
       toast({ title: "Error", description: "No se pudo reiniciar el curso.", variant: "destructive" });
     },
-  });
-
-  const { data: enrollment } = useQuery<any>({
-    queryKey: ["/api/studio/enrollments", slug],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/studio/enrollments");
-      const enrollments = await res.json();
-      return enrollments.find((e: any) => e.courseIdentifier === slug) || null;
-    },
-    enabled: !!user,
   });
 
   const { data: moduleProgressList } = useQuery<ModuleProgress[]>({
@@ -1480,7 +1488,7 @@ export default function StudioCoursePage() {
             ) : (
               <Play size={16} />
             )}
-            Iniciar curso
+            Comenzar curso
           </Button>
           <div className="mt-4">
             <Button variant="outline" onClick={() => navigate("/tutor-ia")} data-testid="button-back-studio">
