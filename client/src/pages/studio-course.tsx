@@ -701,7 +701,14 @@ function StepQuizView({ questions, onQuizComplete, courseSlug, moduleIndex, onNe
   const submitQuizMutation = useMutation({
     mutationFn: async (data: { answers: number[]; score: number }) => {
       const res = await apiRequest("POST", `/api/studio/courses/${courseSlug}/modules/${moduleIndex}/quiz/submit`, data);
-      return res.json();
+      return res.json() as Promise<{ score: number; total: number; scorePercent: number; passed: boolean }>;
+    },
+    onSuccess: (result) => {
+      // Report the result only AFTER the server records the attempt, and use
+      // the server's verdict (result.passed). Firing on click — before this
+      // POST resolves — raced the quiz-attempts refetch against the write and
+      // left the next module locked until a manual reload.
+      onQuizComplete?.(result.score, result.total, result.passed);
     },
   });
 
@@ -727,7 +734,6 @@ function StepQuizView({ questions, onQuizComplete, courseSlug, moduleIndex, onNe
     } else {
       setFinished(true);
       submitQuizMutation.mutate({ answers: [...answers], score: correctCount });
-      onQuizComplete?.(correctCount, total, Math.round((correctCount / total) * 100) >= 70);
     }
   };
 
