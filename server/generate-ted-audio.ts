@@ -80,16 +80,21 @@ function splitTextIntoChunks(text: string, maxChars: number): string[] {
   return chunks;
 }
 
-// Single consistent voice across the whole app (matches Tutor IA's A/B pick).
-// Kept as a field (rather than a bare constant) so the concept stays explicit
-// at each call site, but every entry below now uses the same voice.
-const TTS_VOICE = "ash" as const;
+// Voz por instructor. Yuridia Iturriaga es voz FEMENINA (`coral`); antes usaba
+// `ash` (masculina) por error. Medina se queda en `ash` (masculina). Este mapa
+// es la fuente de verdad del Aula; el Tutor IA tiene su propio mapa equivalente.
+const YURIDIA_VOICE = "coral" as const; // femenina, cálida
+const MEDINA_VOICE = "ash" as const; // masculina, cálida
+type TtsVoice = typeof YURIDIA_VOICE | typeof MEDINA_VOICE;
+
+type CourseFamily = "yuridia" | "medina";
 
 interface CourseEntry {
   slug: string;
   contentHtml: string;
-  voice: typeof TTS_VOICE;
+  voice: TtsVoice;
   audioFilename: string;
+  family: CourseFamily;
 }
 
 function buildCourseList(): CourseEntry[] {
@@ -101,8 +106,9 @@ function buildCourseList(): CourseEntry[] {
       entries.push({
         slug,
         contentHtml: mod.contentHtml,
-        voice: TTS_VOICE,
+        voice: YURIDIA_VOICE,
         audioFilename: mod.audioUrl || `${slug}_ted_talk.mp3`,
+        family: "yuridia",
       });
     }
   }
@@ -115,8 +121,9 @@ function buildCourseList(): CourseEntry[] {
       entries.push({
         slug,
         contentHtml: mod.contentHtml,
-        voice: TTS_VOICE,
+        voice: MEDINA_VOICE,
         audioFilename: filename,
+        family: "medina",
       });
     }
   }
@@ -126,7 +133,7 @@ function buildCourseList(): CourseEntry[] {
 
 async function generateChunkAudio(
   text: string,
-  voice: typeof TTS_VOICE
+  voice: TtsVoice
 ): Promise<Buffer> {
   const response = await openai.audio.speech.create({
     // Steerable TTS: unlike tts-1-hd, gpt-4o-mini-tts honors `instructions`,
@@ -243,23 +250,30 @@ async function main() {
     }
     await generateTedAudio(entry);
   } else {
+    // ONLY_FAMILY=yuridia|medina regenera solo esa familia (p.ej. re-hacer
+    // solo las de Yuridia con `coral` sin tocar las de Medina en `ash`).
+    const onlyFamily = process.env.ONLY_FAMILY as CourseFamily | undefined;
+    const list = onlyFamily
+      ? allEntries.filter((e) => e.family === onlyFamily)
+      : allEntries;
+
     console.log(
-      `[ted-audio] Generating STPS session audio for all ${allEntries.length} courses`
+      `[ted-audio] Generating STPS session audio for ${list.length} courses${onlyFamily ? ` (familia: ${onlyFamily})` : ""}`
     );
     let completed = 0;
     let failed = 0;
 
-    for (const entry of allEntries) {
+    for (const entry of list) {
       try {
         await generateTedAudio(entry);
         completed++;
       } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : String(error);
-        console.error(`[ted-audio] Error generating ${entry.slug}:`, msg);
+        console.error(`[ted-audio] Error generating ${entry.slug} [${entry.voice}]:`, msg);
         failed++;
       }
     }
-    console.log(`[ted-audio] Done: ${completed} succeeded, ${failed} failed out of ${allEntries.length} total`);
+    console.log(`[ted-audio] Done: ${completed} succeeded, ${failed} failed out of ${list.length} total`);
   }
 }
 
