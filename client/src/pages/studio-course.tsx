@@ -1236,12 +1236,22 @@ export default function StudioCoursePage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug || "";
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [activeModule, setActiveModule] = useState(0);
   const [activeTab, setActiveTab] = useState<ContentTab>("lectura");
   const [showChat, setShowChat] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  // Anonymous visitors must never see course content (lecture, modules, etc.) —
+  // only redirect once auth is SETTLED (authLoading === false); redirecting
+  // while auth is still resolving would bounce a logged-in user on refresh,
+  // since `user` starts out null until /api/auth/me resolves.
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [authLoading, user, navigate]);
 
   const { data: courseData, isLoading } = useQuery<{
     course: StudioCourse;
@@ -1471,7 +1481,11 @@ export default function StudioCoursePage() {
     }
   }, [hasEnrollment, moduleProgressList, courseData, resumeApplied]);
 
-  if (isLoading) {
+  if (isLoading || authLoading || !user) {
+    // Covers three states with the same loader: course metadata still
+    // loading, auth still resolving (don't flash content before we know),
+    // and auth settled with no user (the redirect effect above is about to
+    // navigate away — render nothing meanwhile instead of the course).
     return (
       <div className="min-h-screen bg-cedu-cream dark:bg-gray-950 flex items-center justify-center">
         <Loader2 className="animate-spin text-cedu-blue" size={32} />

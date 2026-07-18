@@ -1051,7 +1051,7 @@ export function registerCourseRoutes(app: Express) {
     return res.json({ certs: result.certs });
   });
 
-  app.get("/api/studio/courses/:slug/modules/:index", async (req, res, next) => {
+  app.get("/api/studio/courses/:slug/modules/:index", requireAuth, async (req, res, next) => {
     try {
       const slug = String((req.params.slug as string));
       const moduleIndex = Number((req.params.index as string));
