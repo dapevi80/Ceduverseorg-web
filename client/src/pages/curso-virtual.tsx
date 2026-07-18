@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { authUrlWithNext } from "@/lib/next-destination";
 import { useLocation, useParams, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useForceLightMode } from "@/components/ThemeProvider";
@@ -892,7 +893,8 @@ export default function CursoVirtual() {
   // out null until /api/auth/me resolves.
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      // Lleva el destino para volver a esta clase tras iniciar sesión.
+      navigate(authUrlWithNext(window.location.pathname + window.location.search));
     }
   }, [authLoading, user, navigate]);
 

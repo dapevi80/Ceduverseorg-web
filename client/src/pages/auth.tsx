@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { safeNextDestination } from "@/lib/next-destination";
 import { useForceLightMode } from "@/components/ThemeProvider";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -135,6 +136,12 @@ function AuthPageContent() {
   };
 
   function redirectByRole() {
+    // A dónde volver: si el usuario llegó aquí rebotado desde un link
+    // compartido (/auth?next=/tutor-ia/<curso>/onboarding?ref=...), regresa ahí.
+    // Antes esto mandaba SIEMPRE a /dashboard, así que quien se registraba desde
+    // un link de curso nunca veía el curso que le compartieron.
+    // safeNextDestination sólo acepta rutas internas (ver next-destination.ts).
+    const destino = safeNextDestination(window.location.search) || "/dashboard";
     if (user && inviteToken && !inviteAcceptedRef.current) {
       inviteAcceptedRef.current = true;
       fetch(`/api/invitations/accept/${inviteToken}`, {
@@ -152,9 +159,9 @@ function AuthPageContent() {
         .catch(() => {
           toast({ title: "Error", description: "No se pudo procesar la invitación", variant: "destructive" });
         })
-        .finally(() => setLocation("/dashboard"));
+        .finally(() => setLocation(destino));
     } else {
-      setLocation("/dashboard");
+      setLocation(destino);
     }
   }
 

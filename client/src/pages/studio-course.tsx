@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { authUrlWithNext } from "@/lib/next-destination";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1255,7 +1256,8 @@ export default function StudioCoursePage() {
   // since `user` starts out null until /api/auth/me resolves.
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      // Lleva el destino para volver a este curso tras iniciar sesión.
+      navigate(authUrlWithNext(window.location.pathname + window.location.search));
     }
   }, [authLoading, user, navigate]);
 
