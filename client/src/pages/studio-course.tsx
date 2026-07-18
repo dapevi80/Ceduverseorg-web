@@ -48,8 +48,11 @@ import {
   LogOut,
   Share2,
   Lock,
+  Camera,
+  ClipboardList,
 } from "lucide-react";
 import ShareCourseModal from "@/components/ShareCourseModal";
+import { QRCodeSVG } from "qrcode.react";
 import { certTabMessage, type CertTabState, type PaidCertType } from "@shared/cert-eligibility";
 import {
   Dialog,
@@ -153,7 +156,7 @@ interface ModuleProgress {
   timeSpentSeconds: number | null;
 }
 
-type ContentTab = "lectura" | "mapa" | "quiz" | "fuentes" | "certificado";
+type ContentTab = "lectura" | "mapa" | "quiz" | "fuentes" | "certificado" | "playbook";
 
 const LOADING_TIPS = [
   "El Tutor IA personaliza el contenido a tu puesto e industria",
@@ -1239,6 +1242,156 @@ function CompletionCertificate({ courseName, userName, completedModules, totalMo
   );
 }
 
+interface PlaybookExerciseInfo {
+  index: number;
+  title: string;
+  instruction: string;
+}
+
+interface PlaybookTabData {
+  course: { slug: string; title: string; icon: string | null };
+  playbook: {
+    content: { objetivos: string[]; resumen: string[]; estrategias: string[]; preguntas: string[] };
+    exercises: PlaybookExerciseInfo[];
+    references: string[];
+  };
+  evidenceByExercise: Record<number, { count: number; photoUrls: string[] }>;
+  progress: { done: number; total: number; complete: boolean };
+}
+
+function PlaybookTab({ slug }: { slug: string }) {
+  const [, navigate] = useLocation();
+
+  const { data, isLoading } = useQuery<PlaybookTabData>({
+    queryKey: ["/api/playbook", slug],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/playbook/${slug}`);
+      return res.json();
+    },
+  });
+
+  if (isLoading || !data) {
+    return (
+      <div className="py-12 text-center text-cedu-ink-muted dark:text-gray-500" data-testid="view-playbook-loading">
+        <Loader2 className="animate-spin mx-auto mb-3" size={28} />
+        Cargando Playbook…
+      </div>
+    );
+  }
+
+  const { playbook, evidenceByExercise, progress } = data;
+  const publicUrl = typeof window !== "undefined" ? window.location.origin : "";
+
+  return (
+    <div className="space-y-8" data-testid="view-playbook">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h3 className="font-serif text-lg text-cedu-ink dark:text-white">Playbook del curso</h3>
+          <p className="text-sm text-cedu-ink-muted dark:text-gray-500">
+            {progress.done}/{progress.total} ejercicios completados{progress.complete ? " — ¡Playbook completo! 🏅" : ""}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => window.open(`/api/playbook/${slug}/export.pdf`, "_blank")}
+          data-testid="button-download-playbook-pdf"
+        >
+          <Download size={16} /> Descargar PDF
+        </Button>
+      </div>
+
+      <section>
+        <h4 className="text-sm font-bold text-cedu-blue uppercase tracking-wide mb-2">Objetivos</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-cedu-ink-soft dark:text-gray-300">
+          {playbook.content.objetivos.map((o, i) => <li key={i}>{o}</li>)}
+        </ul>
+      </section>
+
+      <section>
+        <h4 className="text-sm font-bold text-cedu-blue uppercase tracking-wide mb-2">Resumen</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-cedu-ink-soft dark:text-gray-300">
+          {playbook.content.resumen.map((r, i) => <li key={i}>{r}</li>)}
+        </ul>
+      </section>
+
+      <section>
+        <h4 className="text-sm font-bold text-cedu-orange uppercase tracking-wide mb-2">Estrategias</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-cedu-ink-soft dark:text-gray-300">
+          {playbook.content.estrategias.map((e, i) => <li key={i}>{e}</li>)}
+        </ul>
+      </section>
+
+      <section>
+        <h4 className="text-sm font-bold text-cedu-violet uppercase tracking-wide mb-2">Preguntas de reflexión</h4>
+        <ul className="list-disc list-inside space-y-1 text-sm text-cedu-ink-soft dark:text-gray-300">
+          {playbook.content.preguntas.map((p, i) => <li key={i}>{p}</li>)}
+        </ul>
+      </section>
+
+      <section>
+        <h4 className="text-sm font-bold text-cedu-ink dark:text-white uppercase tracking-wide mb-3">Ejercicios de campo</h4>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {playbook.exercises.map((ex) => {
+            const done = (evidenceByExercise[ex.index]?.count || 0) > 0;
+            const exerciseUrl = `${publicUrl}/playbook/${slug}/ejercicio/${ex.index}`;
+            return (
+              <Card key={ex.index} className="p-4" data-testid={`card-exercise-${ex.index}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <Badge variant={done ? "default" : "outline"} className={done ? "bg-cedu-green text-white" : ""}>
+                    {done ? "✅ Hecho" : "Pendiente"}
+                  </Badge>
+                  <span className="text-xs text-cedu-ink-muted dark:text-gray-500">Ejercicio {ex.index + 1}</span>
+                </div>
+                <p className="font-semibold text-cedu-ink dark:text-white text-sm mb-1">{ex.title}</p>
+                <p className="text-xs text-cedu-ink-soft dark:text-gray-400 mb-3">{ex.instruction}</p>
+                <div className="flex items-center gap-3">
+                  <div className="bg-white p-1.5 rounded-lg border border-black/[0.06]">
+                    <QRCodeSVG value={exerciseUrl} size={64} level="M" fgColor="#1b5adf" bgColor="#ffffff" />
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={done ? "outline" : "default"}
+                    onClick={() => navigate(`/playbook/${slug}/ejercicio/${ex.index}`)}
+                    className="gap-1.5"
+                    data-testid={`button-upload-exercise-${ex.index}`}
+                  >
+                    <Camera size={14} /> {done ? "Subir otra foto" : "Subir evidencia"}
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </section>
+
+      {Object.keys(evidenceByExercise).length > 0 && (
+        <section>
+          <h4 className="text-sm font-bold text-cedu-ink dark:text-white uppercase tracking-wide mb-3">Tu álbum de evidencia</h4>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {Object.entries(evidenceByExercise).flatMap(([exIdx, bucket]) =>
+              bucket.photoUrls.map((url, i) => (
+                <a key={`${exIdx}-${i}`} href={url} target="_blank" rel="noopener noreferrer" data-testid={`link-album-photo-${exIdx}-${i}`}>
+                  <img src={url} alt={`Evidencia ejercicio ${Number(exIdx) + 1}`} className="w-full aspect-square object-cover rounded-lg border border-black/[0.06]" />
+                </a>
+              ))
+            )}
+          </div>
+        </section>
+      )}
+
+      {playbook.references.length > 0 && (
+        <section>
+          <h4 className="text-sm font-bold text-cedu-ink dark:text-white uppercase tracking-wide mb-2">Referencias</h4>
+          <ul className="space-y-1 text-xs text-cedu-ink-muted dark:text-gray-500">
+            {playbook.references.map((r, i) => <li key={i}>[{i + 1}] {r}</li>)}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+
 export default function StudioCoursePage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug || "";
@@ -1668,6 +1821,7 @@ export default function StudioCoursePage() {
     { key: "mapa", label: "Mapa Mental", icon: Map },
     { key: "quiz", label: "Quiz", icon: HelpCircle },
     { key: "fuentes", label: "Fuentes", icon: Link2 },
+    { key: "playbook", label: "Playbook", icon: ClipboardList },
     ...(allModulesCompleted ? [{ key: "certificado" as ContentTab, label: "Certificado", icon: Trophy }] : []),
   ];
 
@@ -1980,6 +2134,10 @@ export default function StudioCoursePage() {
                     completedModules={modules.length}
                     totalModules={modules.length}
                   />
+                )}
+
+                {activeTab === "playbook" && (
+                  <PlaybookTab slug={slug} />
                 )}
               </>
             )}
