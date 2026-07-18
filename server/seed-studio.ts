@@ -2,17 +2,20 @@ import { db } from "./db";
 import { studioCourses, studioModules, studioQuizzes } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { studioCourseMeta } from "./data/studio-courses-meta";
+import { splitHtmlBySections } from "@shared/split-html-by-heading";
 
 async function getVideoUrlsForSlug(slug: string): Promise<string[] | undefined> {
   const { videoUrls } = await import("./data/video-urls");
   return videoUrls[slug];
 }
 
+const SPLIT_MIN_CONTENT_LENGTH = 8000;
+
 async function getModulesForSlug(slug: string): Promise<any[] | undefined> {
   const { yuridiaModules } = await import("./data/yuridia-courses");
-  if (yuridiaModules[slug]) return yuridiaModules[slug];
+  if (yuridiaModules[slug]) return splitIfGiant(yuridiaModules[slug], "h3");
   const { medinaModules } = await import("./data/medina-modules");
-  if (medinaModules[slug]) return medinaModules[slug];
+  if (medinaModules[slug]) return splitIfGiant(medinaModules[slug], "h2");
   const { procadistModules } = await import("./data/procadist-modules");
   if (procadistModules[slug]) return procadistModules[slug];
   const { procadistModulesPart2 } = await import("./data/procadist-part2");
@@ -20,6 +23,26 @@ async function getModulesForSlug(slug: string): Promise<any[] | undefined> {
   const { rwaOnboardingModules } = await import("./data/rwa-onboarding-courses");
   if (rwaOnboardingModules[slug]) return rwaOnboardingModules[slug];
   return undefined;
+}
+
+// Rompe un curso de un solo módulo gigante (medina/yuridia) en varios módulos
+// más pequeños, cortando por heading, SIN mutar el arreglo fuente (que es
+// compartido con el seed de Aula y el generador de audio de 29 MP3s).
+function splitIfGiant(modules: any[], headingTag: "h2" | "h3"): any[] {
+  if (!modules || modules.length !== 1) return modules;
+  const only = modules[0];
+  if (!only?.contentHtml || only.contentHtml.length <= SPLIT_MIN_CONTENT_LENGTH) return modules;
+
+  const sections = splitHtmlBySections(only.contentHtml, headingTag);
+  if (sections.length <= 1) return modules;
+
+  return sections.map((s, i) => ({
+    title: s.title || `${only.title} — Parte ${i + 1}`,
+    description: only.description,
+    contentHtml: s.contentHtml,
+    references: i === sections.length - 1 ? only.references : undefined,
+    durationMinutes: Math.max(4, Math.round((only.durationMinutes || 20) / sections.length)),
+  }));
 }
 
 async function getQuizForSlug(slug: string): Promise<any | undefined> {
