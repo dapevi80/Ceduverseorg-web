@@ -211,7 +211,6 @@ function generateProblem(level: number) {
 
 function LoadingState({ profile }: { profile?: { jobTitle?: string; industry?: string } }) {
   const [tipIndex, setTipIndex] = useState(0);
-  const [progress, setProgress] = useState(5);
   const [gameActive, setGameActive] = useState(false);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -224,13 +223,7 @@ function LoadingState({ profile }: { profile?: { jobTitle?: string; industry?: s
 
   useEffect(() => {
     const tipTimer = setInterval(() => setTipIndex(i => (i + 1) % LOADING_TIPS.length), 5000);
-    const progressTimer = setInterval(() => setProgress(p => {
-      if (p < 60) return p + Math.random() * 6 + 2;
-      if (p < 85) return p + Math.random() * 3 + 0.5;
-      if (p < 95) return p + Math.random() * 1.5 + 0.2;
-      return Math.min(p + Math.random() * 0.3, 99);
-    }), 1200);
-    return () => { clearInterval(tipTimer); clearInterval(progressTimer); };
+    return () => clearInterval(tipTimer);
   }, []);
 
   useEffect(() => {
@@ -285,16 +278,21 @@ function LoadingState({ profile }: { profile?: { jobTitle?: string; industry?: s
           <Brain size={28} className="text-white animate-pulse" />
         </div>
         <div>
-          <h3 className="font-serif text-lg text-cedu-ink dark:text-white mb-1">Tu Tutor IA está preparando tu contenido...</h3>
+          <h3 className="font-serif text-lg text-cedu-ink dark:text-white mb-1">Personalizando tu clase a tu perfil…</h3>
+          <p className="text-xs text-cedu-ink-muted dark:text-gray-400 mt-1">
+            Esto toma cerca de un minuto — tu clase se está adaptando a tu puesto e industria. Vale la pena. ✨
+          </p>
           {profile?.jobTitle && (
             <p className="text-xs text-cedu-ink-muted dark:text-gray-400 mt-1">
               Personalizando para: <strong>{profile.jobTitle}</strong> en <strong>{profile.industry || "tu industria"}</strong>
             </p>
           )}
         </div>
-        <div className="px-8">
-          <Progress value={progress} className="h-1.5" />
-          <p className="text-[11px] text-cedu-ink-muted mt-1">{Math.round(progress)}%</p>
+        <div className="px-8 flex items-center justify-center gap-2" data-testid="loading-progress-indeterminate">
+          <Loader2 size={14} className="text-cedu-blue animate-spin shrink-0" aria-hidden="true" />
+          <div className="h-1.5 w-full rounded-full bg-cedu-blue/10 dark:bg-cedu-blue/20 overflow-hidden">
+            <div className="h-full w-2/5 rounded-full bg-gradient-to-r from-cedu-blue to-cedu-violet animate-pulse" />
+          </div>
         </div>
 
         <div className="bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-950 border border-black/[0.06] dark:border-white/10 rounded-2xl p-5 mx-4 shadow-sm" data-testid="mini-game">

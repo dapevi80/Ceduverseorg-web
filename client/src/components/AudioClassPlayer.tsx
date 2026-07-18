@@ -109,14 +109,12 @@ export default function AudioClassPlayer({ courseSlug, moduleIndex, classScript,
 
   if (audioData.status === "generating") {
     return (
-      <div data-testid="audio-player-generating" className="bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-2xl p-5 mb-4">
-        <div className="flex items-center gap-3">
-          <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
-          <div>
-            <p className="font-semibold text-blue-900 dark:text-blue-100 text-sm">Preparando tu clase en audio...</p>
-            <p className="text-blue-600 dark:text-blue-400 text-xs mt-0.5">Esto puede tomar unos 30 segundos</p>
-          </div>
-        </div>
+      <div
+        data-testid="audio-player-generating"
+        className="flex items-center gap-2 text-blue-700 dark:text-blue-300 text-xs mb-4 px-1"
+      >
+        <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+        <span>🎧 Tu audio se está preparando — puedes ir leyendo; el play se activa solo al terminar.</span>
       </div>
     );
   }
