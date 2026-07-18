@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import multer from "multer";
+import crypto from "crypto";
 import { requireAuth, optionalAuth } from "../auth";
 import { storage } from "../storage";
 import { db } from "../db";
@@ -11,7 +12,19 @@ import { renderPlaybookPdf } from "../playbook-pdf";
 import { isPlaybookComplete, playbookProgress } from "@shared/playbook-progress";
 import { PLAYBOOK_EVIDENCE_POINTS, PLAYBOOK_COMPLETION_BONUS } from "@shared/playbook-points";
 import { getEmpresaTeam } from "./empresa";
-import { EVIDENCE_MAX_MB, isImageMimetype, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "../lib/playbook-upload";
+import { EVIDENCE_MAX_MB, isImageMimetype, extensionForMimetype, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "../lib/playbook-upload";
+import { canViewEvidence } from "../lib/playbook-evidence-access";
+
+/** UUID v4-ish check para no golpear la DB con un id de evidencia con formato inválido
+ * (evita depender de que Postgres tire un error de sintaxis que llegaría como 500). */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Ruta pública (nunca la URL directa de R2) para servir una foto de evidencia — el
+ * cliente siempre recibe esto en el campo `photoUrl`, autenticado por
+ * GET /api/playbook/evidencia/:evidenceId/foto. */
+function evidencePhotoPath(evidenceId: string): string {
+  return `/api/playbook/evidencia/${evidenceId}/foto`;
+}
 
 const EVIDENCE_FILE_FILTER_ERROR = "Solo se aceptan imágenes";
 
@@ -78,7 +91,7 @@ export function registerPlaybookRoutes(app: Express) {
         for (const row of rows) {
           const bucket = evidenceByExercise[row.exerciseIndex] || { count: 0, photoUrls: [] };
           bucket.count += 1;
-          bucket.photoUrls.push(row.photoUrl);
+          bucket.photoUrls.push(evidencePhotoPath(row.id));
           evidenceByExercise[row.exerciseIndex] = bucket;
         }
         progress = playbookProgress(exercises.length, rows.map((r) => r.exerciseIndex));
@@ -120,14 +133,19 @@ export function registerPlaybookRoutes(app: Express) {
       // Sube primero, inserta después: si el upload falla, la excepción se propaga a
       // next(err) (500 explícito) y NUNCA se crea una fila de evidencia apuntando a un
       // archivo que no se guardó ([[feedback_no_silent_degradation]]).
-      const key = `evidence/${slug}/${userId}/${exerciseIndex}-${Date.now()}.jpg`;
-      const photoUrl = await r2Storage.uploadBuffer(req.file!.buffer, key, req.file!.mimetype);
+      // El key incluye un token aleatorio (no Date.now(), adivinable) y la extensión
+      // real del mimetype subido (no siempre .jpg) — nunca se persiste ni se devuelve
+      // la URL pública de R2; solo este key privado, servido por el proxy autenticado.
+      const token = crypto.randomBytes(16).toString("hex");
+      const ext = extensionForMimetype(req.file!.mimetype);
+      const key = `evidence/${slug}/${userId}/${exerciseIndex}-${token}.${ext}`;
+      await r2Storage.uploadBuffer(req.file!.buffer, key, req.file!.mimetype);
 
       const [evidence] = await db.insert(playbookEvidence).values({
         userId,
         courseSlug: slug,
         exerciseIndex,
-        photoUrl,
+        photoKey: key,
         points: PLAYBOOK_EVIDENCE_POINTS,
       }).returning();
 
@@ -186,7 +204,7 @@ export function registerPlaybookRoutes(app: Express) {
       }
 
       res.status(201).json({
-        evidence: { exerciseIndex: evidence.exerciseIndex, photoUrl: evidence.photoUrl, points: evidence.points, createdAt: evidence.createdAt },
+        evidence: { exerciseIndex: evidence.exerciseIndex, photoUrl: evidencePhotoPath(evidence.id), points: evidence.points, createdAt: evidence.createdAt },
         pointsAwarded: PLAYBOOK_EVIDENCE_POINTS,
         completed: complete,
         bonusAwarded,
@@ -204,7 +222,7 @@ export function registerPlaybookRoutes(app: Express) {
         .where(and(eq(playbookEvidence.userId, userId), eq(playbookEvidence.courseSlug, slug)))
         .orderBy(playbookEvidence.createdAt);
       res.json({
-        evidence: rows.map((r) => ({ exerciseIndex: r.exerciseIndex, photoUrl: r.photoUrl, points: r.points, createdAt: r.createdAt })),
+        evidence: rows.map((r) => ({ exerciseIndex: r.exerciseIndex, photoUrl: evidencePhotoPath(r.id), points: r.points, createdAt: r.createdAt })),
       });
     } catch (err) { next(err); }
   });
@@ -244,10 +262,10 @@ export function registerPlaybookRoutes(app: Express) {
       // Privacidad: SOLO evidencia de userIds que son miembros de team.id (obtenido de
       // getEmpresaTeam, ligado al propio equipo del solicitante) — WHERE userId IN memberIds.
       const rows = await db.select({
+        id: playbookEvidence.id,
         userId: playbookEvidence.userId,
         courseSlug: playbookEvidence.courseSlug,
         exerciseIndex: playbookEvidence.exerciseIndex,
-        photoUrl: playbookEvidence.photoUrl,
         points: playbookEvidence.points,
         createdAt: playbookEvidence.createdAt,
         fullName: profiles.fullName,
@@ -259,7 +277,61 @@ export function registerPlaybookRoutes(app: Express) {
         .where(inArray(playbookEvidence.userId, memberIds))
         .orderBy(playbookEvidence.createdAt);
 
-      res.json({ team: { id: team.id, name: team.name }, evidence: rows });
+      const evidence = rows.map((r) => ({
+        userId: r.userId,
+        courseSlug: r.courseSlug,
+        exerciseIndex: r.exerciseIndex,
+        photoUrl: evidencePhotoPath(r.id),
+        points: r.points,
+        createdAt: r.createdAt,
+        fullName: r.fullName,
+        email: r.email,
+      }));
+
+      res.json({ team: { id: team.id, name: team.name }, evidence });
+    } catch (err) { next(err); }
+  });
+
+  // Proxy autenticado de la foto de evidencia: nunca se expone la URL pública de R2.
+  // Autorización (predicado puro testeado en server/lib/playbook-evidence-access.ts):
+  // el dueño siempre puede verla; empresa/admin puede verla SOLO si el dueño es
+  // miembro de su propio equipo (getEmpresaTeam del solicitante); cualquier otro caso
+  // → 403. Un equipo ausente o vacío jamás se traduce en acceso.
+  app.get("/api/playbook/evidencia/:evidenceId/foto", requireAuth, async (req, res, next) => {
+    try {
+      const evidenceId = String(req.params.evidenceId);
+      if (!UUID_RE.test(evidenceId)) return res.status(404).json({ message: "Evidencia no encontrada" });
+
+      const [row] = await db.select().from(playbookEvidence).where(eq(playbookEvidence.id, evidenceId));
+      if (!row) return res.status(404).json({ message: "Evidencia no encontrada" });
+
+      const requesterId = req.supabaseUserId!;
+      let requesterTeamMemberIds: string[] | null = null;
+      if (requesterId !== row.userId) {
+        const team = await getEmpresaTeam(requesterId);
+        if (team) {
+          const members = await db.select({ userId: teamUsers.userId })
+            .from(teamUsers).where(eq(teamUsers.teamId, team.id));
+          requesterTeamMemberIds = members.map((m) => m.userId);
+        }
+      }
+
+      const allowed = canViewEvidence({ requesterId, ownerId: row.userId, requesterTeamMemberIds });
+      if (!allowed) return res.status(403).json({ message: "No tienes acceso a esta evidencia" });
+
+      if (!r2Storage.isConfigured) {
+        return res.status(503).json({ message: "Almacenamiento de evidencia no configurado" });
+      }
+
+      const obj = await r2Storage.getObject(row.photoKey);
+      if (!obj) return res.status(404).json({ message: "Foto no encontrada" });
+
+      res.set("Content-Type", obj.contentType);
+      if (obj.contentLength) res.set("Content-Length", String(obj.contentLength));
+      // Privada: nunca cacheable por proxies/CDNs compartidos ni por el navegador en
+      // disco compartido — a diferencia de /audio/:filename, esto es contenido personal.
+      res.set("Cache-Control", "private, no-store");
+      (obj.body as any).pipe(res);
     } catch (err) { next(err); }
   });
 }

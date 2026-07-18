@@ -664,7 +664,7 @@ export const playbookEvidence = pgTable("playbook_evidence", {
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   courseSlug: text("course_slug").notNull().references(() => studioCourses.slug, { onDelete: "cascade" }),
   exerciseIndex: integer("exercise_index").notNull(),
-  photoUrl: text("photo_url").notNull(),
+  photoKey: text("photo_key").notNull(),
   points: integer("points").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [

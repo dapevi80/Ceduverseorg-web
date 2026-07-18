@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS playbook_evidence (
   user_id        uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   course_slug    text NOT NULL REFERENCES studio_courses(slug) ON DELETE CASCADE,
   exercise_index integer NOT NULL,
-  photo_url      text NOT NULL,
+  photo_key      text NOT NULL,
   points         integer NOT NULL,
   created_at     timestamptz NOT NULL DEFAULT now()
 );

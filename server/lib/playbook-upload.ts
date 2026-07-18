@@ -11,6 +11,23 @@ export function isImageMimetype(mimetype: string): boolean {
   return mimetype.startsWith("image/");
 }
 
+/** Extensión de archivo a partir del mimetype subido — el key en R2 debe reflejar el
+ * formato real (png/webp) en vez de asumir siempre .jpg, que rompe el Content-Type al
+ * servir la foto de vuelta. Cualquier image/* no listado cae a "jpg" como default
+ * seguro (isImageMimetype ya garantiza que el mimetype empieza con "image/"). */
+export function extensionForMimetype(mimetype: string): string {
+  const map: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "image/heic": "heic",
+    "image/heif": "heif",
+  };
+  return map[mimetype.toLowerCase()] || "jpg";
+}
+
 /** Chequeo post-upload (defensa en profundidad; multer's limits ya aplica el límite de
  * tamaño a nivel de stream, pero esto deja la regla expresable/testeable como un
  * predicado plano). */

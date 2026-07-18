@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EVIDENCE_MAX_MB, isImageMimetype, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "./playbook-upload";
+import { EVIDENCE_MAX_MB, isImageMimetype, extensionForMimetype, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation } from "./playbook-upload";
 
 describe("EVIDENCE_MAX_MB", () => {
   it("es 8", () => {
@@ -18,6 +18,22 @@ describe("isImageMimetype", () => {
     expect(isImageMimetype("application/pdf")).toBe(false);
     expect(isImageMimetype("video/mp4")).toBe(false);
     expect(isImageMimetype("text/plain")).toBe(false);
+  });
+});
+
+describe("extensionForMimetype", () => {
+  it("mapea jpeg/png/webp a su extensión real (no todo a .jpg)", () => {
+    expect(extensionForMimetype("image/jpeg")).toBe("jpg");
+    expect(extensionForMimetype("image/png")).toBe("png");
+    expect(extensionForMimetype("image/webp")).toBe("webp");
+  });
+
+  it("es insensible a mayúsculas", () => {
+    expect(extensionForMimetype("IMAGE/PNG")).toBe("png");
+  });
+
+  it("un image/* desconocido cae a jpg como default seguro", () => {
+    expect(extensionForMimetype("image/x-made-up")).toBe("jpg");
   });
 });
 
