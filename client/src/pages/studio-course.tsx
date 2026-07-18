@@ -167,7 +167,7 @@ function ModulePill({ index, title, active, completed, onClick }: {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+      className={`flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
         active
           ? "bg-cedu-blue text-white shadow-sm"
           : completed
@@ -517,41 +517,6 @@ function LectureView({ html, reflections, isStub, onRegenerate, isRegenerating, 
   const plainText = useMemo(() => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim(), [html]);
   const readingTime = useMemo(() => Math.ceil(plainText.split(/\s+/).length / 200), [plainText]);
 
-  const handleDownload = async () => {
-    const html2pdf = (await import("html2pdf.js")).default;
-    const DOMPurify = (await import("dompurify")).default;
-    const container = document.createElement("div");
-    const cleanTitle = DOMPurify.sanitize(moduleTitle || "Módulo");
-    const cleanHtml = DOMPurify.sanitize(processedHtml);
-    const cleanReflections = reflections?.map(r => DOMPurify.sanitize(r)) || [];
-    container.innerHTML = `
-      <div style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 40px; color: #1a1a2e;">
-        <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #1b5adf;">
-          <h1 style="font-family: 'DM Serif Display', serif; font-size: 22px; color: #1b5adf; margin: 0;">Ceduverse · Tutor IA</h1>
-          <p style="color: #666; font-size: 11px; margin-top: 4px;">${cleanTitle}</p>
-        </div>
-        <div style="line-height: 1.8; font-size: 14px;">${cleanHtml}</div>
-        ${cleanReflections.length ? `
-          <div style="margin-top: 30px; padding: 20px; background: #f3f0ff; border-radius: 12px; border-left: 4px solid #7c3aed;">
-            <h4 style="font-family: 'DM Serif Display', serif; color: #7c3aed; margin: 0 0 12px 0;">Preguntas de reflexión</h4>
-            <ol style="margin: 0; padding-left: 20px;">
-              ${cleanReflections.map(r => `<li style="margin-bottom: 6px; color: #444;">${r}</li>`).join("")}
-            </ol>
-          </div>` : ""}
-        <div style="text-align: center; margin-top: 40px; padding-top: 15px; border-top: 1px solid #ddd; color: #999; font-size: 10px;">
-          Generado por Ceduverse Tutor IA · ceduverse.org
-        </div>
-      </div>
-    `;
-    html2pdf().set({
-      margin: [10, 10, 10, 10],
-      filename: `ceduverse-${moduleTitle?.replace(/\s+/g, "-").toLowerCase() || "lectura"}.pdf`,
-      image: { type: "jpeg", quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "letter", orientation: "portrait" },
-    }).from(container).save();
-  };
-
   return (
     <div className="flex gap-6" data-testid="view-lectura">
       <div className="flex-1 min-w-0">
@@ -566,15 +531,19 @@ function LectureView({ html, reflections, isStub, onRegenerate, isRegenerating, 
           />
         )}
 
-        <div className="flex items-center gap-3 mb-6 flex-wrap">
-          <span className="text-sm text-cedu-ink-muted flex items-center gap-1">
+        <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+          <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-cedu-blue bg-cedu-blue-light dark:bg-cedu-blue/15 dark:text-blue-300 px-3 py-1.5 rounded-full">
             <Clock size={14} /> ~{readingTime} min de lectura
           </span>
-          <Button variant="outline" size="sm" onClick={handleDownload} className="h-8 text-xs gap-1" data-testid="button-download">
-            <Download size={14} /> Descargar
-          </Button>
           {!isStub && (
-            <Button variant="ghost" size="sm" onClick={onRegenerate} disabled={isRegenerating} className="h-8 text-xs gap-1 text-cedu-ink-muted" data-testid="button-regenerate">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRegenerate}
+              disabled={isRegenerating}
+              className="min-h-9 text-xs sm:text-sm gap-1.5 text-cedu-ink-muted hover:text-cedu-blue hover:bg-cedu-blue-light dark:hover:bg-cedu-blue/10"
+              data-testid="button-regenerate"
+            >
               {isRegenerating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
               Regenerar
             </Button>
@@ -583,7 +552,7 @@ function LectureView({ html, reflections, isStub, onRegenerate, isRegenerating, 
 
         <div
           ref={lectureContentRef}
-          className="prose prose-base max-w-none prose-headings:font-serif prose-headings:text-cedu-ink dark:prose-headings:text-white prose-p:text-cedu-ink-soft dark:prose-p:text-gray-300 prose-p:leading-[1.8] prose-li:text-cedu-ink-soft dark:prose-li:text-gray-300 prose-li:leading-[1.8] prose-strong:text-cedu-ink dark:prose-strong:text-white prose-blockquote:border-cedu-blue prose-blockquote:bg-cedu-blue-light/30 dark:prose-blockquote:bg-cedu-blue/10 prose-blockquote:rounded-lg prose-blockquote:py-1 prose-blockquote:text-cedu-ink-soft dark:prose-blockquote:text-gray-200 [&_blockquote_em]:text-cedu-ink-soft dark:[&_blockquote_em]:text-gray-300 [&_blockquote_p]:text-cedu-ink-soft dark:[&_blockquote_p]:text-gray-200 [&_blockquote_strong]:text-cedu-ink dark:[&_blockquote_strong]:text-white prose-em:text-cedu-ink-soft dark:prose-em:text-gray-300 prose-table:text-sm [&_td]:border [&_td]:border-black/[0.06] dark:[&_td]:border-white/[0.08] [&_td]:px-3 [&_td]:py-2 [&_td]:text-cedu-ink-soft dark:[&_td]:text-gray-300 [&_th]:border [&_th]:border-black/[0.06] dark:[&_th]:border-white/[0.08] [&_th]:px-3 [&_th]:py-2 [&_th]:bg-gray-50 dark:[&_th]:bg-gray-800 dark:[&_th]:text-white dark:prose-a:text-cedu-blue dark:prose-code:text-gray-200"
+          className="prose prose-base max-w-none prose-headings:font-serif prose-h1:text-cedu-ink dark:prose-h1:text-white prose-h2:text-cedu-blue dark:prose-h2:text-blue-300 prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-cedu-blue/15 dark:prose-h2:border-cedu-blue/25 prose-h3:text-cedu-violet dark:prose-h3:text-violet-300 prose-h3:mt-8 prose-h3:mb-3 prose-h4:text-cedu-ink dark:prose-h4:text-white prose-p:text-cedu-ink-soft dark:prose-p:text-gray-300 prose-p:leading-[1.8] prose-li:text-cedu-ink-soft dark:prose-li:text-gray-300 prose-li:leading-[1.8] prose-strong:text-cedu-ink dark:prose-strong:text-white prose-blockquote:border-cedu-blue prose-blockquote:bg-cedu-blue-light/30 dark:prose-blockquote:bg-cedu-blue/10 prose-blockquote:rounded-lg prose-blockquote:py-1 prose-blockquote:text-cedu-ink-soft dark:prose-blockquote:text-gray-200 [&_blockquote_em]:text-cedu-ink-soft dark:[&_blockquote_em]:text-gray-300 [&_blockquote_p]:text-cedu-ink-soft dark:[&_blockquote_p]:text-gray-200 [&_blockquote_strong]:text-cedu-ink dark:[&_blockquote_strong]:text-white prose-em:text-cedu-ink-soft dark:prose-em:text-gray-300 prose-table:text-sm [&_td]:border [&_td]:border-black/[0.06] dark:[&_td]:border-white/[0.08] [&_td]:px-3 [&_td]:py-2 [&_td]:text-cedu-ink-soft dark:[&_td]:text-gray-300 [&_th]:border [&_th]:border-black/[0.06] dark:[&_th]:border-white/[0.08] [&_th]:px-3 [&_th]:py-2 [&_th]:bg-gray-50 dark:[&_th]:bg-gray-800 dark:[&_th]:text-white dark:prose-a:text-cedu-blue dark:prose-code:text-gray-200"
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processedHtml) }}
           data-testid="content-lecture"
         />
@@ -1469,29 +1438,32 @@ export default function StudioCoursePage() {
 
   if (user && !hasEnrollment) {
     return (
-      <div className="min-h-screen bg-cedu-cream dark:bg-gray-950 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <span className="text-5xl mb-4 block">{course.icon || "📘"}</span>
-          <h1 className="font-serif text-2xl text-cedu-ink dark:text-white mb-2" data-testid="text-course-title">{course.title}</h1>
-          <p className="text-sm text-cedu-ink-muted dark:text-gray-400 mb-2">{course.category} · {course.durationMinutes || 60} min</p>
+      <div className="min-h-screen bg-cedu-cream dark:bg-gray-950 flex items-center justify-center px-4">
+        <div className="text-center w-full max-w-md mx-auto">
+          <span className="text-5xl mb-4 flex items-center justify-center w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-cedu-blue-light to-cedu-violet-light dark:from-cedu-blue/15 dark:to-cedu-violet/15">
+            {course.icon || "📘"}
+          </span>
+          <h1 className="font-serif text-2xl text-cedu-ink dark:text-white mt-5 mb-2" data-testid="text-course-title">{course.title}</h1>
+          <p className="text-sm font-medium text-cedu-blue mb-3">{course.category} · {course.durationMinutes || 60} min</p>
           {course.description && (
-            <p className="text-sm text-cedu-ink-soft dark:text-gray-300 mb-6">{course.description}</p>
+            <p className="text-sm text-cedu-ink-soft dark:text-gray-300 mb-7 leading-relaxed">{course.description}</p>
           )}
           <Button
+            size="lg"
             onClick={() => enrollMutation.mutate()}
             disabled={enrollMutation.isPending}
-            className="bg-cedu-blue hover:bg-cedu-blue/90 text-white gap-2"
+            className="bg-cedu-blue hover:bg-cedu-blue/90 text-white gap-2 rounded-xl w-full max-w-xs min-h-12 text-base shadow-sm"
             data-testid="button-start-course"
           >
             {enrollMutation.isPending ? (
-              <Loader2 size={16} className="animate-spin" />
+              <Loader2 size={18} className="animate-spin" />
             ) : (
-              <Play size={16} />
+              <Play size={18} />
             )}
             Comenzar curso
           </Button>
           <div className="mt-4">
-            <Button variant="outline" onClick={() => navigate("/tutor-ia")} data-testid="button-back-studio">
+            <Button variant="outline" onClick={() => navigate("/tutor-ia")} className="rounded-xl min-h-10" data-testid="button-back-studio">
               <ArrowLeft size={14} className="mr-2" /> Volver al catálogo
             </Button>
           </div>
@@ -1514,24 +1486,26 @@ export default function StudioCoursePage() {
             </div>
             <div className="flex flex-col gap-3 items-center">
               <Button
+                size="lg"
                 onClick={() => setShowResumeLanding(false)}
-                className="bg-cedu-blue hover:bg-cedu-blue/90 text-white gap-2 w-full max-w-xs"
+                className="bg-cedu-blue hover:bg-cedu-blue/90 text-white gap-2 w-full max-w-xs rounded-xl min-h-12 text-base shadow-sm"
                 data-testid="button-continue-course"
               >
-                <Play size={16} /> Continuar curso
+                <Play size={18} /> Continuar curso
               </Button>
               <Button
                 variant="outline"
+                size="lg"
                 onClick={() => { setShowResumeLanding(false); setShowResetDialog(true); }}
-                className="gap-2 w-full max-w-xs"
+                className="gap-2 w-full max-w-xs rounded-xl min-h-11"
                 data-testid="button-restart-course-landing"
               >
-                <RotateCcw size={14} /> Reiniciar curso
+                <RotateCcw size={16} /> Reiniciar curso
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => { setShowUnenrollDialog(true); }}
-                className="text-cedu-ink-muted dark:text-gray-400 gap-2"
+                className="text-cedu-ink-muted dark:text-gray-400 gap-2 min-h-10"
                 data-testid="button-leave-course-landing"
               >
                 <LogOut size={14} /> Salir del curso
@@ -1616,28 +1590,28 @@ export default function StudioCoursePage() {
   return (
     <div className="min-h-screen bg-cedu-cream dark:bg-gray-950 transition-colors">
       <header className="bg-white dark:bg-gray-900 border-b border-black/[0.06] dark:border-white/[0.08] sticky top-0 z-30">
-        <div className="max-w-[1600px] mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               onClick={() => navigate("/tutor-ia")}
-              className="text-cedu-ink-muted dark:text-gray-400 hover:text-cedu-ink dark:hover:text-white transition-colors"
+              className="shrink-0 -ml-1 p-1.5 rounded-lg text-cedu-ink-muted dark:text-gray-400 hover:text-cedu-blue hover:bg-cedu-blue-light dark:hover:bg-white/10 dark:hover:text-white transition-colors"
               data-testid="button-back-catalog"
             >
               <ArrowLeft size={18} />
             </button>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">{course.icon || "📘"}</span>
-              <div>
-                <h1 className="font-semibold text-cedu-ink dark:text-white text-sm leading-none line-clamp-1" data-testid="text-course-title">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-2xl shrink-0">{course.icon || "📘"}</span>
+              <div className="min-w-0">
+                <h1 className="font-semibold text-cedu-ink dark:text-white text-sm leading-none truncate" data-testid="text-course-title">
                   {course.title}
                 </h1>
-                <p className="text-[10px] text-cedu-ink-muted dark:text-gray-500">{course.category} · {course.durationMinutes || 60} min</p>
+                <p className="text-[10px] text-cedu-ink-muted dark:text-gray-500 truncate">{course.category} · {course.durationMinutes || 60} min</p>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {course.dc3Available && (
-              <Badge variant="outline" className="text-green-600 border-green-300 dark:text-green-400 dark:border-green-700 text-[10px] gap-1">
+              <Badge variant="outline" className="hidden md:inline-flex text-green-600 border-green-300 dark:text-green-400 dark:border-green-700 text-[10px] gap-1">
                 <FileCheck size={10} /> DC3 STPS
               </Badge>
             )}
@@ -1646,29 +1620,29 @@ export default function StudioCoursePage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowResetDialog(true)}
-                className="text-cedu-orange border-cedu-orange/30 hover:bg-cedu-orange-light gap-1 text-xs"
+                className="text-cedu-orange border-cedu-orange/30 hover:bg-cedu-orange-light gap-1 text-xs px-2 sm:px-3"
                 data-testid="button-restart-course"
               >
-                <RotateCcw size={12} /> Reiniciar
+                <RotateCcw size={12} /> <span className="hidden sm:inline">Reiniciar</span>
               </Button>
             )}
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate("/dashboard")}
-              className="gap-1 text-xs text-cedu-ink-muted border-black/10 dark:border-white/10 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="gap-1 text-xs text-cedu-ink-muted border-black/10 dark:border-white/10 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 px-2 sm:px-3"
               data-testid="button-continue-later"
             >
-              <Clock size={12} /> Continuar después
+              <Clock size={12} /> <span className="hidden sm:inline">Continuar después</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowShareModal(true)}
-              className="gap-1 text-xs text-cedu-blue border-cedu-blue/20 hover:bg-cedu-blue-light dark:hover:bg-cedu-blue/10"
+              className="gap-1 text-xs text-cedu-blue border-cedu-blue/20 hover:bg-cedu-blue-light dark:hover:bg-cedu-blue/10 px-2 sm:px-3"
               data-testid="button-share-course"
             >
-              <Share2 size={12} /> Invitar
+              <Share2 size={12} /> <span className="hidden sm:inline">Invitar</span>
             </Button>
             <button
               onClick={toggleTheme}
@@ -1690,7 +1664,7 @@ export default function StudioCoursePage() {
       </header>
 
       <div className="bg-white dark:bg-gray-900 border-b border-black/[0.06] dark:border-white/[0.08] overflow-x-auto">
-        <div className="max-w-[1600px] mx-auto px-4 py-2 flex gap-2">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-4 py-2 flex gap-2">
           {modules.map((mod, i) => (
             <ModulePill
               key={mod.id}
@@ -1705,16 +1679,16 @@ export default function StudioCoursePage() {
       </div>
 
       <div className="max-w-[1600px] mx-auto flex">
-        <div className={`flex-1 transition-all ${showChat ? "pr-0 lg:pr-[360px]" : ""}`}>
+        <div className={`flex-1 min-w-0 transition-all ${showChat ? "pr-0 lg:pr-[360px]" : ""}`}>
           <div className="bg-white dark:bg-gray-900 border-b border-black/[0.06] dark:border-white/[0.08]">
-            <div className="max-w-4xl mx-auto px-4 sm:px-8 flex gap-1 pt-4">
+            <div className="max-w-4xl mx-auto px-3 sm:px-6 md:px-8 flex gap-1 pt-3 overflow-x-auto">
               {contentTabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 sm:px-4 py-3 rounded-t-lg text-sm font-medium transition-colors shrink-0 whitespace-nowrap ${
                       activeTab === tab.key
                         ? "bg-cedu-cream dark:bg-gray-950 text-cedu-blue border border-b-0 border-black/[0.06] dark:border-white/[0.08]"
                         : "text-cedu-ink-muted dark:text-gray-500 hover:text-cedu-ink dark:hover:text-gray-300"
@@ -1728,7 +1702,7 @@ export default function StudioCoursePage() {
             </div>
           </div>
 
-          <div className="max-w-4xl mx-auto px-4 sm:px-8 py-6">
+          <div className="max-w-4xl mx-auto px-3 sm:px-6 md:px-8 py-4 sm:py-6">
             {(isGenerating && !generatedContent) || generatedContent?.generationStatus === "generating" ? (
               <LoadingState profile={studentProfile || undefined} />
             ) : (
@@ -1755,7 +1729,7 @@ export default function StudioCoursePage() {
                               </span>
                             </div>
                             <div
-                              className="prose prose-base max-w-none prose-headings:font-serif prose-headings:text-cedu-ink dark:prose-headings:text-white prose-p:text-cedu-ink-soft dark:prose-p:text-gray-300 prose-p:leading-[1.8] prose-li:text-cedu-ink-soft dark:prose-li:text-gray-300 prose-strong:text-cedu-ink dark:prose-strong:text-white"
+                              className="prose prose-base max-w-none prose-headings:font-serif prose-h2:text-cedu-blue dark:prose-h2:text-blue-300 prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-3 prose-h3:text-cedu-violet dark:prose-h3:text-violet-300 prose-h1:text-cedu-ink dark:prose-h1:text-white prose-h4:text-cedu-ink dark:prose-h4:text-white prose-p:text-cedu-ink-soft dark:prose-p:text-gray-300 prose-p:leading-[1.8] prose-li:text-cedu-ink-soft dark:prose-li:text-gray-300 prose-strong:text-cedu-ink dark:prose-strong:text-white"
                               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentModule.contentHtml) }}
                               data-testid="content-lecture"
                             />
@@ -1782,7 +1756,7 @@ export default function StudioCoursePage() {
                           </span>
                         </div>
                         <div
-                          className="prose prose-base max-w-none prose-headings:font-serif prose-headings:text-cedu-ink dark:prose-headings:text-white prose-p:text-cedu-ink-soft dark:prose-p:text-gray-300 prose-p:leading-[1.8] prose-li:text-cedu-ink-soft dark:prose-li:text-gray-300 prose-strong:text-cedu-ink dark:prose-strong:text-white"
+                          className="prose prose-base max-w-none prose-headings:font-serif prose-h2:text-cedu-blue dark:prose-h2:text-blue-300 prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-3 prose-h3:text-cedu-violet dark:prose-h3:text-violet-300 prose-h1:text-cedu-ink dark:prose-h1:text-white prose-h4:text-cedu-ink dark:prose-h4:text-white prose-p:text-cedu-ink-soft dark:prose-p:text-gray-300 prose-p:leading-[1.8] prose-li:text-cedu-ink-soft dark:prose-li:text-gray-300 prose-strong:text-cedu-ink dark:prose-strong:text-white"
                           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentModule.contentHtml) }}
                           data-testid="content-lecture"
                         />
@@ -1791,47 +1765,52 @@ export default function StudioCoursePage() {
                       <LoadingState profile={studentProfile || undefined} />
                     )}
 
-                    <div className="flex justify-between mt-8 pt-4 border-t border-black/[0.06] dark:border-white/[0.08]">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mt-8 pt-5 border-t border-black/[0.06] dark:border-white/[0.08]">
                       <Button
                         variant="outline"
+                        size="lg"
                         disabled={activeModule <= 0}
                         onClick={() => { setActiveModule(activeModule - 1); setActiveTab("lectura"); window.scrollTo(0, 0); }}
+                        className="rounded-xl gap-2 min-h-11"
                         data-testid="button-prev-module"
                       >
-                        <ArrowLeft size={14} className="mr-2" /> Anterior
+                        <ArrowLeft size={16} /> Anterior
                       </Button>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2 sm:gap-3">
                         {!isModuleCompleted(activeModule) && generatedContent?.lectureHtml && (
                           <Button
                             variant="outline"
+                            size="lg"
                             onClick={handleCompleteModule}
                             disabled={completeModuleMutation.isPending}
-                            className="text-cedu-green border-cedu-green/30 hover:bg-cedu-green-light gap-1"
+                            className="rounded-xl gap-2 min-h-11 text-cedu-green border-cedu-green/30 hover:bg-cedu-green-light"
                             data-testid="button-complete-module"
                           >
                             {completeModuleMutation.isPending ? (
-                              <Loader2 size={14} className="animate-spin" />
+                              <Loader2 size={16} className="animate-spin" />
                             ) : (
-                              <CheckCircle2 size={14} />
+                              <CheckCircle2 size={16} />
                             )}
                             Completar módulo
                           </Button>
                         )}
                         {activeModule < modules.length - 1 ? (
                           <Button
+                            size="lg"
                             onClick={() => { setActiveModule(activeModule + 1); setActiveTab("lectura"); window.scrollTo(0, 0); }}
-                            className="bg-cedu-blue hover:bg-cedu-blue/90"
+                            className="rounded-xl gap-2 min-h-11 bg-cedu-blue hover:bg-cedu-blue/90"
                             data-testid="button-next-module"
                           >
-                            Siguiente <ChevronRight size={14} className="ml-1" />
+                            Siguiente <ChevronRight size={16} />
                           </Button>
                         ) : (
                           <Button
+                            size="lg"
                             onClick={() => setActiveTab("quiz")}
-                            className="bg-cedu-green hover:bg-cedu-green/90"
+                            className="rounded-xl gap-2 min-h-11 bg-cedu-green hover:bg-cedu-green/90"
                             data-testid="button-go-quiz"
                           >
-                            <Award size={14} className="mr-2" /> Ir al Quiz
+                            <Award size={16} /> Ir al Quiz
                           </Button>
                         )}
                       </div>
