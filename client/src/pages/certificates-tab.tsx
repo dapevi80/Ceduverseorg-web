@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Link } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -152,7 +153,7 @@ export function CertificatesTab() {
                     ) : (
                       completedCourses.map((e) => (
                         <SelectItem key={e.courseSlug} value={e.courseSlug}>
-                          {e.courseSlug?.replace(/-/g, " ") || e.courseSlug}
+                          {(e.courseSlug || "").split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
                         </SelectItem>
                       ))
                     )}
@@ -160,8 +161,15 @@ export function CertificatesTab() {
                 </Select>
               </div>
               <p className="text-xs text-muted-foreground mt-1.5">
-                Las constancias DC-3 STPS y SEP se solicitan desde el curso en el Tutor IA, al aprobar su quiz.
+                Las constancias DC-3 STPS y SEP se obtienen al tomar el curso en el <strong>Tutor IA</strong> y aprobar su evaluación. Ahí mismo solicitas y pagas tu certificado.
               </p>
+              {selectedCourse && selectedCourse !== "none" && (
+                <Link href={`/tutor-ia/${selectedCourse}`}>
+                  <Button className="w-full bg-[#7c3aed] hover:bg-[#7c3aed]/90 text-white" data-testid="button-go-tutor-ia-cert">
+                    Ir al Tutor IA de este curso para obtener tu DC-3
+                  </Button>
+                </Link>
+              )}
             </div>
           </DialogContent>
         </Dialog>
