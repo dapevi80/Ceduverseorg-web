@@ -11,7 +11,7 @@ import { buildPlaybook } from "../playbook-generator";
 import { renderPlaybookPdf } from "../playbook-pdf";
 import { isPlaybookComplete, playbookProgress } from "@shared/playbook-progress";
 import { PLAYBOOK_EVIDENCE_POINTS, PLAYBOOK_COMPLETION_BONUS } from "@shared/playbook-points";
-import { getEmpresaTeam } from "./empresa";
+import { getEmpresaAdminTeam } from "./empresa";
 import { EVIDENCE_MAX_MB, isImageMimetype, extensionForMimetype, safeEvidenceContentType, validateEvidenceFile, shouldAwardCompletionBonus, evidencePointsToAward, isUniqueViolation } from "../lib/playbook-upload";
 import { canViewEvidence } from "../lib/playbook-evidence-access";
 import { shouldRetryFallbackPlaybook } from "../lib/playbook-retry";
@@ -305,19 +305,19 @@ export function registerPlaybookRoutes(app: Express) {
   });
 
   // Empresa/admin: evidencia del equipo. Nunca pública — gateado a admin/empresa_rh
-  // del propio equipo (getEmpresaTeam, mismo criterio que el resto del panel empresa).
+  // del propio equipo (getEmpresaAdminTeam: exige membresia real de admin/empresa_rh).
   // Sin equipo → 403, JAMÁS fallback a "todas las evidencias".
   app.get("/api/empresa/playbook-evidencias", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const team = await getEmpresaTeam(userId);
+      const team = await getEmpresaAdminTeam(userId);
       if (!team) return res.status(403).json({ message: "No tienes una organización" });
 
       const memberIds = await getTeamMemberIds(team.id);
       if (memberIds.length === 0) return res.json({ team: { id: team.id, name: team.name }, evidence: [] });
 
       // Privacidad: SOLO evidencia de userIds que son miembros de team.id (obtenido de
-      // getEmpresaTeam, ligado al propio equipo del solicitante) — WHERE userId IN memberIds.
+      // getEmpresaAdminTeam, ligado al propio equipo del solicitante) — WHERE userId IN memberIds.
       const rows = await db.select({
         id: playbookEvidence.id,
         userId: playbookEvidence.userId,
@@ -352,7 +352,7 @@ export function registerPlaybookRoutes(app: Express) {
   // Proxy autenticado de la foto de evidencia: nunca se expone la URL pública de R2.
   // Autorización (predicado puro testeado en server/lib/playbook-evidence-access.ts):
   // el dueño siempre puede verla; empresa/admin puede verla SOLO si el dueño es
-  // miembro de su propio equipo (getEmpresaTeam del solicitante); cualquier otro caso
+  // miembro de su propio equipo (getEmpresaAdminTeam del solicitante); cualquier otro caso
   // → 403. Un equipo ausente o vacío jamás se traduce en acceso.
   app.get("/api/playbook/evidencia/:evidenceId/foto", requireAuth, async (req, res, next) => {
     try {
@@ -365,7 +365,7 @@ export function registerPlaybookRoutes(app: Express) {
       const requesterId = req.supabaseUserId!;
       let requesterTeamMemberIds: string[] | null = null;
       if (requesterId !== row.userId) {
-        const team = await getEmpresaTeam(requesterId);
+        const team = await getEmpresaAdminTeam(requesterId);
         if (team) {
           requesterTeamMemberIds = await getTeamMemberIds(team.id);
         }

@@ -23,6 +23,38 @@ import { sendEmployeeInvitationEmail, sendSamPartnerNotificationEmail } from "..
 import crypto from "crypto";
 import { determinePlan, UMA_VALUE_2026 } from "./admin";
 
+/**
+ * Variante ESTRICTA para las rutas de evidencia del playbook (fotos del lugar
+ * de trabajo de los alumnos).
+ *
+ * getEmpresaTeam (abajo) tiene una regla heredada: si no hay membresía de
+ * admin/empresa_rh, se conforma con que accounts.userRole diga "empresa" y
+ * devuelve CUALQUIER equipo del usuario, con el rol que sea. Eso está bien para
+ * los paneles administrativos que ya la usan, pero no para material privado de
+ * terceros: bastaría ser miembro raso de un equipo para alcanzar las fotos de
+ * sus compañeros. Aquí se exige membresía real de admin o empresa_rh.
+ *
+ * Decisión del dueño del producto (2026-07-18): apretar SÓLO en evidencia, sin
+ * cambiar getEmpresaTeam, para no dejar fuera a usuarios de empresa que hoy sí
+ * entran a los otros ocho endpoints que dependen de ella.
+ *
+ * orderBy fija el equipo elegido cuando alguien es admin de varios (antes era
+ * el orden que la base quisiera devolver).
+ */
+export async function getEmpresaAdminTeam(userId: string) {
+  const [membership] = await db.select({ teamId: teamUsers.teamId })
+    .from(teamUsers)
+    .where(and(
+      eq(teamUsers.userId, userId),
+      or(eq(teamUsers.role, "admin"), eq(teamUsers.role, "empresa_rh"))
+    ))
+    .orderBy(teamUsers.teamId)
+    .limit(1);
+  if (!membership) return null;
+  const [team] = await db.select().from(teams).where(eq(teams.id, membership.teamId));
+  return team || null;
+}
+
 export async function getEmpresaTeam(userId: string) {
   const membership = await db.select({ teamId: teamUsers.teamId, role: teamUsers.role })
     .from(teamUsers)
