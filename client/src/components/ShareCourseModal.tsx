@@ -39,8 +39,8 @@ const courseTypeConfig = {
     icon: Sparkles,
     color: "cedu-violet",
     bgClass: "bg-cedu-violet/[0.06] border-cedu-violet/10",
-    shareIntro: "\u00a1Te comparto este curso con tutor de IA sobre",
-    shareBody: "Es un curso interactivo con inteligencia artificial de Ceduverse \u2014 aprendizaje personalizado a tu ritmo con certificaci\u00f3n profesional.",
+    shareIntro: "\u00a1Mira nada m\u00e1s! \ud83d\udc40 Encontr\u00e9 un curso con tutor de IA que te va a encantar, sobre",
+    shareBody: "Tienes un tutor de inteligencia artificial de Ceduverse que responde tus dudas al instante, avanzas a tu propio ritmo desde el cel y terminas con una certificaci\u00f3n profesional. \u00a1Te lo dejo por si te late! \ud83d\ude80",
   },
   "academy": {
     label: "Curso profesional certificado",

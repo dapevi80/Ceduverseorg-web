@@ -954,7 +954,7 @@ function ChatPanel({ courseSlug, moduleIndex, profile }: {
         <p className="text-[10px] text-cedu-ink-muted dark:text-gray-500 mt-0.5">Pregunta sobre el contenido del módulo</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-4 space-y-3">
         {chatHistory.length === 0 && (
           <div className="text-center py-8">
             <MessageCircle size={32} className="mx-auto text-cedu-ink-muted/30 dark:text-gray-600 mb-3" />
@@ -975,12 +975,12 @@ function ChatPanel({ courseSlug, moduleIndex, profile }: {
         )}
 
         {chatHistory.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+          <div key={i} className={`flex w-full min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[85%] px-3 py-2 rounded-xl text-sm ${
+              className={`max-w-[85%] min-w-0 px-3 py-2 rounded-xl text-sm break-words overflow-hidden ${
                 msg.role === "user"
-                  ? "bg-cedu-blue text-white rounded-br-sm"
-                  : "bg-white dark:bg-gray-800 border border-black/[0.06] dark:border-white/[0.08] text-cedu-ink dark:text-gray-200 rounded-bl-sm"
+                  ? "bg-cedu-blue text-white rounded-br-sm whitespace-pre-wrap"
+                  : "bg-white dark:bg-gray-800 border border-black/[0.06] dark:border-white/[0.08] text-cedu-ink dark:text-gray-200 rounded-bl-sm [&_*]:max-w-full [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:break-words [&_table]:block [&_table]:overflow-x-auto [&_a]:break-all"
               }`}
               dangerouslySetInnerHTML={msg.role === "assistant" ? { __html: DOMPurify.sanitize(msg.content) } : undefined}
             >
@@ -1881,7 +1881,7 @@ export default function StudioCoursePage() {
         </div>
 
         {showChat && (
-          <div className="fixed right-0 top-[105px] bottom-0 w-[360px] bg-cedu-cream dark:bg-gray-950 border-l border-black/[0.06] dark:border-white/[0.08] z-20 hidden lg:block">
+          <div className="fixed right-0 top-[105px] bottom-0 w-[360px] max-w-full overflow-hidden bg-cedu-cream dark:bg-gray-950 border-l border-black/[0.06] dark:border-white/[0.08] z-20 hidden lg:block">
             <ChatPanel courseSlug={slug} moduleIndex={activeModule} profile={studentProfile || undefined} />
           </div>
         )}
@@ -1890,7 +1890,7 @@ export default function StudioCoursePage() {
       {showChat && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowChat(false)} />
-          <div className="absolute right-0 top-0 bottom-0 w-[320px] bg-cedu-cream dark:bg-gray-950">
+          <div className="absolute right-0 top-0 bottom-0 w-[320px] max-w-full overflow-hidden bg-cedu-cream dark:bg-gray-950">
             <div className="flex items-center justify-between p-3 border-b border-black/[0.06] dark:border-white/[0.08]">
               <span className="font-semibold text-sm text-cedu-ink dark:text-white">Chat con Tutor IA</span>
               <button onClick={() => setShowChat(false)} className="text-cedu-ink-muted dark:text-gray-400" data-testid="button-close-chat-mobile">
