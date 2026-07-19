@@ -62,7 +62,10 @@ export function reflectionBlock(
   x: number,
   y: number,
   w: number,
-  lines: number = REFLECTION_DEFAULT_LINES
+  lines: number = REFLECTION_DEFAULT_LINES,
+  // Color de acento del módulo. Sin él, cada módulo se vería con el mismo
+  // color aunque su capítulo rote entre azul/naranja/violeta/verde.
+  accent: string = REFLECTION_ACCENT
 ): number {
   const fonts = registerCuadernoFonts(doc);
   const safeLines = Math.max(1, Math.floor(lines));
@@ -77,7 +80,7 @@ export function reflectionBlock(
   const drawY = placeBlock(doc, y, totalHeight);
 
   doc.save();
-  doc.rect(x, drawY, 2.5, questionH).fill(REFLECTION_ACCENT);
+  doc.rect(x, drawY, 2.5, questionH).fill(accent);
   doc.font(fonts.sansBold).fontSize(REFLECTION_FONT_SIZE).fillColor(CUADERNO.INK);
   doc.text(question || "", x + REFLECTION_PAD_LEFT, drawY, { width: textW, lineGap: 2 });
   doc.restore();
@@ -109,7 +112,8 @@ export function fillInTable(
   rows: number,
   x: number,
   y: number,
-  w: number
+  w: number,
+  accent: string = TABLE_HEADER_FILL
 ): number {
   const fonts = registerCuadernoFonts(doc);
   const cols = Math.max(1, headers.length);
@@ -128,7 +132,7 @@ export function fillInTable(
 
   // Banda de encabezado.
   doc.save();
-  doc.rect(x, drawY, w, headerH).fillOpacity(0.08).fill(TABLE_HEADER_FILL);
+  doc.rect(x, drawY, w, headerH).fillOpacity(0.08).fill(accent);
   doc.restore();
   doc.save();
   doc.font(fonts.sansBold).fontSize(TABLE_HEADER_FONT_SIZE).fillColor(CUADERNO.INK);
@@ -198,7 +202,8 @@ export function quizBlock(
   index: number,
   x: number,
   y: number,
-  w: number
+  w: number,
+  accent: string = CUADERNO.BLUE
 ): number {
   const fonts = registerCuadernoFonts(doc);
   const options = q.options || [];
@@ -221,7 +226,7 @@ export function quizBlock(
   const drawY = placeBlock(doc, y, totalHeight);
 
   doc.save();
-  doc.font(fonts.sansBold).fontSize(QUIZ_QUESTION_FONT_SIZE).fillColor(CUADERNO.BLUE);
+  doc.font(fonts.sansBold).fontSize(QUIZ_QUESTION_FONT_SIZE).fillColor(accent);
   doc.text(label, x, drawY, { width: labelW, lineBreak: false });
   doc.font(fonts.sansBold).fontSize(QUIZ_QUESTION_FONT_SIZE).fillColor(CUADERNO.INK);
   doc.text(q.question || "", x + labelW, drawY, { width: questionTextW, lineGap: 2 });
