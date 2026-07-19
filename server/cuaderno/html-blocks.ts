@@ -5,7 +5,9 @@
  * Estrategia: `sanitize-html` (ya es dependencia del repo) se encarga de la
  * parte realmente peligrosa — HTML mal formado, entidades, etiquetas
  * desconocidas — y garantiza como salida un HTML bien anidado, sólo con las
- * etiquetas que nos interesan y sin atributos. A partir de ese HTML, ya
+ * etiquetas que nos interesan y prácticamente sin atributos (la única
+ * excepción es `colspan` en `th`/`td`, necesario para no romper la
+ * alineación de tablas con celdas combinadas). A partir de ese HTML, ya
  * confiable, un tokenizer propio y minúsculo arma el árbol de bloques.
  *
  * No se usa una librería de DOM (jsdom, linkedom, etc.) porque sería una
@@ -16,10 +18,11 @@
 import sanitizeHtml from "sanitize-html";
 
 export type Inline = { text: string; bold?: boolean; italic?: boolean };
+export type ListItem = { runs: Inline[]; level: number }; // level 0 = top level
 export type Block =
   | { kind: "heading"; level: 2 | 3; text: string }
   | { kind: "paragraph"; runs: Inline[] }
-  | { kind: "list"; ordered: boolean; items: Inline[][] }
+  | { kind: "list"; ordered: boolean; items: ListItem[] }
   | { kind: "table"; headers: string[]; rows: string[][] }
   | { kind: "quote"; runs: Inline[] };
 
@@ -41,6 +44,7 @@ const ALLOWED_TAGS = [
   "em",
   "b",
   "i",
+  "br",
 ];
 
 const BOLD_TAGS = new Set(["strong", "b"]);
@@ -49,7 +53,7 @@ const ITALIC_TAGS = new Set(["em", "i"]);
 // ---- Árbol mínimo ----------------------------------------------------
 
 type TextNode = { type: "text"; text: string };
-type ElementNode = { type: "element"; tag: string; children: AnyNode[] };
+type ElementNode = { type: "element"; tag: string; children: AnyNode[]; colspan?: number };
 type AnyNode = TextNode | ElementNode;
 
 function decodeEntities(input: string): string {
@@ -80,15 +84,32 @@ function normalizeWhitespace(s: string): string {
 }
 
 /**
- * Tokenizer defensivo: espera HTML ya normalizado por sanitize-html (sin
- * atributos, sólo etiquetas conocidas), pero nunca lanza aunque la entrada
- * no cumpla esa expectativa — cualquier etiqueta de cierre huérfana o sin
- * cerrar simplemente se ignora o se cierra al final.
+ * Extrae `colspan` de la porción de atributos ya recortada por el tokenizer
+ * (todo lo que sanitize-html dejó pasar entre el nombre de la etiqueta y el
+ * `>`). Cualquier valor ausente, no numérico o menor a 1 se ignora (equivale
+ * a colspan=1); valores absurdamente grandes se acotan para no generar
+ * arreglos patológicos a partir de HTML malicioso.
+ */
+function parseColspan(attrs: string): number | undefined {
+  const m = /colspan\s*=\s*"?(\d+)"?/i.exec(attrs);
+  if (!m) return undefined;
+  const n = parseInt(m[1], 10);
+  if (!Number.isFinite(n) || n < 1) return undefined;
+  return Math.min(n, 100);
+}
+
+/**
+ * Tokenizer defensivo: espera HTML ya normalizado por sanitize-html (sólo
+ * etiquetas conocidas, y sin atributos salvo `colspan` en `th`/`td`), pero
+ * nunca lanza aunque la entrada no cumpla esa expectativa — cualquier
+ * etiqueta de cierre huérfana o sin cerrar simplemente se ignora o se cierra
+ * al final. `<br>` no se modela como elemento: se traduce de inmediato a un
+ * salto de línea de texto para que las palabras a los lados nunca se fusionen.
  */
 function parseNodes(html: string): AnyNode[] {
   const root: AnyNode[] = [];
   const stack: ElementNode[] = [];
-  const tagRe = /<\/?([a-zA-Z][a-zA-Z0-9]*)\s*\/?>/g;
+  const tagRe = /<\/?([a-zA-Z][a-zA-Z0-9]*)([^>]*)>/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
@@ -97,6 +118,7 @@ function parseNodes(html: string): AnyNode[] {
   while ((match = tagRe.exec(html)) !== null) {
     const full = match[0];
     const tagName = match[1].toLowerCase();
+    const attrs = match[2];
 
     const textBefore = html.slice(lastIndex, match.index);
     if (textBefore) {
@@ -113,8 +135,15 @@ function parseNodes(html: string): AnyNode[] {
           break;
         }
       }
+    } else if (tagName === "br") {
+      // Línea nueva, nunca una etiqueta que desaparezca en silencio.
+      currentChildren().push({ type: "text", text: "\n" });
     } else {
       const node: ElementNode = { type: "element", tag: tagName, children: [] };
+      if (tagName === "th" || tagName === "td") {
+        const span = parseColspan(attrs);
+        if (span !== undefined) node.colspan = span;
+      }
       currentChildren().push(node);
       if (!isSelfClosing) stack.push(node);
     }
@@ -148,27 +177,53 @@ function findAllDeep(node: AnyNode, tag: string, out: ElementNode[] = []): Eleme
   return out;
 }
 
+/**
+ * Recorre recursivamente para que negrita/cursiva se combinen por OR en vez
+ * de que la más interna gane sola: `<strong>bold <em>emph</em></strong>`
+ * debe producir un run con bold+italic para "emph", no perder el italic.
+ */
+function collectInlineRuns(node: AnyNode, bold: boolean, italic: boolean, out: Inline[]): void {
+  if (node.type === "text") {
+    if (node.text.length === 0) return;
+    const run: Inline = { text: node.text };
+    if (bold) run.bold = true;
+    if (italic) run.italic = true;
+    out.push(run);
+    return;
+  }
+  // Etiqueta inline desconocida (no debería llegar aquí tras sanitize-html):
+  // se sigue bajando sin agregar flags, el texto nunca se pierde.
+  const nextBold = bold || BOLD_TAGS.has(node.tag);
+  const nextItalic = italic || ITALIC_TAGS.has(node.tag);
+  for (const child of node.children) {
+    collectInlineRuns(child, nextBold, nextItalic, out);
+  }
+}
+
 function inlineRuns(children: AnyNode[]): Inline[] {
   const runs: Inline[] = [];
   for (const child of children) {
-    if (child.type === "text") {
-      if (child.text.length === 0) continue;
-      runs.push({ text: child.text });
-      continue;
-    }
-    const text = textContent(child);
-    if (text.length === 0) continue;
-    if (BOLD_TAGS.has(child.tag)) {
-      runs.push({ text, bold: true });
-    } else if (ITALIC_TAGS.has(child.tag)) {
-      runs.push({ text, italic: true });
-    } else {
-      // Etiqueta inline desconocida (no debería llegar aquí tras sanitize-html):
-      // se conserva el texto plano, nunca se pierde.
-      runs.push({ text });
-    }
+    collectInlineRuns(child, false, false, runs);
   }
   return runs;
+}
+
+/** Expande cada celda según su `colspan` repitiendo la etiqueta, para que una
+ * celda combinada ocupe tantas posiciones como columnas cubre en vez de
+ * desalinear el resto de la fila. */
+function expandRow(cells: ElementNode[]): string[] {
+  const out: string[] = [];
+  for (const cell of cells) {
+    const label = textContent(cell).trim();
+    const span = cell.colspan && cell.colspan > 1 ? cell.colspan : 1;
+    for (let i = 0; i < span; i++) out.push(label);
+  }
+  return out;
+}
+
+function padTo(row: string[], len: number): string[] {
+  if (row.length >= len) return row;
+  return [...row, ...Array(len - row.length).fill("")];
 }
 
 function buildTable(table: ElementNode): Block {
@@ -182,18 +237,56 @@ function buildTable(table: ElementNode): Block {
     );
     const hasHeaderRow = firstCells.length > 0 && firstCells.every((c) => c.tag === "th");
     if (hasHeaderRow) {
-      headers = firstCells.map((c) => textContent(c).trim());
+      headers = expandRow(firstCells);
       dataRows = trs.slice(1);
     }
   }
 
   const rows = dataRows.map((tr) =>
-    tr.children
-      .filter((n): n is ElementNode => n.type === "element" && (n.tag === "td" || n.tag === "th"))
-      .map((cell) => textContent(cell).trim())
+    expandRow(
+      tr.children.filter((n): n is ElementNode => n.type === "element" && (n.tag === "td" || n.tag === "th"))
+    )
   );
 
+  // Invariante: headers.length === 0 || headers.length === max(row.length).
+  // No se fabrica un encabezado que no existía (headers=[] se respeta tal
+  // cual), pero si sí existe se rellena — junto con las filas — hasta el
+  // ancho real más grande de la tabla, para que un consumidor pueda hacer
+  // zip(headers[i], row[i]) sin desalinearse por un colspan o una fila corta.
+  const maxRowLen = rows.reduce((m, r) => Math.max(m, r.length), 0);
+  if (headers.length > 0) {
+    const width = Math.max(headers.length, maxRowLen);
+    headers = padTo(headers, width);
+    for (let i = 0; i < rows.length; i++) rows[i] = padTo(rows[i], width);
+  } else if (maxRowLen > 0) {
+    for (let i = 0; i < rows.length; i++) rows[i] = padTo(rows[i], maxRowLen);
+  }
+
   return { kind: "table", headers, rows };
+}
+
+/**
+ * Aplana una lista (posiblemente anidada) a `ListItem[]` conservando la
+ * profundidad. Una `<ul>`/`<ol>` anidada dentro de un `<li>` no genera un
+ * bloque de lista aparte: sus items se agregan al mismo arreglo con
+ * `level` incrementado (aplanado-con-profundidad, no árbol).
+ */
+function collectListItems(container: ElementNode, level: number, out: ListItem[]): void {
+  for (const li of elementsOf(container.children, "li")) {
+    const inlineChildren: AnyNode[] = [];
+    const nestedLists: ElementNode[] = [];
+    for (const child of li.children) {
+      if (child.type === "element" && (child.tag === "ul" || child.tag === "ol")) {
+        nestedLists.push(child);
+      } else {
+        inlineChildren.push(child);
+      }
+    }
+    out.push({ runs: inlineRuns(inlineChildren), level });
+    for (const nested of nestedLists) {
+      collectListItems(nested, level + 1, out);
+    }
+  }
 }
 
 function blockFromElement(node: ElementNode): Block | null {
@@ -204,18 +297,16 @@ function blockFromElement(node: ElementNode): Block | null {
       return { kind: "heading", level: 3, text: textContent(node).trim() };
     case "p":
       return { kind: "paragraph", runs: inlineRuns(node.children) };
-    case "ul":
-      return {
-        kind: "list",
-        ordered: false,
-        items: elementsOf(node.children, "li").map((li) => inlineRuns(li.children)),
-      };
-    case "ol":
-      return {
-        kind: "list",
-        ordered: true,
-        items: elementsOf(node.children, "li").map((li) => inlineRuns(li.children)),
-      };
+    case "ul": {
+      const items: ListItem[] = [];
+      collectListItems(node, 0, items);
+      return { kind: "list", ordered: false, items };
+    }
+    case "ol": {
+      const items: ListItem[] = [];
+      collectListItems(node, 0, items);
+      return { kind: "list", ordered: true, items };
+    }
     case "table":
       return buildTable(node);
     case "blockquote":
@@ -237,7 +328,9 @@ export function htmlToBlocks(html: string): Block[] {
   try {
     const clean = sanitizeHtml(html, {
       allowedTags: ALLOWED_TAGS,
-      allowedAttributes: {},
+      // Único atributo permitido en toda la superficie: colspan en th/td,
+      // indispensable para no desalinear encabezados y filas (finding 3).
+      allowedAttributes: { th: ["colspan"], td: ["colspan"] },
       disallowedTagsMode: "discard",
     });
 

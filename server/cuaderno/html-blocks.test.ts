@@ -23,9 +23,67 @@ describe("htmlToBlocks", () => {
     expect(runs.find((r: any) => r.text.includes("algo")).italic).toBe(true);
   });
 
-  it("lista desordenada y ordenada", () => {
-    expect(htmlToBlocks("<ul><li>a</li><li>b</li></ul>")[0]).toMatchObject({ kind: "list", ordered: false });
-    expect(htmlToBlocks("<ol><li>a</li></ol>")[0]).toMatchObject({ kind: "list", ordered: true });
+  it("lista desordenada y ordenada: items son ListItem[] con level 0", () => {
+    const ul = htmlToBlocks("<ul><li>a</li><li>b</li></ul>")[0] as any;
+    expect(ul).toMatchObject({ kind: "list", ordered: false });
+    expect(ul.items).toEqual([
+      { runs: [{ text: "a" }], level: 0 },
+      { runs: [{ text: "b" }], level: 0 },
+    ]);
+
+    const ol = htmlToBlocks("<ol><li>a</li></ol>")[0] as any;
+    expect(ol).toMatchObject({ kind: "list", ordered: true });
+    expect(ol.items).toEqual([{ runs: [{ text: "a" }], level: 0 }]);
+  });
+
+  it("lista anidada: los items de la sublista se aplanan con level incrementado (finding 4)", () => {
+    const b = htmlToBlocks("<ul><li>a<ul><li>a1</li></ul></li><li>b</li></ul>")[0] as any;
+    expect(b.kind).toBe("list");
+    expect(b.items).toEqual([
+      { runs: [{ text: "a" }], level: 0 },
+      { runs: [{ text: "a1" }], level: 1 },
+      { runs: [{ text: "b" }], level: 0 },
+    ]);
+  });
+
+  it("<br> separa palabras en vez de fusionarlas (finding 1)", () => {
+    const b = htmlToBlocks("<p>linea1<br>linea2</p>") as any;
+    const joined = b[0].runs.map((r: any) => r.text).join("");
+    expect(joined).not.toBe("linea1linea2");
+    expect(joined.replace(/\s+/g, " ").trim()).toBe("linea1 linea2");
+  });
+
+  it("negrita+cursiva anidada conserva ambos flags: strong>em (finding 2)", () => {
+    const b = htmlToBlocks("<p><strong>bold <em>emph</em></strong></p>") as any;
+    const runs = b[0].runs;
+    const boldOnly = runs.find((r: any) => r.text.trim() === "bold");
+    const boldItalic = runs.find((r: any) => r.text.trim() === "emph");
+    expect(boldOnly.bold).toBe(true);
+    expect(boldOnly.italic).toBeUndefined();
+    expect(boldItalic.bold).toBe(true);
+    expect(boldItalic.italic).toBe(true);
+  });
+
+  it("negrita+cursiva anidada conserva ambos flags: em>strong (finding 2, orden simétrico)", () => {
+    const b = htmlToBlocks("<p><em>ital <strong>both</strong></em></p>") as any;
+    const runs = b[0].runs;
+    const italicOnly = runs.find((r: any) => r.text.trim() === "ital");
+    const both = runs.find((r: any) => r.text.trim() === "both");
+    expect(italicOnly.italic).toBe(true);
+    expect(italicOnly.bold).toBeUndefined();
+    expect(both.bold).toBe(true);
+    expect(both.italic).toBe(true);
+  });
+
+  it("colspan mantiene headers y filas alineados (finding 3)", () => {
+    const b = htmlToBlocks(
+      '<table><tr><th colspan="2">A</th></tr><tr><td>1</td><td>2</td></tr></table>'
+    )[0] as any;
+    expect(b.kind).toBe("table");
+    const maxRowLen = b.rows.reduce((m: number, r: string[]) => Math.max(m, r.length), 0);
+    expect(b.headers.length === 0 || b.headers.length === maxRowLen).toBe(true);
+    expect(b.headers).toEqual(["A", "A"]);
+    expect(b.rows).toEqual([["1", "2"]]);
   });
 
   it("tabla con encabezados y filas", () => {
