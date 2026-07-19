@@ -179,6 +179,8 @@ export interface IStorage {
   upsertModuleProgress(enrollmentId: string, moduleIdentifier: string, data: Partial<InsertStudioModuleProgress>): Promise<StudioModuleProgress>;
   createStudioQuizAttempt(data: InsertStudioQuizAttempt): Promise<StudioQuizAttempt>;
   getStudioQuizAttempts(userId: string, courseIdentifier: string): Promise<StudioQuizAttempt[]>;
+  /** Todos los intentos del socio, de CUALQUIER curso de Studio (para /api/me/cert-elegibles). */
+  getAllStudioQuizAttempts(userId: string): Promise<StudioQuizAttempt[]>;
   deleteStudioEnrollment(userId: string, courseIdentifier: string): Promise<boolean>;
   resetStudioEnrollmentProgress(enrollmentId: string): Promise<boolean>;
   getChatSession(userId: string, courseSlug: string, moduleIndex: number): Promise<ChatSession | undefined>;
@@ -686,6 +688,10 @@ export class DatabaseStorage implements IStorage {
       eq(studioQuizAttempts.userId, userId),
       eq(studioQuizAttempts.courseIdentifier, courseIdentifier),
     )).orderBy(desc(studioQuizAttempts.createdAt));
+  }
+
+  async getAllStudioQuizAttempts(userId: string): Promise<StudioQuizAttempt[]> {
+    return db.select().from(studioQuizAttempts).where(eq(studioQuizAttempts.userId, userId));
   }
 
   async deleteStudioEnrollment(userId: string, courseIdentifier: string): Promise<boolean> {

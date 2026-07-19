@@ -43,7 +43,7 @@ import { eq, and, sql, count, desc } from "drizzle-orm";
 import { sendKitEmail } from "../email";
 import { getInitialsFromName } from "./helpers";
 import { getEffectiveRole } from "../lib/effective-role";
-import { computeCertStatus } from "../lib/cert-status";
+import { computeCertStatus, computeCertEligibleCourses } from "../lib/cert-status";
 
 // Public lead form — anonymous, low-volume in legitimate use.
 // 5 leads / IP / hour is generous for a real prospect (typically 1) and blocks scrapers.
@@ -1073,6 +1073,35 @@ export function registerCourseRoutes(app: Express) {
       return res.status(503).json({ message: "No pudimos verificar tus certificados. Intenta de nuevo en unos minutos.", state: "error" });
     }
     return res.json({ certs: result.certs });
+  });
+
+  // Lista, para la pestaña Certificado, de todos los cursos del Tutor IA con los
+  // que el socio se ha relacionado (inscrito, intentó el quiz, o ya tiene una
+  // solicitud), con la elegibilidad real de cada uno. Reemplaza el uso de
+  // /api/me/courses en esa pestaña (bug 2026-07-19): esa ruta es Aula Virtual
+  // (tabla `courses` legacy), una fuente de datos distinta al Tutor IA
+  // (studio_courses/studio_enrollments/studio_quiz_attempts) — por eso las
+  // clases del Aula aparecían ahí y los cursos completados del Tutor IA nunca.
+  // Muestra TODOS los cursos relacionados, no solo los elegibles: el socio
+  // necesita ver dónde está parado (falta aprobar el quiz, ya solicitó, etc.),
+  // no solo la lista filtrada a "sí puedes pedirlo ya". Estrictamente scoped al
+  // usuario de la sesión (requireAuth + req.supabaseUserId).
+  app.get("/api/me/cert-elegibles", requireAuth, async (req, res) => {
+    const userId = req.supabaseUserId!;
+    const result = await computeCertEligibleCourses(
+      {
+        getEnrollments: (uid) => storage.getStudioEnrollments(uid),
+        getAllAttempts: (uid) => storage.getAllStudioQuizAttempts(uid),
+        getRequestsByUser: (uid) => storage.getCertificateRequestsByUser(uid),
+        getStudioCourse: (slug) => storage.getStudioCourse(slug),
+      },
+      { userId },
+    );
+    if (!result.ok) {
+      // Sin degradación silenciosa: un fallo NUNCA se sirve como "sin cursos".
+      return res.status(503).json({ message: "No pudimos cargar tus cursos elegibles para certificado. Intenta de nuevo en unos minutos.", state: "error" });
+    }
+    return res.json({ courses: result.courses });
   });
 
   app.get("/api/studio/courses/:slug/modules/:index", requireAuth, async (req, res, next) => {

@@ -39,12 +39,35 @@ type CertificateRequest = {
   courseSlug?: string;
 };
 
-type CourseEnrollment = {
-  id: number;
-  userId: string;
-  courseId: string;
-  courseSlug: string;
-  completed: number;
+// Un curso del Tutor IA (studio_courses) con el que el socio se ha relacionado
+// (inscrito, intentó el quiz, o ya tiene una solicitud), y la elegibilidad real
+// de cada certificado de pago para ese curso. Viene de GET /api/me/cert-elegibles
+// (server/lib/cert-status.ts::computeCertEligibleCourses), que reemplaza al
+// antiguo /api/me/courses del Aula Virtual — ver el comentario en esa función
+// para el porqué (bug 2026-07-19).
+type CertStatusEntry = {
+  certType: "dc3" | "sep";
+  state: string;
+  message: string;
+  eligible: boolean;
+  priceMxn: number;
+  request: { id: string; status: string; pdfUrl: string | null; rejectReason: string | null } | null;
+};
+
+type CertEligibleCourse = {
+  slug: string;
+  title: string;
+  icon: string | null;
+  certs: { dc3: CertStatusEntry; sep: CertStatusEntry };
+};
+
+const CERT_STATE_UI: Record<string, { label: string; color: string; icon: any }> = {
+  elegible: { label: "Puedes solicitarlo", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
+  sin_intento_aprobado: { label: "Falta aprobar el quiz", color: "bg-amber-100 text-amber-800", icon: Clock },
+  pago_pendiente: { label: "Pago pendiente", color: "bg-amber-100 text-amber-800", icon: Clock },
+  ya_solicitado: { label: "En proceso", color: "bg-blue-100 text-blue-800", icon: Loader2 },
+  emitido: { label: "Emitido", color: "bg-green-100 text-green-800", icon: CheckCircle2 },
+  curso_no_encontrado: { label: "Curso no encontrado", color: "bg-red-100 text-red-800", icon: XCircle },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
@@ -71,11 +94,18 @@ export function CertificatesTab() {
     queryKey: ["/api/me/certificates"],
   });
 
-  const { data: enrollments = [] } = useQuery<CourseEnrollment[]>({
-    queryKey: ["/api/me/courses"],
+  const {
+    data: coursesData,
+    isLoading: isCoursesLoading,
+    isError: isCoursesError,
+  } = useQuery<{ courses: CertEligibleCourse[] }>({
+    queryKey: ["/api/me/cert-elegibles"],
   });
+  const courses = coursesData?.courses ?? [];
 
-  const completedCourses = enrollments.filter((e) => e.completed >= 100);
+  // Elegible para AL MENOS un certificado de pago (dc3 o sep): son los cursos
+  // que tiene sentido ofrecer en el selector de "Solicitar certificado".
+  const eligibleCourses = courses.filter((c) => c.certs.dc3.eligible || c.certs.sep.eligible);
 
   const requestMutation = useMutation({
     mutationFn: async (vars: { courseSlug: string; certType: string }) => {
@@ -148,12 +178,16 @@ export function CertificatesTab() {
                     <SelectValue placeholder="Seleccionar curso" />
                   </SelectTrigger>
                   <SelectContent>
-                    {completedCourses.length === 0 ? (
-                      <SelectItem value="none" disabled>No hay cursos completados</SelectItem>
+                    {isCoursesLoading ? (
+                      <SelectItem value="none" disabled>Cargando cursos…</SelectItem>
+                    ) : isCoursesError ? (
+                      <SelectItem value="none" disabled>No se pudieron cargar tus cursos</SelectItem>
+                    ) : eligibleCourses.length === 0 ? (
+                      <SelectItem value="none" disabled>No hay cursos del Tutor IA listos para certificado</SelectItem>
                     ) : (
-                      completedCourses.map((e) => (
-                        <SelectItem key={e.courseSlug} value={e.courseSlug}>
-                          {(e.courseSlug || "").split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                      eligibleCourses.map((c) => (
+                        <SelectItem key={c.slug} value={c.slug}>
+                          {c.title}
                         </SelectItem>
                       ))
                     )}
@@ -173,6 +207,105 @@ export function CertificatesTab() {
             </div>
           </DialogContent>
         </Dialog>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold text-cedu-ink">Tus cursos del Tutor IA</h3>
+        {isCoursesLoading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-6">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Cargando tus cursos del Tutor IA...
+          </div>
+        ) : isCoursesError ? (
+          <Card className="border-red-200" data-testid="cert-courses-error">
+            <CardContent className="py-6 flex items-center gap-3">
+              <XCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <p className="text-sm text-red-700">
+                No pudimos cargar tus cursos del Tutor IA. Esto NO significa que no tengas cursos — intenta de nuevo en unos minutos.
+              </p>
+            </CardContent>
+          </Card>
+        ) : courses.length === 0 ? (
+          <Card className="border-dashed" data-testid="cert-courses-empty">
+            <CardContent className="py-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                Aún no te has inscrito ni tomado ninguna evaluación en el <strong>Tutor IA</strong>. Ahí es donde se obtienen las constancias DC-3 STPS y SEP.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {courses.map((course) => {
+              const rows = (["dc3", "sep"] as const)
+                .map((certType) => ({ certType, cert: course.certs[certType] }))
+                .filter(({ cert }) => cert.state !== "curso_sin_certificado");
+              return (
+                <Card key={course.slug} data-testid={`cert-course-${course.slug}`}>
+                  <CardContent className="py-4 px-5 space-y-3">
+                    <p className="font-semibold text-sm text-cedu-ink">{course.title}</p>
+                    {rows.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Este curso no ofrece certificados de pago (DC-3 / SEP).</p>
+                    ) : (
+                      rows.map(({ certType, cert }) => {
+                        const ui = CERT_STATE_UI[cert.state] || CERT_STATE_UI.sin_intento_aprobado;
+                        const StateIcon = ui.icon;
+                        return (
+                          <div key={certType} className="flex items-center justify-between gap-3 flex-wrap" data-testid={`cert-course-${course.slug}-${certType}`}>
+                            <div className="flex items-center gap-2">
+                              <Badge className={`${TYPE_CONFIG[certType].badge} border-0 text-xs`}>
+                                {TYPE_CONFIG[certType].label}
+                              </Badge>
+                              <Badge variant="outline" className={`${ui.color} border-0 text-xs gap-1`}>
+                                <StateIcon className={`h-3 w-3 ${cert.state === "ya_solicitado" ? "animate-spin" : ""}`} />
+                                {ui.label}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">{cert.message}</span>
+                            </div>
+                            {cert.state === "elegible" && (
+                              <Button
+                                size="sm"
+                                className="bg-cedu-blue hover:bg-cedu-blue/90 text-white"
+                                disabled={requestMutation.isPending}
+                                onClick={() => requestMutation.mutate({ courseSlug: course.slug, certType })}
+                                data-testid={`btn-request-${course.slug}-${certType}`}
+                              >
+                                Solicitar (${cert.priceMxn.toLocaleString()} MXN)
+                              </Button>
+                            )}
+                            {cert.state === "pago_pendiente" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={requestMutation.isPending}
+                                onClick={() => requestMutation.mutate({ courseSlug: course.slug, certType })}
+                                data-testid={`btn-complete-payment-${course.slug}-${certType}`}
+                              >
+                                Completar pago
+                              </Button>
+                            )}
+                            {cert.state === "emitido" && cert.request?.pdfUrl && (
+                              <a href={cert.request.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                <Button size="sm" variant="outline" className="gap-1">
+                                  <Download className="h-3.5 w-3.5" />
+                                  PDF
+                                </Button>
+                              </a>
+                            )}
+                            {cert.state === "sin_intento_aprobado" && (
+                              <Link href={`/tutor-ia/${course.slug}`}>
+                                <Button size="sm" variant="outline">Ir al Tutor IA</Button>
+                              </Link>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
