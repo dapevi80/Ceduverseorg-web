@@ -50,6 +50,12 @@ export function pickAllowedNorm(candidate: string | null | undefined, allowed: s
   if (trimmedCandidate.length === 0) return null;
   if (!allowed || allowed.length === 0) return null;
 
-  const match = allowed.find((entry) => normalize(entry) === trimmedCandidate);
+  // La comparación ignora mayúsculas, pero lo que se DEVUELVE es siempre la
+  // cadena de la lista real, no la que escribió el modelo. Así no se pierde una
+  // sugerencia correcta por un "nom-006-stps-2014" en minúsculas, y al mismo
+  // tiempo lo que se guarda sale verbatim de las referencias del curso: el
+  // modelo nunca aporta el texto, sólo elige de la lista.
+  const objetivo = trimmedCandidate.toLocaleLowerCase();
+  const match = allowed.find((entry) => normalize(entry).toLocaleLowerCase() === objetivo);
   return match !== undefined ? normalize(match) : null;
 }

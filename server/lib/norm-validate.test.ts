@@ -67,18 +67,31 @@ describe("isAllowedNorm / pickAllowedNorm — coincidencia exacta, nunca parcial
     expect(result).toBe(ALLOWED[1]);
   });
 
-  it("sensible a mayúsculas/minúsculas: 'nom-006-stps-2014' en minúsculas NO matchea (más seguro que normalizar)", () => {
-    // Decisión deliberada: normalizar mayúsculas/minúsculas abriría la puerta
-    // a que el modelo "corrija" el formato exacto verbatim de la referencia.
-    // La comparación exacta (solo trim, sin lowercase) es la más conservadora:
-    // fuerza a que el candidato sea idéntico al texto real del curso.
-    expect(isAllowedNorm("nom-006-stps-2014", ALLOWED)).toBe(false);
-    expect(pickAllowedNorm("nom-006-stps-2014", ALLOWED)).toBeNull();
+  it("ignora mayúsculas al comparar, PERO devuelve la cadena real de la lista (no inventa texto)", () => {
+    expect(pickAllowedNorm("nom-006-stps-2014", ["NOM-006-STPS-2014"])).toBe("NOM-006-STPS-2014");
   });
 
   it("no hace fuzzy/substring match: una norma que contiene a otra como substring no cuenta", () => {
     const allowedSubset = ["NOM-006-STPS-2014 (parte general)"];
     expect(isAllowedNorm("NOM-006-STPS-2014", allowedSubset)).toBe(false);
     expect(pickAllowedNorm("NOM-006-STPS-2014", allowedSubset)).toBeNull();
+  });
+});
+
+describe("pickAllowedNorm — mayúsculas", () => {
+  const allowed = ["NOM-006-STPS-2014", "LFT Art. 132"];
+
+  it("ignora mayúsculas al comparar, pero devuelve la cadena REAL de la lista", () => {
+    expect(pickAllowedNorm("nom-006-stps-2014", allowed)).toBe("NOM-006-STPS-2014");
+    expect(pickAllowedNorm("NOM-006-STPS-2014", allowed)).toBe("NOM-006-STPS-2014");
+  });
+
+  it("sigue rechazando una coincidencia parcial aunque el caso empate", () => {
+    expect(pickAllowedNorm("nom-006", allowed)).toBeNull();
+  });
+
+  it("lo devuelto SIEMPRE sale de la lista permitida, nunca del candidato", () => {
+    const r = pickAllowedNorm("lft art. 132", allowed);
+    expect(allowed).toContain(r);
   });
 });
