@@ -139,11 +139,44 @@ function AuthPageContent() {
     localStorage.setItem("cedu_otp_cooldown", String(Date.now() + seconds * 1000));
   };
 
-  function redirectByRole() {
+  /**
+   * ¿La cuenta termino su alta? (accountSetup >= 4)
+   *
+   * Ante CUALQUIER falla devuelve `false` — o sea, manda al alta. Fallar
+   * "cerrado" es seguro: una cuenta YA completa que aterrice en /welcome
+   * rebota sola (ese efecto la reenvia a su destino), mientras que fallar
+   * "abierto" deja entrar a una cuenta sin perfil, sin terminos aceptados y
+   * sin atribucion de referido — que es justo el bug que esto corrige.
+   */
+  async function cuentaCompleta(): Promise<boolean> {
+    try {
+      const r = await fetch("/api/me/account", { credentials: "include" });
+      if (!r.ok) return false;
+      const acc = await r.json();
+      return Number(acc?.accountSetup ?? 0) >= 4;
+    } catch {
+      return false;
+    }
+  }
+
+  async function redirectByRole() {
+    // El alta de cuenta se exige AQUI, no en el dashboard.
+    //
+    // Antes el unico guardia vivia en dashboard.tsx (accountSetup < 4 ->
+    // /welcome). Cuando esta pantalla dejo de mandar a todos al dashboard —para
+    // que un invitado aterrizara en el curso compartido— ese guardia dejo de
+    // ejecutarse: un correo nuevo entraba directo al curso SIN alta, sin perfil
+    // y sin aceptar terminos. La puerta va donde pasan todos, no en cada pagina.
+    //
+    // El destino sigue guardado (rememberNextDestination al montar), asi que el
+    // final del alta lo consume y el invitado igual termina en su curso.
+    if (!(await cuentaCompleta())) {
+      setLocation("/welcome");
+      return;
+    }
+
     // A dónde volver: si el usuario llegó aquí rebotado desde un link
     // compartido (/auth?next=/tutor-ia/<curso>/onboarding?ref=...), regresa ahí.
-    // Antes esto mandaba SIEMPRE a /dashboard, así que quien se registraba desde
-    // un link de curso nunca veía el curso que le compartieron.
     // safeNextDestination sólo acepta rutas internas (ver next-destination.ts).
     const destino = safeNextDestination(window.location.search) || consumeNextDestination() || "/dashboard";
     if (user && inviteToken && !inviteAcceptedRef.current) {
