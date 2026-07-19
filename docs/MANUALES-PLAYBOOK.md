@@ -104,3 +104,14 @@ Remove-Item .env.seed.txt
 Ya está en `.gitignore`, así que no hay riesgo de que se suba al repo.
 
 - [ ] Borrado
+
+---
+
+## 8. (Backlog del cuaderno) QR a videos de YouTube
+
+Idea de David: que el cuaderno traiga QR a documentales o conferencias del tema.
+
+**Trampa:** la IA NO puede inventar esos links. Un ID de YouTube inventado no da error —
+manda a cualquier video— y en material de capacitación eso es grave. Dos salidas honestas:
+biblioteca curada por instructor (links reales pegados a mano) o QR que abra una BÚSQUEDA
+del tema (nunca se rompe, menos curado). Decidir al retomar el cuaderno.
