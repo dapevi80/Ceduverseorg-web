@@ -25,12 +25,25 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
 
-const require = createRequire(import.meta.url);
+// OJO: NO usar `createRequire(import.meta.url)` a nivel de módulo.
+//
+// En producción este servidor se empaqueta a CommonJS (script/build.ts), y ahí
+// esbuild reemplaza `import.meta` por un objeto vacío: `import.meta.url` queda
+// `undefined` y `createRequire(undefined)` LANZA al cargar el módulo, tumbando
+// el arranque completo del servidor. Pasó en el deploy del 2026-07-19: el build
+// compilaba bien y el proceso moría con
+// "The argument 'filename' must be a file URL object... Received undefined".
+//
+// En el bundle CJS `require` ya existe y sirve tal cual; `createRequire` sólo
+// hace falta cuando se corre como ESM (tsx en desarrollo). El ternario evita
+// evaluar `import.meta.url` en el camino CJS.
+const resolver: NodeRequire =
+  typeof require === "function" ? require : createRequire(import.meta.url);
 
 /** Resuelve un specifier de paquete npm a una ruta absoluta en disco, o null si no existe. */
 function resolvePackageFile(specifier: string): string | null {
   try {
-    return require.resolve(specifier);
+    return resolver.resolve(specifier);
   } catch {
     return null;
   }
