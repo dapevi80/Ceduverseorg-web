@@ -44,6 +44,7 @@ import PrivacidadPage from "@/pages/privacidad";
 import CookiesPage from "@/pages/cookies";
 import VerifySocioPage from "@/pages/verify-socio";
 import ReportarRiesgoPage from "@/pages/reportar-riesgo";
+import MisRiesgosPage from "@/pages/mis-riesgos";
 import PendingTermsModal from "@/components/PendingTermsModal";
 import LiveTutor from "@/pages/live-tutor";
 import PrivateSessionsPage from "@/pages/private-sessions";
@@ -115,6 +116,7 @@ function Router() {
       <Route path="/verify/socio/:numero" component={VerifySocioPage} />
       <Route path="/riesgos/reportar/:slug" component={ReportarRiesgoPage} />
       <Route path="/riesgos/reportar" component={ReportarRiesgoPage} />
+      <Route path="/riesgos/mios" component={MisRiesgosPage} />
       <Route path="/playbook/:slug/ejercicio/:n" component={PlaybookExerciseRedirect} />
       <Route path="/tutor-ia-vivo" component={LiveTutor as any} />
       <Route path="/sesiones-privadas" component={PrivateSessionsPage} />

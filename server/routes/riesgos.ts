@@ -4,10 +4,21 @@ import crypto from "crypto";
 import { requireAuth } from "../auth";
 import { storage } from "../storage";
 import { db } from "../db";
-import { riskFindings, teamUsers, teams, users, profiles, studioEnrollments } from "@shared/schema";
+import {
+  riskFindings,
+  teamUsers,
+  teams,
+  users,
+  profiles,
+  studioEnrollments,
+  playbookEvidence,
+  achievementUsers,
+  achievements,
+} from "@shared/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { r2Storage } from "../services/r2-storage";
 import { assembleReferences } from "@shared/playbook-assemble";
+import { totalPoints } from "@shared/playbook-points";
 import {
   EVIDENCE_MAX_MB,
   isImageMimetype,
@@ -316,12 +327,50 @@ export function registerRiesgosRoutes(app: Express) {
   // toCompanyView (esa es la proyección para OTROS/la empresa): aquí no hay
   // fuga posible porque el dueño de la fila es quien la está pidiendo, así
   // que se puede mostrar más detalle (puntos, resolución) del que ve la empresa.
+  //
+  // Task 9 (docs/superpowers/plans/2026-07-18-detector-riesgos.md): además de
+  // la lista, esta misma respuesta trae el total acumulado de puntos del
+  // trabajador (spec, decisión del dueño del producto 2026-07-19) — se
+  // extiende ESTE endpoint en vez de agregar uno nuevo porque "Mis hallazgos"
+  // es la única pantalla que hoy necesita el número, y la página ya pide
+  // esta ruta para pintar la lista; un segundo roundtrip solo para el total
+  // no le compra nada al cliente. totalPoints() (shared/playbook-points.ts)
+  // agrega tres fuentes — PURA, sin decidir aquí cómo sumarlas, solo qué
+  // filas trae cada una:
+  //   1) risk_findings.points_awarded de este usuario (0 en las no
+  //      validadas — pointsForTransition solo paga al entrar a "atendido",
+  //      así que sumarlas tal cual ya excluye lo no validado);
+  //   2) playbook_evidence.points de este usuario;
+  //   3) achievements.value vía achievement_users de este usuario — aquí
+  //      viven, sin tabla aparte, los certificados/diplomas de curso que el
+  //      dueño del producto pidió contar.
+  // El desglose por fuente se manda también (points.breakdown): la UI de hoy
+  // solo pinta el total, pero el dueño puede querer premiar fuentes distinto
+  // más adelante y no debe requerir otro cambio de contrato para eso.
   app.get("/api/riesgos/mios", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
       const rows = await db.select().from(riskFindings)
         .where(eq(riskFindings.userId, userId))
         .orderBy(desc(riskFindings.createdAt));
+
+      const [evidenceRows, achievementRows] = await Promise.all([
+        db.select({ points: playbookEvidence.points })
+          .from(playbookEvidence)
+          .where(eq(playbookEvidence.userId, userId)),
+        db.select({ value: achievements.value })
+          .from(achievementUsers)
+          .innerJoin(achievements, eq(achievementUsers.achievementId, achievements.id))
+          .where(eq(achievementUsers.userId, userId)),
+      ]);
+
+      const findingsPoints = rows.map((r) => r.pointsAwarded);
+      const evidencePoints = evidenceRows.map((e) => e.points);
+      const achievementValues = achievementRows.map((a) => a.value);
+
+      const findingsSum = findingsPoints.reduce((s, p) => s + p, 0);
+      const evidenceSum = evidencePoints.reduce((s, p) => s + p, 0);
+      const achievementSum = achievementValues.reduce((s, v) => s + v, 0);
 
       res.json({
         hallazgos: rows.map((r) => ({
@@ -336,7 +385,22 @@ export function registerRiesgosRoutes(app: Express) {
           pointsAwarded: r.pointsAwarded,
           resolutionNote: r.resolutionNote,
           resolvedAt: r.resolvedAt,
+          // Solo un booleano, nunca la llave — igual que hasSolutionPhoto en
+          // toCompanyView (server/lib/risk-anonymity.ts). El trabajador pide
+          // la imagen real vía GET /api/riesgos/:id/foto-solucion (más abajo
+          // en este archivo), que sí es SU proxy autenticado (a diferencia
+          // de /api/empresa/riesgos/:id/foto-solucion, que solo autoriza
+          // admins).
+          hasSolutionPhoto: Boolean(r.resolutionPhotoKey && r.resolutionPhotoKey.trim().length > 0),
         })),
+        points: {
+          total: totalPoints({ findingsPoints, evidencePoints, achievementValues }),
+          breakdown: {
+            findings: findingsSum,
+            evidence: evidenceSum,
+            achievements: achievementSum,
+          },
+        },
       });
     } catch (err) { next(err); }
   });
@@ -390,6 +454,63 @@ export function registerRiesgosRoutes(app: Express) {
       stream.on("error", (streamErr: unknown) => {
         if (res.headersSent) {
           console.error("R2 stream error after headers sent (foto de riesgo):", streamErr);
+          return;
+        }
+        next(streamErr);
+      });
+      stream.pipe(res);
+    } catch (err) { next(err); }
+  });
+
+  // Proxy autenticado de la foto de SOLUCIÓN para el trabajador que reportó
+  // el hallazgo (Task 9). Existe /api/empresa/riesgos/:id/foto-solucion más
+  // abajo, pero ESE solo autoriza admins — el reportante (que no es admin de
+  // su empresa la mayoría de las veces) quedaría sin forma de ver la foto
+  // que la empresa subió al corregir su propio reporte, justo el dato que
+  // hace que valga la pena seguir reportando. Mismo patrón que
+  // GET /api/riesgos/:id/foto: autorizado si el solicitante es el autor
+  // (row.userId), O si administra el equipo del hallazgo — nunca se expone
+  // la URL pública de R2 ni la llave.
+  app.get("/api/riesgos/:id/foto-solucion", requireAuth, async (req, res, next) => {
+    try {
+      const id = String(req.params.id);
+      if (!UUID_RE.test(id)) return res.status(404).json({ message: "Hallazgo no encontrado" });
+
+      const [row] = await db.select().from(riskFindings).where(eq(riskFindings.id, id));
+      if (!row) return res.status(404).json({ message: "Hallazgo no encontrado" });
+      if (!row.resolutionPhotoKey) {
+        return res.status(404).json({ message: "Este hallazgo todavía no tiene foto de solución" });
+      }
+
+      const requesterId = req.supabaseUserId!;
+      let allowed = requesterId === row.userId;
+      if (!allowed) {
+        const adminTeamIds = await getEmpresaAdminTeamIds(requesterId);
+        allowed = adminTeamIds.includes(row.teamId);
+      }
+      if (!allowed) return res.status(403).json({ message: "No tienes acceso a esta foto" });
+
+      if (!r2Storage.isConfigured) {
+        return res.status(503).json({ message: "Almacenamiento de fotos no configurado" });
+      }
+
+      const obj = await r2Storage.getObject(row.resolutionPhotoKey);
+      if (!obj) return res.status(404).json({ message: "Foto no encontrada" });
+
+      res.set("Content-Type", safeEvidenceContentType(obj.contentType));
+      res.set("X-Content-Type-Options", "nosniff");
+      if (obj.contentLength) res.set("Content-Length", String(obj.contentLength));
+      // Privada: nunca cacheable por proxies/CDN compartidos ni por el navegador
+      // en disco compartido.
+      res.set("Cache-Control", "private, no-store");
+      const stream = obj.body as any;
+      const destroyStream = () => {
+        if (typeof stream.destroy === "function") stream.destroy();
+      };
+      req.on("close", destroyStream);
+      stream.on("error", (streamErr: unknown) => {
+        if (res.headersSent) {
+          console.error("R2 stream error after headers sent (foto de solución, trabajador):", streamErr);
           return;
         }
         next(streamErr);
