@@ -171,6 +171,9 @@ async function toFindingRow(row: typeof riskFindings.$inferSelect): Promise<Find
     createdAt: row.createdAt,
     reporterName: profile?.fullName ?? null,
     reporterEmail: user?.email ?? null,
+    resolvedAt: row.resolvedAt,
+    resolutionNote: row.resolutionNote,
+    resolutionPhotoKey: row.resolutionPhotoKey,
   };
 }
 
@@ -486,7 +489,14 @@ export function registerRiesgosRoutes(app: Express) {
           return res.status(400).json({ message: "Estado inválido" });
         }
         const toStatus: RiskStatus = rawStatus;
-        const fromStatus = row.status as RiskStatus;
+        // row.status viene de la base, no del cliente, pero una fila con un
+        // valor viejo/corrupto que ya no está en RISK_STATUSES no debe
+        // colarse a TRANSITIONS[from] (undefined ahí truena con un 500). El
+        // dato está mal, no la petición: 409, no 500.
+        if (!isRiskStatus(row.status)) {
+          return res.status(409).json({ message: "El hallazgo tiene un estado inválido; contacta soporte" });
+        }
+        const fromStatus: RiskStatus = row.status;
 
         if (!canTransition(fromStatus, toStatus)) {
           return res.status(400).json({ message: `No se puede pasar de "${fromStatus}" a "${toStatus}".` });
@@ -498,18 +508,38 @@ export function registerRiesgosRoutes(app: Express) {
         }
 
         const resolutionNoteInput = typeof req.body.resolutionNote === "string" ? req.body.resolutionNote.trim() : "";
-        // Si no mandan una nota nueva, conserva la que ya tenía el hallazgo
-        // (p. ej. al reabrir y volver a descartar sin repetirla) — solo como
-        // dato a persistir; validateTransition sigue exigiendo que exista
-        // alguna si el destino es "descartado".
-        const effectiveResolutionNote = resolutionNoteInput || row.resolutionNote || null;
+        // Reabrir (destino "en_revision") nunca toca la nota existente — se
+        // conserva tal cual para que, si se vuelve a cerrar con el MISMO
+        // significado (ver abajo), siga disponible sin tener que retipearla.
+        //
+        // Al cerrar (destino "atendido" o "descartado") solo se hereda la
+        // nota existente cuando el destino es "descartado" — el único
+        // estado que la exige, y el único caso legítimo de "reabrir y
+        // volver a descartar sin repetir el motivo". Heredarla hacia
+        // "atendido" es el bug que encontró la revisión: la nota de rechazo
+        // de un descartado anterior aparecería como si explicara una
+        // corrección real, y el registro de cumplimiento leería "corregido"
+        // con el motivo de por qué se había descartado antes. Un destino de
+        // cierre con significado distinto ("atendido") nunca hereda.
+        const effectiveResolutionNote =
+          toStatus === "en_revision"
+            ? (row.resolutionNote ?? null)
+            : resolutionNoteInput || (toStatus === "descartado" ? row.resolutionNote : null) || null;
 
-        // Para validar la transición SIN subir nada todavía: si llegó un
-        // archivo nuevo se usa un marcador no vacío (la llave real aún no
-        // existe); si no llegó, se evalúa contra la llave que el hallazgo ya
-        // tenía (permite re-cerrar como atendido sin volver a adjuntar la
-        // misma foto).
-        const photoPresenceForValidation = req.file ? "nueva-foto-pendiente-de-subir" : row.resolutionPhotoKey;
+        // Una foto de resolución solo cuenta como evidencia cuando el
+        // DESTINO es "atendido" — permitir que una foto adjunta a un cierre
+        // como "descartado" quede guardada en resolution_photo_key es
+        // precisamente el hueco que la revisión encontró: descartar con foto
+        // (para lo que sea) deja una llave no vacía que luego, al reabrir y
+        // cerrar como atendido SIN foto nueva, validateTransition confunde
+        // con evidencia real de corrección. Por eso, fuera de "atendido":
+        // el marcador de validación es null (nunca cuenta como evidencia,
+        // exista o no una llave previa) y más abajo la foto adjunta, si la
+        // hay, ni se sube a R2 ni se persiste.
+        const photoPresenceForValidation =
+          toStatus === "atendido"
+            ? (req.file ? "nueva-foto-pendiente-de-subir" : row.resolutionPhotoKey)
+            : null;
 
         const transitionCheck = validateTransition(toStatus, {
           resolutionPhotoKey: photoPresenceForValidation,
@@ -519,18 +549,24 @@ export function registerRiesgosRoutes(app: Express) {
           return res.status(400).json({ message: transitionCheck.message });
         }
 
-        if (!r2Storage.isConfigured && req.file) {
+        const willUploadPhoto = Boolean(req.file) && toStatus === "atendido";
+
+        if (!r2Storage.isConfigured && willUploadPhoto) {
           return res.status(503).json({ message: "Almacenamiento de fotos no configurado" });
         }
 
-        // Todo validado — recién ahora se sube la foto nueva a R2, si la hay.
-        // La llave usa el id del hallazgo (findingPhotoKey), igual que la
-        // foto original: nunca el user id de quien la sube.
+        // Todo validado — recién ahora se sube la foto nueva a R2, si la hay
+        // y el destino es "atendido". La llave usa el id del hallazgo
+        // (findingPhotoKey), igual que la foto original: nunca el user id de
+        // quien la sube. Si llegó un archivo pero el destino no es
+        // "atendido", se ignora deliberadamente: ni se sube a R2 (nada
+        // huérfano) ni se guarda su llave (nada que luego se confunda con
+        // evidencia de corrección).
         let resolutionPhotoKey = row.resolutionPhotoKey;
-        if (req.file) {
-          const ext = extensionForMimetype(req.file.mimetype);
+        if (willUploadPhoto) {
+          const ext = extensionForMimetype(req.file!.mimetype);
           const key = findingPhotoKey(row.id, ext);
-          await r2Storage.uploadBuffer(req.file.buffer, key, req.file.mimetype);
+          await r2Storage.uploadBuffer(req.file!.buffer, key, req.file!.mimetype);
           resolutionPhotoKey = key;
         }
 
@@ -554,6 +590,17 @@ export function registerRiesgosRoutes(app: Express) {
           .where(eq(riskFindings.id, row.id))
           .returning();
 
+        // El id ya se validó (existe, pertenece a una empresa administrada
+        // por el solicitante) apenas unas líneas arriba, así que un
+        // .returning() vacío aquí solo puede significar que la fila
+        // desapareció entre el SELECT y este UPDATE (borrado concurrente) —
+        // no algo que el cliente pueda corregir reenviando la misma
+        // petición. Sin este guard, updated.userId de la siguiente sección
+        // truena con un 500 poco claro.
+        if (!updated) {
+          return res.status(409).json({ message: "El hallazgo ya no existe; probablemente fue eliminado." });
+        }
+
         // Logro acumulado (spec §8): solo se considera cuando ESTA
         // transición de verdad pagó puntos (points > 0) — reabrir y volver a
         // cerrar no debe re-disparar el conteo, porque pointsForTransition ya
@@ -563,7 +610,11 @@ export function registerRiesgosRoutes(app: Express) {
         // otorgarlo, el perdedor de la carrera relee lo que ya quedó
         // persistido en vez de responder 500 — el hallazgo ya se actualizó
         // con éxito arriba, así que esta parte nunca debe tumbar la request.
-        let achievementAwarded: string | null = null;
+        //
+        // El slug otorgado (si lo hay) NUNCA se guarda en una variable que
+        // llegue a la respuesta HTTP de este endpoint: ver el comentario
+        // junto a res.json() más abajo para el porqué (CRITICAL — filtración
+        // de conteo acumulado del reportante a la empresa).
         if (points > 0) {
           const validated = await db.select({ id: riskFindings.id }).from(riskFindings)
             .where(and(eq(riskFindings.userId, updated.userId), eq(riskFindings.status, "atendido")));
@@ -581,7 +632,11 @@ export function registerRiesgosRoutes(app: Express) {
                   shortDescription: "La empresa validó tus hallazgos de riesgo con evidencia de corrección",
                   description: "Reportaste incumplimientos reales en tu lugar de trabajo y la empresa los corrigió, documentando la evidencia.",
                   category: "Academy",
-                  value: RIESGO_VALIDADO_PUNTOS,
+                  // Proporcional al umbral: el logro de 100 hallazgos
+                  // representa muchísimo más esfuerzo/impacto sostenido que
+                  // el del primero, y no debe valer lo mismo en el perfil
+                  // del trabajador.
+                  value: RIESGO_VALIDADO_PUNTOS * threshold,
                   icon: "shield-check",
                 });
               } catch (err) {
@@ -604,23 +659,30 @@ export function registerRiesgosRoutes(app: Express) {
                   status: "active",
                   certType: "diploma",
                 });
-                achievementAwarded = achSlug;
               } catch (err) {
                 if (!isUniqueViolation(err)) throw err;
                 // Carrera: otro request concurrente ya otorgó el logro
                 // (colisión en uq_achievement_users_cert). El hallazgo ya se
                 // actualizó con éxito arriba — esto no es un error real.
-                achievementAwarded = null;
               }
             }
           }
         }
 
+        // El slug del logro otorgado arriba (si lo hay) NUNCA sale en esta
+        // respuesta: es `detector-riesgos-<n>` donde n es el conteo GLOBAL Y
+        // ACUMULADO de hallazgos validados del reportante — un dato derivado
+        // del reportante, ni más ni menos que su nombre. Devolvérselo a la
+        // empresa (que ve esta respuesta, no el trabajador) filtraría,
+        // incluso en un reporte anónimo, cuántos hallazgos previos tiene esa
+        // persona, y volvería identificables/vinculables entre sí sus
+        // reportes anónimos en un taller chico. El logro SÍ se otorga arriba
+        // (server-side); el trabajador lo ve en su propia vista
+        // (GET /api/me/achievements), nunca aquí.
         const finalRow = await toFindingRow(updated);
         res.json({
           finding: toCompanyView(finalRow),
           pointsAwarded: points,
-          achievementAwarded,
         });
       } catch (err) { next(err); }
     },
@@ -645,7 +707,11 @@ export function registerRiesgosRoutes(app: Express) {
 
       const requesterId = req.supabaseUserId!;
       const adminTeamIds = await getEmpresaAdminTeamIds(requesterId);
-      if (!adminTeamIds.includes(row.teamId)) {
+      // Explícito por simetría con GET /api/empresa/riesgos y PATCH
+      // /api/empresa/riesgos/:id: sin esto el 403 de un solicitante sin
+      // ninguna organización sale correcto solo por accidente
+      // ([].includes(...) === false), no porque el código lo declare.
+      if (adminTeamIds.length === 0 || !adminTeamIds.includes(row.teamId)) {
         return res.status(403).json({ message: "No tienes acceso a esta foto" });
       }
 

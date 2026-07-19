@@ -29,6 +29,9 @@ function baseRow(overrides: Partial<FindingRow> = {}): FindingRow {
     createdAt: new Date("2026-07-18T12:00:00Z"),
     reporterName: REPORTER_NAME,
     reporterEmail: REPORTER_EMAIL,
+    resolvedAt: null,
+    resolutionNote: null,
+    resolutionPhotoKey: null,
     ...overrides,
   };
 }
@@ -141,6 +144,67 @@ describe("toCompanyView — photoRef opaco: nunca el photoKey crudo", () => {
     const row = baseRow();
     const result = toCompanyView(row);
     expect(result.photoRef).toBe(row.id);
+  });
+});
+
+describe("toCompanyView — historial de cumplimiento (spec §10): company-authored, no reporter-derived", () => {
+  it("resolvedAt viaja truncado al día, igual que createdAt", () => {
+    const row = baseRow({ resolvedAt: new Date("2026-07-20T23:59:59.999Z") });
+    const result = toCompanyView(row);
+    expect(result.resolvedAt).toBe("2026-07-20");
+  });
+
+  it("resolvedAt es null cuando el hallazgo no se ha cerrado", () => {
+    const row = baseRow({ resolvedAt: null });
+    const result = toCompanyView(row);
+    expect(result.resolvedAt).toBeNull();
+  });
+
+  it("resolutionNote viaja tal cual (la escribió la empresa, no el reportante)", () => {
+    const row = baseRow({ resolutionNote: "Se instaló la calza faltante y se capacitó al turno." });
+    const result = toCompanyView(row);
+    expect(result.resolutionNote).toBe("Se instaló la calza faltante y se capacitó al turno.");
+  });
+
+  it("resolutionNote es null cuando no hay nota", () => {
+    const row = baseRow({ resolutionNote: null });
+    expect(toCompanyView(row).resolutionNote).toBeNull();
+  });
+
+  it("hasSolutionPhoto es true cuando la fila trae una llave de foto de solución", () => {
+    const row = baseRow({ resolutionPhotoKey: "risk/finding-0001/resolucion-secreta.jpg" });
+    const result = toCompanyView(row);
+    expect(result.hasSolutionPhoto).toBe(true);
+  });
+
+  it("hasSolutionPhoto es false cuando no hay foto de solución (null o cadena vacía)", () => {
+    expect(toCompanyView(baseRow({ resolutionPhotoKey: null })).hasSolutionPhoto).toBe(false);
+    expect(toCompanyView(baseRow({ resolutionPhotoKey: "" })).hasSolutionPhoto).toBe(false);
+    expect(toCompanyView(baseRow({ resolutionPhotoKey: undefined })).hasSolutionPhoto).toBe(false);
+  });
+
+  it("la llave cruda de la foto de solución NUNCA aparece en el JSON serializado — solo el booleano", () => {
+    const secretKey = "risk/finding-0001/resolucion-muy-secreta-token.jpg";
+    const row = baseRow({ resolutionPhotoKey: secretKey });
+    const result = toCompanyView(row);
+    expect("resolutionPhotoKey" in result).toBe(false);
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain(secretKey);
+    expect(serialized).not.toContain("resolucion-muy-secreta-token");
+  });
+
+  it("estos tres campos no dependen de anonymous: siguen presentes en un hallazgo anónimo", () => {
+    const row = baseRow({
+      anonymous: true,
+      resolvedAt: new Date("2026-07-21T08:00:00Z"),
+      resolutionNote: "Corregido conforme a NOM-006-STPS-2014.",
+      resolutionPhotoKey: "risk/finding-0001/sol.jpg",
+    });
+    const result = toCompanyView(row);
+    expect(result.reporter).toBeNull(); // identidad sigue oculta
+    expect(result.resolvedAt).toBe("2026-07-21");
+    expect(result.resolutionNote).toBe("Corregido conforme a NOM-006-STPS-2014.");
+    expect(result.hasSolutionPhoto).toBe(true);
   });
 });
 

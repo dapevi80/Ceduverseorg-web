@@ -23,9 +23,20 @@ export interface FindingRow {
   createdAt: Date;
   reporterName?: string | null;
   reporterEmail?: string | null;
-  // resto de columnas de risk_findings (team_id, resolution_*, points_awarded,
-  // etc.) deliberadamente NO forman parte de este tipo: toCompanyView solo
-  // conoce y copia los campos que declara explícitamente abajo.
+  // Datos de resolución (spec §10, historial de cumplimiento): a diferencia
+  // de reporterName/reporterEmail, estos NO identifican al reportante — los
+  // escribe/genera la empresa al cerrar el hallazgo (resolvedAt es cuándo
+  // cerró, resolutionNote es lo que la empresa escribió, resolutionPhotoKey
+  // solo se usa aquí para derivar un booleano de "existe evidencia", nunca
+  // se expone la llave cruda). Por eso toCompanyView SÍ puede copiarlos,
+  // campo por campo, a diferencia del bloque de identidad de arriba.
+  resolvedAt?: Date | null;
+  resolutionNote?: string | null;
+  resolutionPhotoKey?: string | null;
+  // resto de columnas de risk_findings (team_id, points_awarded, user_id ya
+  // cubierto arriba, etc.) deliberadamente NO forman parte de este tipo:
+  // toCompanyView solo conoce y copia los campos que declara explícitamente
+  // abajo.
 }
 
 export interface CompanyFinding {
@@ -46,6 +57,18 @@ export interface CompanyFinding {
   // row.photoKey a mano para que el cliente pueda pedir la foto, y eso
   // reintroduciría la fuga una línea fuera de este módulo.
   photoRef: string;
+  // Historial de cumplimiento (spec §10): "detectado el <createdAt>,
+  // corregido el <resolvedAt>, con nota y evidencia" sin que el cliente
+  // tenga que adivinar probando /foto-solucion y viendo si da 404. Mismo
+  // truncamiento a solo fecha que createdAt; null si el hallazgo no se ha
+  // cerrado todavía. Company-authored, no reporter-derived: seguro de
+  // exponer campo por campo, igual que el resto de este objeto (nunca spread).
+  resolvedAt: string | null;
+  resolutionNote: string | null;
+  // Solo SI existe una foto de solución, nunca la llave — el proxy
+  // autenticado (/api/empresa/riesgos/:id/foto-solucion) sigue siendo el
+  // único camino para verla de verdad.
+  hasSolutionPhoto: boolean;
 }
 
 /**
@@ -73,6 +96,9 @@ export function toCompanyView(row: FindingRow): CompanyFinding {
     createdAt: toDateOnly(row.createdAt),
     reporter,
     photoRef: row.id,
+    resolvedAt: row.resolvedAt ? toDateOnly(row.resolvedAt) : null,
+    resolutionNote: row.resolutionNote ?? null,
+    hasSolutionPhoto: Boolean(row.resolutionPhotoKey && row.resolutionPhotoKey.trim().length > 0),
   };
 }
 
