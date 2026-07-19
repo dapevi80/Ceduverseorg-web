@@ -110,8 +110,11 @@ Es el mayor riesgo de esfuerzo del rediseño y conviene aislarlo en su propio m�
 ## 9. Parámetros
 ```
 PAGINA            = LETTER (612x792)
-MARGENES          = 54pt sup/inf, 54pt izq, 170pt der (margen de notas)
-COLUMNA_NOTAS     = ~110pt, con renglones al 8% de opacidad
+MARGENES          = 54pt sup, 62pt inf (pie de pagina), 54pt izq
+COLUMNA_TEXTO     = 330pt
+COLUMNA_NOTAS     = 172pt (separada 18pt del texto), renglones al 8% de opacidad
+                    -- David 2026-07-18: 130pt se sentia reducido para escribir
+PIE_DE_PAGINA     = numero de pagina + nombre del curso, en todas menos la portada
 RENGLON           = 22pt de interlínea para escritura a mano
 COLORES_MODULO    = [blue, orange, violet, green] rotando
 FUENTES           = DM Serif Display (títulos) / Plus Jakarta Sans (texto)
