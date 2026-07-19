@@ -14,11 +14,21 @@ import {
   extensionForMimetype,
   safeEvidenceContentType,
   validateEvidenceFile,
+  isUniqueViolation,
 } from "../lib/playbook-upload";
 import { toCompanyView, findingPhotoKey, type FindingRow } from "../lib/risk-anonymity";
 import { pickAllowedNorm } from "../lib/norm-validate";
 import { resolveTeamSelection } from "../lib/team-selection";
 import { suggestNorm } from "../risk-norm-suggest";
+import {
+  canTransition,
+  validateTransition,
+  pointsForTransition,
+  isRiskStatus,
+  RIESGO_VALIDADO_PUNTOS,
+  type RiskStatus,
+} from "../lib/risk-status";
+import { riskAchievementThreshold, riskAchievementSlug } from "../lib/risk-achievements";
 import { getEmpresaAdminTeamIds } from "./empresa";
 
 // Detector de riesgos — endpoints del trabajador (Task 5 del plan
@@ -46,22 +56,31 @@ const riesgoUpload = multer({
 
 /** Traduce fallos de multer (tamaño, mimetype) a 400 explícito en vez de dejarlos
  * caer al handler genérico de errores (500) — mismo patrón que
- * server/routes/playbook.ts handleEvidenceUpload. */
-function handleRiesgoUpload(req: any, res: any, next: any) {
-  riesgoUpload.single("photo")(req, res, (err: unknown) => {
-    if (!err) return next();
-    if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({ message: `La foto no puede pesar más de ${EVIDENCE_MAX_MB}MB` });
-    }
-    if (err instanceof multer.MulterError) {
-      return res.status(400).json({ message: err.message || "Archivo inválido" });
-    }
-    if (err instanceof Error && err.message === RIESGO_FILE_FILTER_ERROR) {
-      return res.status(400).json({ message: err.message });
-    }
-    return next(err);
-  });
+ * server/routes/playbook.ts handleEvidenceUpload.
+ *
+ * Factory por nombre de campo: la subida del reporte usa el campo "photo" y
+ * el cierre de la empresa usa "resolutionPhoto" (multipart opcional) —
+ * misma allowlist/límite/errores para ambas, una sola copia de la lógica de
+ * traducción de errores. */
+function handleRiesgoImageUpload(fieldName: string) {
+  return (req: any, res: any, next: any) => {
+    riesgoUpload.single(fieldName)(req, res, (err: unknown) => {
+      if (!err) return next();
+      if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ message: `La foto no puede pesar más de ${EVIDENCE_MAX_MB}MB` });
+      }
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ message: err.message || "Archivo inválido" });
+      }
+      if (err instanceof Error && err.message === RIESGO_FILE_FILTER_ERROR) {
+        return res.status(400).json({ message: err.message });
+      }
+      return next(err);
+    });
+  };
 }
+
+const handleRiesgoUpload = handleRiesgoImageUpload("photo");
 
 /** Los equipos A LOS QUE PERTENECE el trabajador que reporta — a diferencia
  * de getEmpresaAdminTeamIds (server/routes/empresa.ts), aquí cualquier rol
@@ -368,6 +387,289 @@ export function registerRiesgosRoutes(app: Express) {
       stream.on("error", (streamErr: unknown) => {
         if (res.headersSent) {
           console.error("R2 stream error after headers sent (foto de riesgo):", streamErr);
+          return;
+        }
+        next(streamErr);
+      });
+      stream.pipe(res);
+    } catch (err) { next(err); }
+  });
+
+  // ---------------------------------------------------------------------
+  // Endpoints de la empresa (Task 6 del plan
+  // docs/superpowers/plans/2026-07-18-detector-riesgos.md). Ver spec §4, §6,
+  // §8, §12.
+  //
+  // Alcance: SIEMPRE por getEmpresaAdminTeamIds (plural) del SOLICITANTE —
+  // TODAS las empresas que administra, nunca un solo equipo "resuelto"
+  // arbitrariamente con orderBy+limit(1) (getEmpresaAdminTeam, singular, de
+  // server/routes/empresa.ts). Ese resuelve-uno fue precisamente el bug que
+  // 403'ba a un admin de varias empresas fuera de sus propios hallazgos: un
+  // admin de A y B tiene acceso legítimo a ambas, y comparar contra un único
+  // equipo elegido arbitrariamente niega en falso el acceso a la que no ganó
+  // el desempate. Sin ningún equipo administrado → 403; jamás la lista de
+  // otra empresa; jamás "todos los hallazgos".
+  // ---------------------------------------------------------------------
+
+  // Tablero de la empresa: hallazgos de TODAS las empresas que administra el
+  // solicitante. Cada fila SIEMPRE pasa por toCompanyView (nunca se arma la
+  // respuesta a mano ni con un spread del row — ver el comentario al inicio
+  // del archivo y server/lib/risk-anonymity.ts): un hallazgo anónimo no
+  // puede traer nombre, correo ni user id en ninguna parte de esta lista.
+  app.get("/api/empresa/riesgos", requireAuth, async (req, res, next) => {
+    try {
+      const userId = req.supabaseUserId!;
+      const adminTeamIds = await getEmpresaAdminTeamIds(userId);
+      if (adminTeamIds.length === 0) {
+        return res.status(403).json({ message: "No tienes una organización" });
+      }
+
+      const rows = await db.select().from(riskFindings)
+        .where(inArray(riskFindings.teamId, adminTeamIds))
+        .orderBy(desc(riskFindings.createdAt));
+
+      const hallazgos = await Promise.all(rows.map(async (row) => toCompanyView(await toFindingRow(row))));
+      res.json({ hallazgos });
+    } catch (err) { next(err); }
+  });
+
+  // Cierra el ciclo del hallazgo (spec §4, §8, §12): en_revision -> atendido
+  // (con foto de la corrección, acredita puntos) o descartado (con motivo,
+  // 0 puntos); también permite reabrir atendido/descartado -> en_revision.
+  //
+  // Orden de operaciones deliberado — nada se escribe (ni en R2 ni en la
+  // base) hasta que TODO lo anterior ya se validó:
+  //   1) el solicitante administra al menos una empresa (si no, 403, nada
+  //      tocado);
+  //   2) el id tiene formato válido y el hallazgo existe (404 si no);
+  //   3) el hallazgo pertenece a una de las empresas que administra el
+  //      solicitante — comparado contra el team_id YA PERSISTIDO en la fila,
+  //      NUNCA contra un teamId que mande el cliente (403 si no coincide);
+  //   4) el estado destino tiene formato válido y la transición está
+  //      permitida por canTransition (400 si no);
+  //   5) si llegó un archivo, pasa la misma validación de imagen que la
+  //      subida del trabajador (400 si no);
+  //   6) validateTransition confirma que la evidencia que exige el estado
+  //      destino ya está presente — usando un marcador (no la llave real,
+  //      que aún no existe) si llegó una foto nueva, o la que el hallazgo ya
+  //      tenía si se está re-cerrando sin volver a adjuntarla (400 si falta).
+  // Solo después de que 1-6 pasaron se sube la foto nueva a R2 (si la hay) y
+  // se actualiza la fila. Así una falla de validación nunca deja un objeto
+  // huérfano en R2, y una falla de R2 nunca deja un hallazgo a medio
+  // actualizar.
+  app.patch(
+    "/api/empresa/riesgos/:id",
+    requireAuth,
+    handleRiesgoImageUpload("resolutionPhoto"),
+    async (req, res, next) => {
+      try {
+        const userId = req.supabaseUserId!;
+        const id = String(req.params.id);
+        if (!UUID_RE.test(id)) return res.status(404).json({ message: "Hallazgo no encontrado" });
+
+        const adminTeamIds = await getEmpresaAdminTeamIds(userId);
+        if (adminTeamIds.length === 0) {
+          return res.status(403).json({ message: "No tienes una organización" });
+        }
+
+        const [row] = await db.select().from(riskFindings).where(eq(riskFindings.id, id));
+        if (!row) return res.status(404).json({ message: "Hallazgo no encontrado" });
+
+        // Membresía del hallazgo verificada por su team_id YA PERSISTIDO —
+        // jamás por un teamId que mande el cliente en el body/query.
+        if (!adminTeamIds.includes(row.teamId)) {
+          return res.status(403).json({ message: "No tienes acceso a este hallazgo" });
+        }
+
+        const rawStatus = req.body.status;
+        if (!isRiskStatus(rawStatus)) {
+          return res.status(400).json({ message: "Estado inválido" });
+        }
+        const toStatus: RiskStatus = rawStatus;
+        const fromStatus = row.status as RiskStatus;
+
+        if (!canTransition(fromStatus, toStatus)) {
+          return res.status(400).json({ message: `No se puede pasar de "${fromStatus}" a "${toStatus}".` });
+        }
+
+        if (req.file) {
+          const fileCheck = validateEvidenceFile(req.file);
+          if (!fileCheck.ok) return res.status(400).json({ message: fileCheck.message });
+        }
+
+        const resolutionNoteInput = typeof req.body.resolutionNote === "string" ? req.body.resolutionNote.trim() : "";
+        // Si no mandan una nota nueva, conserva la que ya tenía el hallazgo
+        // (p. ej. al reabrir y volver a descartar sin repetirla) — solo como
+        // dato a persistir; validateTransition sigue exigiendo que exista
+        // alguna si el destino es "descartado".
+        const effectiveResolutionNote = resolutionNoteInput || row.resolutionNote || null;
+
+        // Para validar la transición SIN subir nada todavía: si llegó un
+        // archivo nuevo se usa un marcador no vacío (la llave real aún no
+        // existe); si no llegó, se evalúa contra la llave que el hallazgo ya
+        // tenía (permite re-cerrar como atendido sin volver a adjuntar la
+        // misma foto).
+        const photoPresenceForValidation = req.file ? "nueva-foto-pendiente-de-subir" : row.resolutionPhotoKey;
+
+        const transitionCheck = validateTransition(toStatus, {
+          resolutionPhotoKey: photoPresenceForValidation,
+          resolutionNote: effectiveResolutionNote,
+        });
+        if (!transitionCheck.ok) {
+          return res.status(400).json({ message: transitionCheck.message });
+        }
+
+        if (!r2Storage.isConfigured && req.file) {
+          return res.status(503).json({ message: "Almacenamiento de fotos no configurado" });
+        }
+
+        // Todo validado — recién ahora se sube la foto nueva a R2, si la hay.
+        // La llave usa el id del hallazgo (findingPhotoKey), igual que la
+        // foto original: nunca el user id de quien la sube.
+        let resolutionPhotoKey = row.resolutionPhotoKey;
+        if (req.file) {
+          const ext = extensionForMimetype(req.file.mimetype);
+          const key = findingPhotoKey(row.id, ext);
+          await r2Storage.uploadBuffer(req.file.buffer, key, req.file.mimetype);
+          resolutionPhotoKey = key;
+        }
+
+        const points = pointsForTransition(fromStatus, toStatus, row.pointsAwarded);
+        const isClosing = toStatus === "atendido" || toStatus === "descartado";
+        const now = new Date();
+
+        const [updated] = await db.update(riskFindings)
+          .set({
+            status: toStatus,
+            resolutionPhotoKey,
+            resolutionNote: effectiveResolutionNote,
+            // pointsForTransition ya devuelve 0 si alreadyAwarded > 0, así
+            // que sumar aquí nunca duplica el pago aunque se reabra y se
+            // vuelva a cerrar (Task 2, risk-status.ts).
+            pointsAwarded: row.pointsAwarded + points,
+            resolvedBy: isClosing ? userId : null,
+            resolvedAt: isClosing ? now : null,
+            updatedAt: now,
+          })
+          .where(eq(riskFindings.id, row.id))
+          .returning();
+
+        // Logro acumulado (spec §8): solo se considera cuando ESTA
+        // transición de verdad pagó puntos (points > 0) — reabrir y volver a
+        // cerrar no debe re-disparar el conteo, porque pointsForTransition ya
+        // devolvió 0 en ese caso. Mismo patrón tolerante a colisión única que
+        // el bono de finalización del Playbook (server/routes/playbook.ts):
+        // si dos cierres concurrentes chocan al crear el logro o al
+        // otorgarlo, el perdedor de la carrera relee lo que ya quedó
+        // persistido en vez de responder 500 — el hallazgo ya se actualizó
+        // con éxito arriba, así que esta parte nunca debe tumbar la request.
+        let achievementAwarded: string | null = null;
+        if (points > 0) {
+          const validated = await db.select({ id: riskFindings.id }).from(riskFindings)
+            .where(and(eq(riskFindings.userId, updated.userId), eq(riskFindings.status, "atendido")));
+          const threshold = riskAchievementThreshold(validated.length);
+          if (threshold !== null) {
+            const achSlug = riskAchievementSlug(threshold);
+            let achievement = await storage.getAchievementBySlug(achSlug);
+            if (!achievement) {
+              try {
+                achievement = await storage.createAchievement({
+                  slug: achSlug,
+                  name: threshold === 1
+                    ? "Detector de riesgos: primer hallazgo validado"
+                    : `Detector de riesgos: ${threshold} hallazgos validados`,
+                  shortDescription: "La empresa validó tus hallazgos de riesgo con evidencia de corrección",
+                  description: "Reportaste incumplimientos reales en tu lugar de trabajo y la empresa los corrigió, documentando la evidencia.",
+                  category: "Academy",
+                  value: RIESGO_VALIDADO_PUNTOS,
+                  icon: "shield-check",
+                });
+              } catch (err) {
+                if (!isUniqueViolation(err)) throw err;
+                // Carrera: otro request concurrente ganó la creación del
+                // logro (colisión en achievements.slug, único). Relee el que
+                // ya quedó persistido.
+                achievement = await storage.getAchievementBySlug(achSlug);
+                if (!achievement) throw err;
+              }
+            }
+            const alreadyHasIt = (await storage.getUserAchievements(updated.userId))
+              .some((a) => a.achievementId === achievement.id);
+            if (!alreadyHasIt) {
+              try {
+                await storage.awardAchievement({
+                  userId: updated.userId,
+                  achievementId: achievement.id,
+                  isActive: true,
+                  status: "active",
+                  certType: "diploma",
+                });
+                achievementAwarded = achSlug;
+              } catch (err) {
+                if (!isUniqueViolation(err)) throw err;
+                // Carrera: otro request concurrente ya otorgó el logro
+                // (colisión en uq_achievement_users_cert). El hallazgo ya se
+                // actualizó con éxito arriba — esto no es un error real.
+                achievementAwarded = null;
+              }
+            }
+          }
+        }
+
+        const finalRow = await toFindingRow(updated);
+        res.json({
+          finding: toCompanyView(finalRow),
+          pointsAwarded: points,
+          achievementAwarded,
+        });
+      } catch (err) { next(err); }
+    },
+  );
+
+  // Proxy autenticado de la foto de SOLUCIÓN (el riesgo ya corregido) —
+  // mismo patrón que GET /api/riesgos/:id/foto: nunca se expone la URL
+  // pública de R2 ni la llave, y el alcance se prueba contra
+  // getEmpresaAdminTeamIds del solicitante (TODAS las empresas que
+  // administra), nunca contra un solo equipo resuelto arbitrariamente ni
+  // contra un team_id que mande el cliente.
+  app.get("/api/empresa/riesgos/:id/foto-solucion", requireAuth, async (req, res, next) => {
+    try {
+      const id = String(req.params.id);
+      if (!UUID_RE.test(id)) return res.status(404).json({ message: "Hallazgo no encontrado" });
+
+      const [row] = await db.select().from(riskFindings).where(eq(riskFindings.id, id));
+      if (!row) return res.status(404).json({ message: "Hallazgo no encontrado" });
+      if (!row.resolutionPhotoKey) {
+        return res.status(404).json({ message: "Este hallazgo todavía no tiene foto de solución" });
+      }
+
+      const requesterId = req.supabaseUserId!;
+      const adminTeamIds = await getEmpresaAdminTeamIds(requesterId);
+      if (!adminTeamIds.includes(row.teamId)) {
+        return res.status(403).json({ message: "No tienes acceso a esta foto" });
+      }
+
+      if (!r2Storage.isConfigured) {
+        return res.status(503).json({ message: "Almacenamiento de fotos no configurado" });
+      }
+
+      const obj = await r2Storage.getObject(row.resolutionPhotoKey);
+      if (!obj) return res.status(404).json({ message: "Foto no encontrada" });
+
+      res.set("Content-Type", safeEvidenceContentType(obj.contentType));
+      res.set("X-Content-Type-Options", "nosniff");
+      if (obj.contentLength) res.set("Content-Length", String(obj.contentLength));
+      // Privada: nunca cacheable por proxies/CDN compartidos ni por el navegador
+      // en disco compartido.
+      res.set("Cache-Control", "private, no-store");
+      const stream = obj.body as any;
+      const destroyStream = () => {
+        if (typeof stream.destroy === "function") stream.destroy();
+      };
+      req.on("close", destroyStream);
+      stream.on("error", (streamErr: unknown) => {
+        if (res.headersSent) {
+          console.error("R2 stream error after headers sent (foto de solución):", streamErr);
           return;
         }
         next(streamErr);

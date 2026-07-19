@@ -3,6 +3,7 @@ import {
   canTransition,
   validateTransition,
   pointsForTransition,
+  isRiskStatus,
   RIESGO_VALIDADO_PUNTOS,
   type RiskStatus,
 } from "./risk-status";
@@ -142,5 +143,28 @@ describe("pointsForTransition — los puntos se acreditan al validar, nunca dos 
 
   it("nuevo -> en_revision: 0 puntos", () => {
     expect(pointsForTransition("nuevo", "en_revision", 0)).toBe(0);
+  });
+});
+
+describe("isRiskStatus — guarda de tipo para el status que manda el cliente", () => {
+  it("acepta los 4 estados válidos", () => {
+    for (const s of ["nuevo", "en_revision", "atendido", "descartado"]) {
+      expect(isRiskStatus(s)).toBe(true);
+    }
+  });
+
+  it("rechaza un string que no es un estado", () => {
+    expect(isRiskStatus("aprobado")).toBe(false);
+  });
+
+  it("rechaza undefined, null, número, objeto", () => {
+    expect(isRiskStatus(undefined)).toBe(false);
+    expect(isRiskStatus(null)).toBe(false);
+    expect(isRiskStatus(1)).toBe(false);
+    expect(isRiskStatus({ status: "atendido" })).toBe(false);
+  });
+
+  it("es sensible a mayúsculas (no normaliza silenciosamente)", () => {
+    expect(isRiskStatus("Atendido")).toBe(false);
   });
 });

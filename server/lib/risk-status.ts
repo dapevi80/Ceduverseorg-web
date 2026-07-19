@@ -9,6 +9,15 @@
 
 export type RiskStatus = "nuevo" | "en_revision" | "atendido" | "descartado";
 
+const RISK_STATUSES: readonly RiskStatus[] = ["nuevo", "en_revision", "atendido", "descartado"];
+
+/** Guarda de tipo para el `status` que manda el cliente en
+ * PATCH /api/empresa/riesgos/:id — nunca se castea un string arbitrario del
+ * body directo a RiskStatus sin pasar por aquí primero. */
+export function isRiskStatus(value: unknown): value is RiskStatus {
+  return typeof value === "string" && (RISK_STATUSES as readonly string[]).includes(value);
+}
+
 /** Puntos que gana el trabajador cuando su hallazgo se VALIDA (entra a "atendido"). */
 export const RIESGO_VALIDADO_PUNTOS = 150;
 
