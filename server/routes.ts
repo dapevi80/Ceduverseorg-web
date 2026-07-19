@@ -57,6 +57,7 @@ import bcrypt from "bcryptjs";
 // Route modules
 import { registerCourseRoutes } from "./routes/courses";
 import { registerPlaybookRoutes } from "./routes/playbook";
+import { registerRiesgosRoutes } from "./routes/riesgos";
 import { registerAdminRoutes } from "./routes/admin";
 import { registerCrmRoutes } from "./routes/crm";
 import { ensureReferralCode } from "./lib/ensure-referral-code";
@@ -411,6 +412,7 @@ export async function registerRoutes(
   registerCourseRoutes(app);
   registerCertificateRoutes(app);
   registerPlaybookRoutes(app);
+  registerRiesgosRoutes(app);
   registerVaultRoutes(app);
   registerAdminRoutes(app);
 
