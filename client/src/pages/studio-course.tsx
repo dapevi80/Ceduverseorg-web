@@ -1493,15 +1493,43 @@ export default function StudioCoursePage() {
     enabled: !!user && !!slug,
   });
 
+  const { data: moduleProgressList } = useQuery<ModuleProgress[]>({
+    queryKey: ["module-progress", enrollment?.id],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/studio/enrollments/${enrollment.id}/progress`);
+      return res.json();
+    },
+    enabled: !!enrollment?.id,
+  });
+
   const passedModules = useMemo(() => {
     const set = new Set<number>();
     (quizAttempts || []).forEach(a => { if (a.passed) set.add(a.moduleIndex); });
     return set;
   }, [quizAttempts]);
 
+  /** Modulos ya marcados como completados (progreso persistido). */
+  const completedModules = useMemo(() => {
+    const set = new Set<number>();
+    (moduleProgressList || []).forEach((p) => {
+      const m = /^module_(\d+)$/.exec(p.moduleIdentifier);
+      if (m && p.completed) set.add(Number(m[1]));
+    });
+    return set;
+  }, [moduleProgressList]);
+
+  // Se desbloquea por quiz aprobado O por modulo ya completado.
+  //
+  // El "o ya completado" NO es una puerta trasera: existe por el historial.
+  // Quien termino cursos ANTES de que existiera este bloqueo no tiene intentos
+  // de quiz registrados, y con la regla anterior sus modulos ya estudiados
+  // volvian a aparecer cerrados, pidiendole rehacer el curso completo (pasaba
+  // con 4 cursos de la cuenta del dueño: modulos completados, cero quizzes).
+  // Para que siga siendo honesto hacia adelante, "Completar modulo" ahora exige
+  // haber aprobado el quiz — asi completado implica aprobado.
   const isModuleUnlocked = useCallback(
-    (i: number) => i === 0 || passedModules.has(i - 1),
-    [passedModules]
+    (i: number) => i === 0 || passedModules.has(i - 1) || completedModules.has(i - 1),
+    [passedModules, completedModules]
   );
 
   const { data: generatedContent, isLoading: isGenerating } = useQuery<GeneratedContent>({
@@ -1590,15 +1618,6 @@ export default function StudioCoursePage() {
     onError: () => {
       toast({ title: "Error", description: "No se pudo reiniciar el curso.", variant: "destructive" });
     },
-  });
-
-  const { data: moduleProgressList } = useQuery<ModuleProgress[]>({
-    queryKey: ["module-progress", enrollment?.id],
-    queryFn: async () => {
-      const res = await apiRequest("GET", `/api/studio/enrollments/${enrollment.id}/progress`);
-      return res.json();
-    },
-    enabled: !!enrollment?.id,
   });
 
   const regenerateMutation = useMutation({
@@ -2061,7 +2080,8 @@ export default function StudioCoursePage() {
                             variant="outline"
                             size="lg"
                             onClick={handleCompleteModule}
-                            disabled={completeModuleMutation.isPending}
+                            disabled={completeModuleMutation.isPending || !passedModules.has(activeModule)}
+                            title={!passedModules.has(activeModule) ? "Aprueba el quiz de este módulo para poder completarlo." : undefined}
                             className="rounded-xl gap-2 min-h-11 text-cedu-green border-cedu-green/30 hover:bg-cedu-green-light"
                             data-testid="button-complete-module"
                           >
