@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, AlertTriangle, ShieldAlert, ImageOff, RotateCcw } from "lucide-react";
+import { Loader2, AlertTriangle, ShieldAlert, ImageOff, RotateCcw, FileDown } from "lucide-react";
 
 // Tablero de la empresa del detector de riesgos (Task 8 del plan
 // docs/superpowers/plans/2026-07-18-detector-riesgos.md). Reemplaza la
@@ -152,6 +152,21 @@ function solutionPhotoUrl(findingId: string): string {
   return `/api/empresa/riesgos/${findingId}/foto-solucion`;
 }
 
+/** URL del historial de cumplimiento en PDF (Task 11, spec §10). `from`/`to`
+ * son los mismos filtros de fecha que ya tiene el tablero — se reusan tal
+ * cual para que "exportar" coincida con "lo que estoy viendo", sin agregar
+ * un segundo par de controles de fecha. requireAuth del servidor se
+ * satisface con la cookie de sesión (mismo origen), igual que el export del
+ * playbook en studio-course.tsx — window.open no necesita el header
+ * Authorization legacy para esto. */
+function historialPdfUrl(dateFrom: string, dateTo: string): string {
+  const params = new URLSearchParams();
+  if (dateFrom) params.set("from", dateFrom);
+  if (dateTo) params.set("to", dateTo);
+  const qs = params.toString();
+  return `/api/empresa/riesgos/historial.pdf${qs ? `?${qs}` : ""}`;
+}
+
 /** PATCH multipart — apiRequest (queryClient.ts) siempre hace JSON.stringify
  * del body, así que no sirve para subir la foto de solución. Mismo patrón de
  * headers (Bearer legacy + X-View-As) que authedFetch en reportar-riesgo.tsx,
@@ -260,7 +275,18 @@ export function TeamRiesgosTab() {
 
   return (
     <div data-testid="view-team-riesgos">
-      <h3 className="font-serif text-lg text-cedu-ink mb-1">Hallazgos del equipo</h3>
+      <div className="flex items-start justify-between gap-3 mb-1">
+        <h3 className="font-serif text-lg text-cedu-ink">Hallazgos del equipo</h3>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => window.open(historialPdfUrl(dateFrom, dateTo), "_blank")}
+          data-testid="button-riesgos-historial-pdf"
+        >
+          <FileDown size={14} className="mr-1" />
+          Historial de cumplimiento (PDF)
+        </Button>
+      </div>
       <p className="text-sm text-cedu-ink-muted mb-6">
         {hallazgos.length} hallazgo{hallazgos.length !== 1 ? "s" : ""} reportado
         {hallazgos.length !== 1 ? "s" : ""} por tu equipo

@@ -30,6 +30,7 @@ import { toCompanyView, findingPhotoKey, type FindingRow } from "../lib/risk-ano
 import { pickAllowedNorm } from "../lib/norm-validate";
 import { resolveTeamSelection } from "../lib/team-selection";
 import { suggestNorm } from "../risk-norm-suggest";
+import { renderHistorialPdf, type HistorialFindingInput } from "../riesgos-historial-pdf";
 import {
   canTransition,
   validateTransition,
@@ -185,6 +186,102 @@ async function toFindingRow(row: typeof riskFindings.$inferSelect): Promise<Find
     resolutionNote: row.resolutionNote,
     resolutionPhotoKey: row.resolutionPhotoKey,
   };
+}
+
+/** Fila mínima para el historial de cumplimiento (Task 11, spec §10): a
+ * diferencia de toFindingRow (arriba), esta NUNCA consulta profiles/users
+ * para un hallazgo anónimo — la consulta de identidad ni se ejecuta, no
+ * solo se omite el nombre después. Ver el brief de Task 11: "reuse the same
+ * anonymity projection the API uses; do not query identity columns just
+ * because you're server-side." */
+interface HistorialRow {
+  id: string;
+  anonymous: boolean;
+  reporterName: string | null;
+  description: string;
+  normRef: string | null;
+  createdAt: Date;
+  resolvedAt: Date | null;
+  resolutionNote: string | null;
+  photoKey: string;
+  resolutionPhotoKey: string | null;
+}
+
+/** Hallazgos `atendido` de TODAS las empresas que administra el solicitante
+ * (mismo alcance que GET /api/empresa/riesgos — inArray contra el
+ * team_id YA PERSISTIDO de cada fila, nunca un teamId que mande el
+ * cliente), acotados opcionalmente a un periodo por fecha de detección. */
+async function fetchHistorialFindings(
+  adminTeamIds: string[],
+  from: string | null,
+  to: string | null
+): Promise<HistorialRow[]> {
+  const rows = await db.select().from(riskFindings)
+    .where(and(inArray(riskFindings.teamId, adminTeamIds), eq(riskFindings.status, "atendido")))
+    .orderBy(desc(riskFindings.createdAt));
+
+  const filtered = (from || to)
+    ? rows.filter((r) => {
+        const d = r.createdAt.toISOString().slice(0, 10);
+        if (from && d < from) return false;
+        if (to && d > to) return false;
+        return true;
+      })
+    : rows;
+
+  // Identidad SOLO para hallazgos firmados. Para los anónimos ni se arma el
+  // conjunto de ids a consultar: la protección real no es "no mostrar el
+  // nombre después", es "nunca haberlo leído".
+  const namedUserIds = Array.from(new Set(filtered.filter((r) => !r.anonymous).map((r) => r.userId)));
+  const nameByUserId = new Map<string, string | null>();
+  if (namedUserIds.length > 0) {
+    const profileRows = await db.select({ id: profiles.id, fullName: profiles.fullName })
+      .from(profiles).where(inArray(profiles.id, namedUserIds));
+    for (const p of profileRows) nameByUserId.set(p.id, p.fullName ?? null);
+  }
+
+  return filtered.map((r) => ({
+    id: r.id,
+    anonymous: r.anonymous,
+    reporterName: r.anonymous ? null : (nameByUserId.get(r.userId) ?? null),
+    description: r.description,
+    normRef: r.normRef,
+    createdAt: r.createdAt,
+    resolvedAt: r.resolvedAt,
+    resolutionNote: r.resolutionNote,
+    photoKey: r.photoKey,
+    resolutionPhotoKey: r.resolutionPhotoKey,
+  }));
+}
+
+/** Descarga completa (no stream) de un objeto de R2 — el renderer de PDF
+ * necesita los bytes completos para doc.image(). null si el objeto no
+ * existe (dato inconsistente: se documenta como "foto no disponible" en el
+ * PDF en vez de tronar todo el historial). */
+async function fetchPhotoBuffer(key: string): Promise<Buffer | null> {
+  const obj = await r2Storage.getObject(key);
+  if (!obj) return null;
+  const chunks: Buffer[] = [];
+  for await (const chunk of obj.body as any) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
+
+const HISTORIAL_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function formatHistorialDate(d: string): string {
+  const year = Number(d.slice(0, 4));
+  const month = Number(d.slice(5, 7));
+  const day = Number(d.slice(8, 10));
+  return new Date(year, month - 1, day).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" });
+}
+
+function historialPeriodLabel(from: string | null, to: string | null): string {
+  if (!from && !to) return "Historial completo";
+  if (from && to) return `${formatHistorialDate(from)} — ${formatHistorialDate(to)}`;
+  if (from) return `Desde ${formatHistorialDate(from)}`;
+  return `Hasta ${formatHistorialDate(to!)}`;
 }
 
 export function registerRiesgosRoutes(app: Express) {
@@ -547,6 +644,76 @@ export function registerRiesgosRoutes(app: Express) {
 
       const hallazgos = await Promise.all(rows.map(async (row) => toCompanyView(await toFindingRow(row))));
       res.json({ hallazgos });
+    } catch (err) { next(err); }
+  });
+
+  // Historial de cumplimiento en PDF (Task 11, spec §10): el documento que
+  // la empresa le muestra a un inspector de la STPS — "detectado el 12 de
+  // marzo, corregido el 14, con foto de ambos momentos y la norma citada".
+  // Solo hallazgos `atendido` entran aquí: son los únicos con ciclo de
+  // corrección cerrado y evidencia real; uno "descartado" no documenta
+  // cumplimiento, documenta que no hubo corrección.
+  //
+  // Reglas duras de este endpoint:
+  //   - Alcance: SIEMPRE getEmpresaAdminTeamIds del solicitante (TODAS las
+  //     empresas que administra), contra el team_id YA PERSISTIDO de cada
+  //     hallazgo — igual que GET /api/empresa/riesgos arriba. Ningún teamId
+  //     llega desde el cliente para decidir el alcance.
+  //   - Anonimato: fetchHistorialFindings() nunca consulta profiles/users
+  //     para un hallazgo anónimo (ni la consulta se ejecuta), y
+  //     renderFindingEntry() (server/riesgos-historial-pdf.ts) ignora
+  //     reporterName de todos modos si anonymous=true — dos capas.
+  //   - La norma se imprime verbatim de lo guardado (nunca reformateada).
+  //   - Las fotos se leen de R2 por su llave server-side y se embeben como
+  //     bytes; nunca se emite una URL pública ni la llave misma.
+  //   - Un hallazgo sin foto de corrección (dato inconsistente: "atendido"
+  //     debería tenerla) se imprime con el hueco explícito, nunca se omite
+  //     la entrada en silencio.
+  app.get("/api/empresa/riesgos/historial.pdf", requireAuth, async (req, res, next) => {
+    try {
+      const userId = req.supabaseUserId!;
+      const adminTeamIds = await getEmpresaAdminTeamIds(userId);
+      if (adminTeamIds.length === 0) {
+        return res.status(403).json({ message: "No tienes una organización" });
+      }
+
+      const rawFrom = typeof req.query.from === "string" ? req.query.from : "";
+      const rawTo = typeof req.query.to === "string" ? req.query.to : "";
+      const from = HISTORIAL_DATE_RE.test(rawFrom) ? rawFrom : null;
+      const to = HISTORIAL_DATE_RE.test(rawTo) ? rawTo : null;
+
+      const teamRows = await db.select({ name: teams.name }).from(teams).where(inArray(teams.id, adminTeamIds));
+      const companyNames = teamRows.map((t) => t.name);
+
+      const rows = await fetchHistorialFindings(adminTeamIds, from, to);
+
+      if (!r2Storage.isConfigured) {
+        return res.status(503).json({ message: "Almacenamiento de fotos no configurado" });
+      }
+
+      const findings: HistorialFindingInput[] = await Promise.all(
+        rows.map(async (r) => ({
+          id: r.id,
+          anonymous: r.anonymous,
+          reporterName: r.reporterName,
+          description: r.description,
+          normRef: r.normRef,
+          detectedAt: r.createdAt,
+          resolvedAt: r.resolvedAt,
+          resolutionNote: r.resolutionNote,
+          hazardPhoto: await fetchPhotoBuffer(r.photoKey),
+          correctionPhoto: r.resolutionPhotoKey ? await fetchPhotoBuffer(r.resolutionPhotoKey) : null,
+        }))
+      );
+
+      const pdf = await renderHistorialPdf(findings, {
+        companyNames,
+        periodLabel: historialPeriodLabel(from, to),
+      });
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", 'attachment; filename="historial-cumplimiento.pdf"');
+      res.send(pdf);
     } catch (err) { next(err); }
   });
 
