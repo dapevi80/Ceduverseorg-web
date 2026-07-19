@@ -55,6 +55,32 @@ export async function getEmpresaAdminTeam(userId: string) {
   return team || null;
 }
 
+/**
+ * Todos los equipos donde el usuario tiene membresía REAL de admin/empresa_rh
+ * — a diferencia de getEmpresaAdminTeam (arriba), que resuelve solo UNO con
+ * orderBy+limit(1). Ese límite está bien para los paneles que solo necesitan
+ * "un" equipo administrado, pero es incorrecto para autorización: un admin de
+ * varias empresas (A y B) tiene acceso legítimo a AMBAS, y comparar contra un
+ * único equipo resuelto arbitrariamente niega en falso el acceso a la que no
+ * ganó el orderBy. Ver server/routes/riesgos.ts, proxy de foto del hallazgo:
+ * el admin de A y B debe poder ver fotos de hallazgos de cualquiera de las
+ * dos, no solo de la que ordene primero por id.
+ *
+ * NO reemplaza a getEmpresaAdminTeam ni cambia su comportamiento: otros
+ * llamadores dependen de que siga resolviendo un solo equipo. Esta función se
+ * agrega al lado, para autorización basada en membresía (pertenece o no
+ * pertenece al conjunto), no en "cuál es el equipo".
+ */
+export async function getEmpresaAdminTeamIds(userId: string): Promise<string[]> {
+  const memberships = await db.select({ teamId: teamUsers.teamId })
+    .from(teamUsers)
+    .where(and(
+      eq(teamUsers.userId, userId),
+      or(eq(teamUsers.role, "admin"), eq(teamUsers.role, "empresa_rh"))
+    ));
+  return memberships.map((m) => m.teamId);
+}
+
 export async function getEmpresaTeam(userId: string) {
   const membership = await db.select({ teamId: teamUsers.teamId, role: teamUsers.role })
     .from(teamUsers)

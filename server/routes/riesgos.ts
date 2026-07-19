@@ -5,7 +5,7 @@ import { requireAuth } from "../auth";
 import { storage } from "../storage";
 import { db } from "../db";
 import { riskFindings, teamUsers, teams, users, profiles, studioEnrollments } from "@shared/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { r2Storage } from "../services/r2-storage";
 import { assembleReferences } from "@shared/playbook-assemble";
 import {
@@ -17,8 +17,9 @@ import {
 } from "../lib/playbook-upload";
 import { toCompanyView, findingPhotoKey, type FindingRow } from "../lib/risk-anonymity";
 import { pickAllowedNorm } from "../lib/norm-validate";
+import { resolveTeamSelection } from "../lib/team-selection";
 import { suggestNorm } from "../risk-norm-suggest";
-import { getEmpresaAdminTeam } from "./empresa";
+import { getEmpresaAdminTeamIds } from "./empresa";
 
 // Detector de riesgos — endpoints del trabajador (Task 5 del plan
 // docs/superpowers/plans/2026-07-18-detector-riesgos.md). Ver el spec
@@ -62,20 +63,32 @@ function handleRiesgoUpload(req: any, res: any, next: any) {
   });
 }
 
-/** El equipo AL QUE PERTENECE el trabajador que reporta — a diferencia de
- * getEmpresaAdminTeam (server/routes/empresa.ts), aquí cualquier rol de
- * membresía cuenta (member/admin/empresa_rh): quien reporta un riesgo no
- * necesita ser admin de su empresa, solo trabajar ahí. orderBy fija el
- * resultado cuando alguien pertenece a más de un equipo. */
-async function resolveWorkerTeam(userId: string) {
-  const [membership] = await db.select({ teamId: teamUsers.teamId })
+/** Los equipos A LOS QUE PERTENECE el trabajador que reporta — a diferencia
+ * de getEmpresaAdminTeamIds (server/routes/empresa.ts), aquí cualquier rol
+ * de membresía cuenta (member/admin/empresa_rh): quien reporta un riesgo no
+ * necesita ser admin de su empresa, solo trabajar ahí.
+ *
+ * Devuelve TODOS los team_id, sin elegir uno: la elección (cuando hay más de
+ * uno) la hace resolveTeamSelection (server/lib/team-selection.ts) con un
+ * teamId explícito del cliente, nunca aquí en silencio — ver el comentario
+ * de esa función para el porqué (un worker que cambió de empleador no debe
+ * poder reportar, sin darse cuenta, al empleador viejo). */
+async function getWorkerTeamIds(userId: string): Promise<string[]> {
+  const memberships = await db.select({ teamId: teamUsers.teamId })
     .from(teamUsers)
-    .where(eq(teamUsers.userId, userId))
-    .orderBy(teamUsers.teamId)
-    .limit(1);
-  if (!membership) return null;
-  const [team] = await db.select().from(teams).where(eq(teams.id, membership.teamId));
-  return team || null;
+    .where(eq(teamUsers.userId, userId));
+  return memberships.map((m) => m.teamId);
+}
+
+/** id + name de un conjunto de equipos, para presentarle al cliente la
+ * lista de empresas entre las que debe elegir (mis-empresas, y el 400 de
+ * ambigüedad de POST /api/riesgos). */
+async function listTeams(teamIds: string[]): Promise<{ id: string; name: string }[]> {
+  if (teamIds.length === 0) return [];
+  const rows = await db.select({ id: teams.id, name: teams.name })
+    .from(teams)
+    .where(inArray(teams.id, teamIds));
+  return rows;
 }
 
 /** Referencias reales permitidas para la sugerencia/confirmación de norma
@@ -145,8 +158,9 @@ async function toFindingRow(row: typeof riskFindings.$inferSelect): Promise<Find
 export function registerRiesgosRoutes(app: Express) {
   // Crear un hallazgo. Orden de operaciones (deliberado, ver spec §12):
   // 1) validar TODO lo que no requiere escribir nada (archivo, descripción,
-  //    anonymous, curso, EQUIPO DEL TRABAJADOR) — sin equipo, 400 honesto y
-  //    ninguna escritura, ni en R2 ni en la base;
+  //    anonymous, curso, EQUIPO DEL TRABAJADOR — incluida la ambigüedad de
+  //    equipo cuando pertenece a más de uno) — sin equipo resuelto sin
+  //    ambigüedad, 400 honesto y ninguna escritura, ni en R2 ni en la base;
   // 2) subir la foto a R2 SOLO después de que el reporte ya se sabe válido;
   // 3) insertar en risk_findings SOLO después de que la subida a R2 tuvo éxito.
   // Así una falla de R2 nunca deja un hallazgo huérfano (fila sin foto), y una
@@ -175,11 +189,26 @@ export function registerRiesgosRoutes(app: Express) {
         courseSlug = course.slug;
       }
 
-      // Sin empresa → mensaje honesto, nada se escribe (ni foto ni fila).
-      const team = await resolveWorkerTeam(userId);
-      if (!team) {
-        return res.status(400).json({ message: "Esta función requiere pertenecer a una empresa" });
+      // Equipo del trabajador: con una sola membresía se usa esa (como
+      // antes). Con más de una, NUNCA se elige en silencio — se exige un
+      // teamId explícito, validado contra las membresías reales de este
+      // mismo usuario (nunca se confía en lo que mande el cliente tal cual).
+      // Ver server/lib/team-selection.ts para el porqué. Esto ocurre ANTES
+      // de tocar R2: un 400 de ambigüedad nunca deja un objeto huérfano.
+      const workerTeamIds = await getWorkerTeamIds(userId);
+      const rawTeamId = typeof req.body.teamId === "string" ? req.body.teamId.trim() : "";
+      const teamSelection = resolveTeamSelection(workerTeamIds, rawTeamId || null);
+      if (!teamSelection.ok) {
+        if (teamSelection.error === "no_membership") {
+          return res.status(400).json({ message: "Esta función requiere pertenecer a una empresa" });
+        }
+        const empresas = await listTeams(workerTeamIds);
+        return res.status(400).json({
+          message: "Perteneces a varias empresas; especifica a cuál reportar este hallazgo",
+          empresas,
+        });
       }
+      const teamId = teamSelection.teamId;
 
       // La norma que manda el cliente NUNCA se guarda tal cual: solo se acepta
       // si coincide EXACTO con una referencia real disponible para este
@@ -187,6 +216,12 @@ export function registerRiesgosRoutes(app: Express) {
       const allowedRefs = await resolveAllowedNormRefs(userId, courseSlug);
       const rawNormRef = typeof req.body.normRef === "string" ? req.body.normRef : null;
       const normRef = pickAllowedNorm(rawNormRef, allowedRefs);
+      // El cliente sí mandó una norma no vacía, pero no coincidió con
+      // ninguna referencia real permitida: se guarda null (correcto, cero
+      // invención), pero la respuesta debe decirlo explícito — si no, el
+      // cliente ve 201 y asume que su norma se guardó, y la UI queda
+      // desincronizada en silencio con lo que realmente hay en la base.
+      const normRefRejected = rawNormRef != null && rawNormRef.trim().length > 0 && normRef === null;
 
       if (!r2Storage.isConfigured) {
         return res.status(503).json({ message: "Almacenamiento de fotos no configurado" });
@@ -205,7 +240,7 @@ export function registerRiesgosRoutes(app: Express) {
         id: findingId,
         userId,
         anonymous,
-        teamId: team.id,
+        teamId,
         courseSlug,
         photoKey: key,
         description,
@@ -215,7 +250,22 @@ export function registerRiesgosRoutes(app: Express) {
       }).returning();
 
       const row = await toFindingRow(inserted);
-      res.status(201).json({ finding: toCompanyView(row) });
+      res.status(201).json({ finding: toCompanyView(row), normRefRejected });
+    } catch (err) { next(err); }
+  });
+
+  // Empresas del trabajador que reporta — el cliente la usa para: (a) saber
+  // si necesita pedirle al trabajador que elija equipo antes de reportar
+  // (más de una empresa), y (b) construir el selector con id+name cuando
+  // POST /api/riesgos responde 400 por ambigüedad. Cualquier rol de
+  // membresía cuenta, igual que getWorkerTeamIds: reportar un riesgo no
+  // requiere ser admin de la empresa, solo trabajar ahí.
+  app.get("/api/riesgos/mis-empresas", requireAuth, async (req, res, next) => {
+    try {
+      const userId = req.supabaseUserId!;
+      const teamIds = await getWorkerTeamIds(userId);
+      const empresas = await listTeams(teamIds);
+      res.json({ empresas });
     } catch (err) { next(err); }
   });
 
@@ -272,9 +322,12 @@ export function registerRiesgosRoutes(app: Express) {
   // Proxy autenticado de la foto del hallazgo — nunca se expone la URL pública
   // de R2 ni la llave. Autorizado si el solicitante es el autor, O si es
   // admin/empresa_rh del equipo AL QUE PERTENECE EL HALLAZGO (row.teamId,
-  // nunca un team_id que mande el cliente): getEmpresaAdminTeam resuelve el
-  // equipo del SOLICITANTE por su propia membresía real, y se compara contra
-  // el team_id ya persistido en la fila.
+  // nunca un team_id que mande el cliente): getEmpresaAdminTeamIds resuelve
+  // TODOS los equipos que el SOLICITANTE administra por membresía real, y se
+  // prueba pertenencia contra ese conjunto — no un solo equipo "resuelto"
+  // arbitrariamente. Un admin de varias empresas (A y B) debe poder ver
+  // fotos de hallazgos de cualquiera de las dos, no solo de la que gane un
+  // desempate interno que al admin ni le consta.
   app.get("/api/riesgos/:id/foto", requireAuth, async (req, res, next) => {
     try {
       const id = String(req.params.id);
@@ -286,8 +339,8 @@ export function registerRiesgosRoutes(app: Express) {
       const requesterId = req.supabaseUserId!;
       let allowed = requesterId === row.userId;
       if (!allowed) {
-        const adminTeam = await getEmpresaAdminTeam(requesterId);
-        allowed = !!adminTeam && adminTeam.id === row.teamId;
+        const adminTeamIds = await getEmpresaAdminTeamIds(requesterId);
+        allowed = adminTeamIds.includes(row.teamId);
       }
       if (!allowed) return res.status(403).json({ message: "No tienes acceso a esta foto" });
 
@@ -305,6 +358,13 @@ export function registerRiesgosRoutes(app: Express) {
       // en disco compartido.
       res.set("Cache-Control", "private, no-store");
       const stream = obj.body as any;
+      // Si el cliente aborta la descarga a medias (navegación fuera,
+      // conexión caída), "close" en req dispara igual — sin esto el stream
+      // de R2 se queda leyendo hacia un response que ya nadie consume.
+      const destroyStream = () => {
+        if (typeof stream.destroy === "function") stream.destroy();
+      };
+      req.on("close", destroyStream);
       stream.on("error", (streamErr: unknown) => {
         if (res.headersSent) {
           console.error("R2 stream error after headers sent (foto de riesgo):", streamErr);
