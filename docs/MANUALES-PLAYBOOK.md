@@ -1,117 +1,113 @@
-# Manuales pendientes — Playbook y Cuaderno (2026-07-18)
+# Acciones manuales pendientes — David
 
-Cosas que sólo puede hacer David (Supabase, Cloudflare, deploy). Marcar al completar.
-
----
-
-## 1. 🔴 Volver a correr la migración del playbook — CAMBIÓ
-
-**Archivo:** `C:\Users\user\Documents\ceduverse-web\migrations\2026-07-18_playbook.sql`
-
-Ya la corriste una vez (por eso el seed funcionó). Pero **después se le agregó la columna
-`source`** —la que distingue un playbook generado por IA de uno de respaldo— y el
-`CREATE TABLE IF NOT EXISTS` **se salta entero** cuando la tabla ya existe. Por eso al final
-del archivo hay ahora un `ALTER TABLE ... ADD COLUMN IF NOT EXISTS source`.
-
-**Sin esto, al deployar la rama TODAS las rutas del playbook responden 500**
-(`column course_playbooks.source does not exist`).
-
-Basta con volver a correr el archivo completo: es idempotente.
-
-- [ ] Corrido
+Actualizado 2026-07-19. Lo ya verificado contra la base está marcado ✅ y no hay que rehacerlo.
 
 ---
 
-## 2. 🔴 SQL de referidos — hay dinero de por medio
+## YA HECHO (verificado en tu base, no lo repitas)
 
-**Archivo:** `C:\Users\user\Documents\ceduverse-web\migrations\2026-07-18_backfill_referral_codes.sql`
-
-Repara a **todos** los socios cooperativos cuyo folio nunca se registró como código de
-referido válido. El primer bloque te dice cuántos están afectados: **ese número es cuántos
-referidos se han estado perdiendo**.
-
-- [ ] Corrido el backfill (anotar el número de afectados: ____ )
-- [ ] Corrido el `UPDATE` que acredita el alta de `wawawa2415@rapplo.com` (va DESPUÉS del backfill)
+- ✅ Migración del playbook aplicada (la columna `source` existe).
+- ✅ Backfill de referidos: cero folios sin código.
+- ✅ Contador de usos alineado con la realidad.
+- ✅ Atribución de `wawawa2415` acreditada a tu folio `CEDU-CVS9`.
+- ✅ Roles de empresa revisados: los 4 dueños son `admin`, nadie queda fuera.
+- ✅ 59 playbooks sembrados, **ninguno** con contenido de respaldo.
 
 ---
 
-## 3. Deploy de `main`
+# AHORA
 
-Último commit relevante: **`5df6a51`** — hace que una cuenta nueva, después de completar el
-alta, aterrice en el curso que le compartieron en vez del dashboard.
+## PASO 1 — Deployar `main`
 
-El del código de referido (`6319a4f`) ya lo verificaste funcionando. Éste es el tramo que
-faltaba.
+El playbook ya está mergeado. Deploya `main` como siempre.
 
-- [ ] Deployado y probado con una cuenta nueva
+- [ ] Deployado
 
----
+## PASO 2 — Probar el link compartido (5 minutos)
 
-## 4. Cloudflare — cerrar el prefijo `evidence/`
+Con una cuenta nueva, en ventana privada o desde el celular:
 
-Antes de que el playbook llegue a producción. El código ya nunca emite la URL pública de R2
-(las fotos van por un proxy con sesión), pero **el bucket sigue siendo público**: si alguien
-adivinara la llave, alcanzaría la foto. Las llaves ahora son aleatorias, así que en la
-práctica está sellado, pero el cierre real es quitarle el acceso público a ese prefijo.
+1. Abre el link que compartes de un curso.
+2. Regístrate.
+3. Completa el alta.
+4. **Debes aterrizar en el curso**, no en el dashboard.
+
+Es el único tramo del arreglo que no pude verificar yo.
+
+- [ ] Probado y funciona
+
+## PASO 3 — Cloudflare: cerrar el acceso público a las fotos
+
+⚠️ **CORREGIDO:** son **dos** prefijos, no uno.
+
+| Prefijo | Qué guarda |
+|---|---|
+| `evidence/` | fotos del playbook (lo que se deploya hoy) |
+| `risk/` | fotos del detector de riesgos (lo que viene) |
+
+En el bucket de R2, quítale el acceso público **a esos dos prefijos**.
+
+**No cierres el bucket completo:** los certificados sí se sirven por URL pública y se romperían.
+
+El código nunca emite la URL pública de esas fotos y las llaves son aleatorias, así que en la
+práctica ya está sellado — esto es el cierre real.
 
 - [ ] Hecho
 
 ---
 
-## 5. Revisar `team_users.role` en producción
+# DESPUÉS (cuando el detector esté terminado y mergeado)
 
-Se apretó el acceso a las evidencias: ahora exige **membresía real** de `admin` o
-`empresa_rh`, ya no basta con que el rol de la cuenta diga "empresa". Es más seguro, pero
-quiero confirmar que no deje fuera a un dueño legítimo.
+## PASO 4 — Migración del detector
 
-```sql
-select tu.role, count(*)
-from team_users tu
-join accounts a on a.id = tu.user_id
-where a.user_role in ('empresa','empresa_rh')
-group by tu.role;
+Correr en Supabase:
 ```
-
-Si aparecen dueños con un rol distinto de `admin`/`empresa_rh`, avísame.
-
-- [ ] Revisado
-
----
-
-## 6. Sembrar el resto de los playbooks (cuando quieras)
-
-Ya corriste uno (`brainshield-boveda-pi`, salió bien y con contenido real). Los demás:
-
+C:\Users\user\Documents\ceduverse-web\migrations\2026-07-19_risk_findings.sql
 ```
-npx tsx --env-file=.env.seed.txt server/generate-playbooks.ts
-```
+Trae los `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` desde el principio, así que es seguro
+correrla más de una vez.
 
-~62 cursos, una llamada a Claude cada uno. No es urgente y no bloquea el cuaderno.
+- [ ] Corrida
 
-- [ ] Corrido (anotar los que fallen)
+## PASO 5 — Borrar la tabla vieja de evidencias (opcional)
 
----
+Ya verifiqué que **está vacía**: 0 filas, 0 puntos. Nadie pierde nada.
+El `DROP` viene comentado al final de esa misma migración; descoméntalo si quieres limpiar.
 
-## 7. Borrar `.env.seed.txt` al final
+- [ ] Hecho (o decidido dejarla)
 
-**Todavía NO.** Los agentes lo están usando para verificar el cuaderno contra datos reales.
-Cuando terminemos el build:
+## PASO 6 — Borrar `.env.seed.txt`
+
+**Todavía NO.** Lo estoy usando para verificar contra datos reales. Cuando cerremos el detector:
 
 ```
 Remove-Item .env.seed.txt
 ```
 
-Ya está en `.gitignore`, así que no hay riesgo de que se suba al repo.
+Ya está en `.gitignore`, así que no hay riesgo de que se suba.
 
 - [ ] Borrado
 
 ---
 
-## 8. (Backlog del cuaderno) QR a videos de YouTube
+# PENDIENTES QUE NO SON TÉCNICOS
 
-Idea de David: que el cuaderno traiga QR a documentales o conferencias del tema.
+## Para Daniel (antes de lanzar el detector)
 
-**Trampa:** la IA NO puede inventar esos links. Un ID de YouTube inventado no da error —
-manda a cualquier video— y en material de capacitación eso es grave. Dos salidas honestas:
-biblioteca curada por instructor (links reales pegados a mano) o QR que abra una BÚSQUEDA
-del tema (nunca se rompe, menos curado). Decidir al retomar el cuaderno.
+Redactar en los términos con la empresa y en el aviso al trabajador la política que decidiste:
+**si una empresa pide la identidad de un reportante anónimo, Ceduverse no la entrega.**
+
+Con su límite honesto asentado: la identidad **sí existe** en la base (hace falta para acreditar
+puntos), así que la protección es de política y control de acceso, no de imposibilidad técnica.
+Al trabajador se le puede prometer "no se la damos a tu empresa"; **nunca** "nadie puede saberlo".
+
+Ver `docs/superpowers/specs/2026-07-18-detector-riesgos-design.md` §13.
+
+- [ ] Redactado
+
+## Decisiones abiertas contigo
+
+- **Cuaderno de estudio:** pausado en 6/10. Retomarlo cuando decidas.
+- **QR a videos de YouTube en el cuaderno:** falta decidir entre biblioteca curada por instructor
+  (links reales pegados a mano) o QR que abra una búsqueda del tema. La IA **no** puede inventar
+  esos links.
