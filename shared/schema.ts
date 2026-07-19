@@ -663,21 +663,40 @@ export const coursePlaybooks = pgTable("course_playbooks", {
   generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Evidencia fotográfica que un alumno sube por ejercicio de campo del Playbook.
-// Privada del alumno + visible a su empresa/admin (server/routes/playbook.ts),
-// NUNCA pública. Puede haber varias filas por (userId, courseSlug, exerciseIndex)
-// — el álbum las muestra todas; el ejercicio cuenta "hecho" con >=1
-// (shared/playbook-progress.ts).
-export const playbookEvidence = pgTable("playbook_evidence", {
+// Detector de riesgos (spec docs/superpowers/specs/2026-07-18-detector-riesgos-design.md).
+// Reemplaza playbook_evidence: un trabajador capacitado reporta un incumplimiento
+// real (foto + descripción), la empresa lo atiende/descarta, y los puntos se
+// acreditan SOLO al validar (nunca al enviar).
+//
+// user_id SIEMPRE se guarda (hace falta para acreditar puntos y para que el
+// trabajador vea sus propios hallazgos), incluso cuando anonymous = true. La
+// anonimidad es una regla de SERVIDOR aplicada en la capa de API (el endpoint
+// de la empresa omite user_id/nombre/correo cuando anonymous = true), no una
+// omisión de columna — ver §6 del spec.
+//
+// team_id es text (no uuid) porque teams.id es text en todo el resto del
+// schema (ver `teams` arriba); el spec dice "uuid" pero eso no coincide con
+// la tabla real y una FK con tipos distintos no se puede crear.
+export const riskFindings = pgTable("risk_findings", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  courseSlug: text("course_slug").notNull().references(() => studioCourses.slug, { onDelete: "cascade" }),
-  exerciseIndex: integer("exercise_index").notNull(),
+  anonymous: boolean("anonymous").notNull(),
+  teamId: text("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  courseSlug: text("course_slug").references(() => studioCourses.slug, { onDelete: "set null" }),
   photoKey: text("photo_key").notNull(),
-  points: integer("points").notNull(),
+  description: text("description").notNull(),
+  normRef: text("norm_ref"),
+  status: text("status").notNull().default("nuevo").$type<"nuevo" | "en_revision" | "atendido" | "descartado">(),
+  resolutionPhotoKey: text("resolution_photo_key"),
+  resolutionNote: text("resolution_note"),
+  pointsAwarded: integer("points_awarded").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  resolvedBy: uuid("resolved_by").references(() => users.id, { onDelete: "set null" }),
 }, (table) => [
-  index("idx_playbook_evidence_user_course").on(table.userId, table.courseSlug),
+  index("idx_risk_findings_team_status").on(table.teamId, table.status),
+  index("idx_risk_findings_user").on(table.userId),
 ]);
 
 export const studentProfiles = pgTable("student_profiles", {
@@ -835,7 +854,7 @@ export const insertStudioCourseSchema = createInsertSchema(studioCourses).omit({
 export const insertStudioModuleSchema = createInsertSchema(studioModules).omit({ id: true });
 export const insertStudioQuizSchema = createInsertSchema(studioQuizzes).omit({ id: true });
 export const insertCoursePlaybookSchema = createInsertSchema(coursePlaybooks).omit({ generatedAt: true });
-export const insertPlaybookEvidenceSchema = createInsertSchema(playbookEvidence).omit({ id: true, createdAt: true });
+export const insertRiskFindingSchema = createInsertSchema(riskFindings).omit({ id: true, createdAt: true, updatedAt: true, resolvedAt: true });
 export const insertStudentProfileSchema = createInsertSchema(studentProfiles).omit({ id: true });
 export const insertGeneratedContentSchema = createInsertSchema(generatedContent).omit({ id: true, generatedAt: true });
 export const insertStudioEnrollmentSchema = createInsertSchema(studioEnrollments).omit({ id: true, enrolledAt: true });
@@ -851,8 +870,8 @@ export type StudioQuiz = typeof studioQuizzes.$inferSelect;
 export type InsertStudioQuiz = z.infer<typeof insertStudioQuizSchema>;
 export type CoursePlaybook = typeof coursePlaybooks.$inferSelect;
 export type InsertCoursePlaybook = z.infer<typeof insertCoursePlaybookSchema>;
-export type PlaybookEvidence = typeof playbookEvidence.$inferSelect;
-export type InsertPlaybookEvidence = z.infer<typeof insertPlaybookEvidenceSchema>;
+export type RiskFinding = typeof riskFindings.$inferSelect;
+export type InsertRiskFinding = z.infer<typeof insertRiskFindingSchema>;
 export type StudentProfile = typeof studentProfiles.$inferSelect;
 export type InsertStudentProfile = z.infer<typeof insertStudentProfileSchema>;
 export type GeneratedContent = typeof generatedContent.$inferSelect;
