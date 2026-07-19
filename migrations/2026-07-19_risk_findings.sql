@@ -67,3 +67,28 @@ ALTER TABLE risk_findings ADD COLUMN IF NOT EXISTS resolved_by uuid REFERENCES u
 -- NOTA: el DROP de playbook_evidence NO va aqui. Se retira en la Task 10, junto
 -- con el codigo que todavia la consulta; borrarla antes deja rutas vivas apuntando
 -- a una tabla inexistente.
+
+-- =============================================================================
+-- Task 10 (docs/superpowers/plans/2026-07-18-detector-riesgos.md): el código
+-- que consultaba playbook_evidence (server/routes/playbook.ts: subida, álbum,
+-- proxy de foto, listado de la empresa) ya se retiró. Este repo dejó de
+-- declarar/consultar la tabla desde shared/schema.ts.
+--
+-- Lo que este bloque NO hace, a propósito: dropear la tabla automáticamente.
+-- El playbook con subida de evidencia se desplegó a producción varios días
+-- antes de este retiro, así que playbook_evidence pudo llegar a tener fotos
+-- reales de trabajadores. Perder esas fotos por dejar limpio el esquema no es
+-- un trade que se tome aquí — lo decide el operador, a mano, y solo si
+-- confirma que la tabla está vacía.
+--
+-- Antes de correr el DROP (comentado abajo), el operador corre esto en el SQL
+-- editor de Supabase y confirma el resultado:
+--
+--   SELECT count(*) FROM playbook_evidence;
+--
+-- Si el conteo es 0 → seguro descomentar y correr el DROP de abajo.
+-- Si el conteo es > 0 → NO dropear: hay evidencia real de al menos un
+-- trabajador. Coordinar con el dueño del producto (exportar/migrar esas filas
+-- y sus fotos en R2 antes de tocar el esquema, si se decide conservarlas).
+--
+-- DROP TABLE IF EXISTS playbook_evidence;

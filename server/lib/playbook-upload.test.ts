@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EVIDENCE_MAX_MB, ALLOWED_EVIDENCE_MIMETYPES, isImageMimetype, extensionForMimetype, safeEvidenceContentType, validateEvidenceFile, shouldAwardCompletionBonus, isUniqueViolation, evidencePointsToAward } from "./playbook-upload";
+import { EVIDENCE_MAX_MB, ALLOWED_EVIDENCE_MIMETYPES, isImageMimetype, extensionForMimetype, safeEvidenceContentType, validateEvidenceFile, isUniqueViolation } from "./playbook-upload";
 
 describe("EVIDENCE_MAX_MB", () => {
   it("es 8", () => {
@@ -120,40 +120,6 @@ describe("validateEvidenceFile", () => {
     const result = validateEvidenceFile({ mimetype: "image/jpeg", size: MAX_BYTES + 1 });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.message).toMatch(new RegExp(`${EVIDENCE_MAX_MB}MB`));
-  });
-});
-
-describe("shouldAwardCompletionBonus (dedupe del logro)", () => {
-  it("completo + nunca otorgado → se otorga", () => {
-    expect(shouldAwardCompletionBonus(true, false)).toBe(true);
-  });
-
-  it("completo + ya otorgado antes → NO se vuelve a otorgar (dedupe)", () => {
-    expect(shouldAwardCompletionBonus(true, true)).toBe(false);
-  });
-
-  it("incompleto → nunca se otorga, sin importar el historial", () => {
-    expect(shouldAwardCompletionBonus(false, false)).toBe(false);
-    expect(shouldAwardCompletionBonus(false, true)).toBe(false);
-  });
-});
-
-describe("evidencePointsToAward (I2 — antifarming de puntos por evidencia)", () => {
-  it("primera evidencia del ejercicio → otorga el total de puntos", () => {
-    expect(evidencePointsToAward(true, 100)).toBe(100);
-  });
-
-  it("NO es la primera evidencia del ejercicio → otorga 0 (no se repite el farming)", () => {
-    expect(evidencePointsToAward(false, 100)).toBe(0);
-  });
-
-  it("respeta el valor de evidencePoints que se le pase, no un número fijo", () => {
-    expect(evidencePointsToAward(true, 250)).toBe(250);
-    expect(evidencePointsToAward(false, 250)).toBe(0);
-  });
-
-  it("0 puntos configurados + primera evidencia → sigue siendo 0 (caso borde)", () => {
-    expect(evidencePointsToAward(true, 0)).toBe(0);
   });
 });
 

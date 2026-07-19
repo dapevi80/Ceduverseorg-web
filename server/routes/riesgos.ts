@@ -11,7 +11,6 @@ import {
   users,
   profiles,
   studioEnrollments,
-  playbookEvidence,
   achievementUsers,
   achievements,
 } from "@shared/schema";
@@ -335,15 +334,17 @@ export function registerRiesgosRoutes(app: Express) {
   // es la única pantalla que hoy necesita el número, y la página ya pide
   // esta ruta para pintar la lista; un segundo roundtrip solo para el total
   // no le compra nada al cliente. totalPoints() (shared/playbook-points.ts)
-  // agrega tres fuentes — PURA, sin decidir aquí cómo sumarlas, solo qué
+  // agrega dos fuentes — PURA, sin decidir aquí cómo sumarlas, solo qué
   // filas trae cada una:
   //   1) risk_findings.points_awarded de este usuario (0 en las no
   //      validadas — pointsForTransition solo paga al entrar a "atendido",
   //      así que sumarlas tal cual ya excluye lo no validado);
-  //   2) playbook_evidence.points de este usuario;
-  //   3) achievements.value vía achievement_users de este usuario — aquí
+  //   2) achievements.value vía achievement_users de este usuario — aquí
   //      viven, sin tabla aparte, los certificados/diplomas de curso que el
   //      dueño del producto pidió contar.
+  // Task 10 retiró la tercera fuente (playbook_evidence.points — la actividad
+  // de campo del playbook, reemplazada por este mismo flujo de hallazgos): ya
+  // no se lee esa tabla aquí. Ver shared/playbook-points.ts para el porqué.
   // El desglose por fuente se manda también (points.breakdown): la UI de hoy
   // solo pinta el total, pero el dueño puede querer premiar fuentes distinto
   // más adelante y no debe requerir otro cambio de contrato para eso.
@@ -354,22 +355,15 @@ export function registerRiesgosRoutes(app: Express) {
         .where(eq(riskFindings.userId, userId))
         .orderBy(desc(riskFindings.createdAt));
 
-      const [evidenceRows, achievementRows] = await Promise.all([
-        db.select({ points: playbookEvidence.points })
-          .from(playbookEvidence)
-          .where(eq(playbookEvidence.userId, userId)),
-        db.select({ value: achievements.value })
-          .from(achievementUsers)
-          .innerJoin(achievements, eq(achievementUsers.achievementId, achievements.id))
-          .where(eq(achievementUsers.userId, userId)),
-      ]);
+      const achievementRows = await db.select({ value: achievements.value })
+        .from(achievementUsers)
+        .innerJoin(achievements, eq(achievementUsers.achievementId, achievements.id))
+        .where(eq(achievementUsers.userId, userId));
 
       const findingsPoints = rows.map((r) => r.pointsAwarded);
-      const evidencePoints = evidenceRows.map((e) => e.points);
       const achievementValues = achievementRows.map((a) => a.value);
 
       const findingsSum = findingsPoints.reduce((s, p) => s + p, 0);
-      const evidenceSum = evidencePoints.reduce((s, p) => s + p, 0);
       const achievementSum = achievementValues.reduce((s, v) => s + v, 0);
 
       res.json({
@@ -394,10 +388,9 @@ export function registerRiesgosRoutes(app: Express) {
           hasSolutionPhoto: Boolean(r.resolutionPhotoKey && r.resolutionPhotoKey.trim().length > 0),
         })),
         points: {
-          total: totalPoints({ findingsPoints, evidencePoints, achievementValues }),
+          total: totalPoints({ findingsPoints, achievementValues }),
           breakdown: {
             findings: findingsSum,
-            evidence: evidenceSum,
             achievements: achievementSum,
           },
         },

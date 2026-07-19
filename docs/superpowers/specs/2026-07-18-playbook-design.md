@@ -68,7 +68,27 @@ El botón "Descargar" del Tutor IA (que bajaba un PDF de texto plano) se **quit�
 - **Pre-generado por curso** (no por usuario) — costo IA una sola vez por curso. Script `npx tsx server/generate-playbooks.ts [slug]`.
 - Si la IA falla → playbook mínimo real (resumen recortado del `contentHtml` + referencias + ejercicios genéricos del tema), nunca vacío ([[feedback_no_silent_degradation]]).
 
-### 4.4 Flujo de evidencia (QR → foto → logro)
+### 4.4 Flujo de evidencia (QR → foto → logro) — **REEMPLAZADO (2026-07-19)**
+
+> **Estado: retirado.** Esta actividad de campo ("haz el ejercicio y sube tu foto")
+> se retiró en Task 10 del plan `docs/superpowers/plans/2026-07-18-detector-riesgos.md`.
+> El dueño del producto la reemplazó por el **detector de riesgos**
+> (`docs/superpowers/specs/2026-07-18-detector-riesgos-design.md`, ver su §1):
+> el trabajador ya no sube evidencia de una tarea, reporta un incumplimiento
+> real que la empresa atiende o descarta. La infraestructura descrita abajo
+> (subida validada, proxy autenticado, alcance por empresa) se reutilizó para
+> ese flujo nuevo (spec §11); `playbook_evidence` como tabla quedó retirada
+> (nunca tuvo datos en producción según el diseño original — la migración de
+> retiro deja, por precaución, un chequeo manual antes de dropear la tabla real,
+> ver `migrations/2026-07-19_risk_findings.sql`). Los `course_playbooks.exercises`
+> que la IA genera NO se descartaron: se reencuadraron de "tareas" a "señales de
+> riesgo que puedes detectar" (spec del detector §9) y su QR/CTA apunta ahora a
+> `/riesgos/reportar/:slug`. El resto del playbook (guía de estudio §4.2-4.3,
+> referencias, export PDF §4.6) sigue vivo sin cambios de fondo.
+>
+> El flujo descrito abajo queda como registro histórico de lo que se construyó
+> y por qué cambió de sentido; ya no describe el comportamiento actual.
+
 ```
 [PDF/app] ejercicio N con QR → escanea con el cel
    → abre /playbook/:courseSlug/ejercicio/:n  (exige login; si no, /auth y regresa)

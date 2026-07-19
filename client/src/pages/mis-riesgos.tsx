@@ -21,7 +21,7 @@ import { Loader2, AlertTriangle, ShieldAlert, ArrowLeft, Award } from "lucide-re
 // El total de puntos que se pinta arriba viene YA agregado del servidor
 // (server/routes/riesgos.ts, GET /api/riesgos/mios, que a su vez llama a
 // totalPoints() en shared/playbook-points.ts) — esta pantalla nunca suma
-// las tres fuentes por su cuenta, solo pinta lo que el servidor ya sumó.
+// las fuentes por su cuenta, solo pinta lo que el servidor ya sumó.
 
 type RiskStatus = "nuevo" | "en_revision" | "atendido" | "descartado";
 
@@ -42,7 +42,6 @@ interface MyFinding {
 
 interface PointsBreakdown {
   findings: number;
-  evidence: number;
   achievements: number;
 }
 
@@ -169,9 +168,8 @@ export default function MisRiesgosPage() {
         {query.isSuccess && (
           <>
             {/* Total acumulado, prominente: risk_findings.points_awarded
-                validados + playbook_evidence.points + achievements.value
-                (incluye certificados/diplomas de curso) — un solo número, ya
-                sumado por el servidor. */}
+                validados + achievements.value (incluye certificados/diplomas
+                de curso) — un solo número, ya sumado por el servidor. */}
             <Card
               className="p-6 mb-8 bg-cedu-blue text-white flex items-center gap-4"
               data-testid="card-points-total"
@@ -182,7 +180,7 @@ export default function MisRiesgosPage() {
                   {query.data.points.total.toLocaleString("es-MX")} puntos
                 </p>
                 <p className="text-sm text-white/80">
-                  Suman tus hallazgos validados, tus ejercicios del Playbook y tus certificados.
+                  Suman tus hallazgos validados y tus certificados.
                 </p>
               </div>
             </Card>

@@ -699,17 +699,12 @@ export const riskFindings = pgTable("risk_findings", {
   index("idx_risk_findings_user").on(table.userId),
 ]);
 
-export const playbookEvidence = pgTable("playbook_evidence", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  courseSlug: text("course_slug").notNull().references(() => studioCourses.slug, { onDelete: "cascade" }),
-  exerciseIndex: integer("exercise_index").notNull(),
-  photoKey: text("photo_key").notNull(),
-  points: integer("points").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-}, (table) => [
-  index("idx_playbook_evidence_user_course").on(table.userId, table.courseSlug),
-]);
+// playbook_evidence (evidencia por ejercicio del playbook) se retiró en Task 10
+// (docs/superpowers/plans/2026-07-18-detector-riesgos.md) — reemplazada por
+// risk_findings arriba. La tabla SQL no se dropea automáticamente (podía tener
+// filas reales de producción; ver migrations/2026-07-19_risk_findings.sql para
+// el chequeo manual que el operador corre antes de dropearla), solo se dejó de
+// declarar/consultar aquí.
 
 export const studentProfiles = pgTable("student_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -867,7 +862,6 @@ export const insertStudioModuleSchema = createInsertSchema(studioModules).omit({
 export const insertStudioQuizSchema = createInsertSchema(studioQuizzes).omit({ id: true });
 export const insertCoursePlaybookSchema = createInsertSchema(coursePlaybooks).omit({ generatedAt: true });
 export const insertRiskFindingSchema = createInsertSchema(riskFindings).omit({ id: true, createdAt: true, updatedAt: true, resolvedAt: true });
-export const insertPlaybookEvidenceSchema = createInsertSchema(playbookEvidence).omit({ id: true, createdAt: true });
 export const insertStudentProfileSchema = createInsertSchema(studentProfiles).omit({ id: true });
 export const insertGeneratedContentSchema = createInsertSchema(generatedContent).omit({ id: true, generatedAt: true });
 export const insertStudioEnrollmentSchema = createInsertSchema(studioEnrollments).omit({ id: true, enrolledAt: true });
@@ -885,8 +879,6 @@ export type CoursePlaybook = typeof coursePlaybooks.$inferSelect;
 export type InsertCoursePlaybook = z.infer<typeof insertCoursePlaybookSchema>;
 export type RiskFinding = typeof riskFindings.$inferSelect;
 export type InsertRiskFinding = z.infer<typeof insertRiskFindingSchema>;
-export type PlaybookEvidence = typeof playbookEvidence.$inferSelect;
-export type InsertPlaybookEvidence = z.infer<typeof insertPlaybookEvidenceSchema>;
 export type StudentProfile = typeof studentProfiles.$inferSelect;
 export type InsertStudentProfile = z.infer<typeof insertStudentProfileSchema>;
 export type GeneratedContent = typeof generatedContent.$inferSelect;
