@@ -6,7 +6,7 @@
 
 **Architecture:** Un componedor (`server/cuaderno/`) que junta datos ya existentes (nada de llamadas nuevas a IA) y los dibuja con pdfkit. La pieza de riesgo —traducir el `lectureHtml` a bloques imprimibles— se aísla en un módulo **puro y probado**, separado del dibujo.
 
-**Tech Stack:** TypeScript, pdfkit (ya en uso), `qrcode` (ya en uso), `@fontsource/dm-serif-display` y `@fontsource/plus-jakarta-sans` (nuevos, sólo por sus TTF), Drizzle/Postgres, vitest.
+**Tech Stack:** TypeScript, pdfkit (ya en uso), `qrcode` (ya en uso), `@fontsource/dm-serif-display` y `@fontsource/plus-jakarta-sans` (nuevos, sólo por sus archivos de fuente `.woff`), Drizzle/Postgres, vitest.
 
 **Spec:** `docs/superpowers/specs/2026-07-18-cuaderno-estudio-design.md` — léelo antes de empezar.
 
@@ -32,8 +32,8 @@
 - Test: `server/cuaderno/fonts.test.ts`
 
 **Interfaces:**
-- Produce: `registerCuadernoFonts(doc: PDFKit.PDFDocument): { serif: string; sans: string; sansBold: string; serifItalic: string }` — registra y devuelve los NOMBRES a usar en `doc.font(...)`. Si un TTF no existe, devuelve los equivalentes Helvetica y lo registra en consola (respaldo honesto, no silencioso).
-- Produce: `FONT_FILES` — rutas resueltas de los TTF dentro de `node_modules/@fontsource/...`.
+- Produce: `registerCuadernoFonts(doc: PDFKit.PDFDocument): { serif: string; sans: string; sansBold: string; serifItalic: string }` — registra y devuelve los NOMBRES a usar en `doc.font(...)`. Si un archivo de fuente no existe, devuelve los equivalentes Helvetica y lo registra en consola (respaldo honesto, no silencioso).
+- Produce: `FONT_FILES` — rutas resueltas de los `.woff` dentro de `node_modules/@fontsource/...` (los paquetes NO traen `.ttf`; `.woff2` revienta con acentos).
 
 - [ ] **Step 1: Instalar las fuentes**
 
@@ -41,7 +41,7 @@
 npm install @fontsource/dm-serif-display @fontsource/plus-jakarta-sans
 ```
 
-- [ ] **Step 2: Localizar los TTF**
+- [ ] **Step 2: Localizar los archivos de fuente**
 
 Los paquetes traen `files/*.ttf`. Confirma las rutas exactas antes de escribir el módulo:
 

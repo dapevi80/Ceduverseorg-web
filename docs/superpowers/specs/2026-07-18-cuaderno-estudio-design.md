@@ -34,9 +34,10 @@ Un **cuaderno de trabajo imprimible** con el curso completo, módulo por módulo
 
 ### 4.1 Tipografía (la corrección de fondo)
 Incrustar las fuentes reales vía `doc.registerFont()`:
-- **DM Serif Display** → títulos, numerales de capítulo, portada. Paquete `@fontsource/dm-serif-display` (v5.2.8, trae TTF).
+- **DM Serif Display** → títulos, numerales de capítulo, portada. Paquete `@fontsource/dm-serif-display` (v5.2.8).
 - **Plus Jakarta Sans** → texto corrido, etiquetas, tablas. Paquete `@fontsource/plus-jakarta-sans` (v5.2.8). Se necesitan regular y bold.
 - Ambas de licencia libre (SIL OFL), incrustables sin problema.
+- **Corrección verificada al implementar:** estos paquetes NO traen `.ttf`, sólo `.woff`/`.woff2`. Y `.woff2` con texto acentuado revienta fontkit (`RangeError` al cerrar el documento), así que se incrustan los **`.woff`**.
 
 ### 4.2 Paleta (valores exactos ya en uso)
 `cedu-ink #1a1a2e` · `cedu-ink-muted #7a7a99` · `cedu-cream #faf8f4` · `cedu-blue #1b5adf` · `cedu-orange #f28023` · `cedu-violet #7c3aed` · `cedu-green #00b87a`, más los tintes `-light` para fondos de caja.
