@@ -62,7 +62,7 @@ TRABAJADOR
 | id | uuid PK | |
 | user_id | uuid FK → users | **siempre** se guarda (puntos, antiabuso); no se expone si es anónimo |
 | anonymous | boolean not null | elección del trabajador en ESE reporte |
-| team_id | uuid FK → teams | la empresa que lo recibe; se resuelve al reportar |
+| team_id | **text** FK → teams | la empresa que lo recibe; se resuelve al reportar. (`teams.id` es text en todo el schema, no uuid — corregido al implementar) |
 | course_slug | text FK → studio_courses, nullable | de dónde salió (null si reportó fuera de un curso) |
 | photo_key | text not null | llave R2, nunca URL pública |
 | description | text not null | palabras del trabajador |

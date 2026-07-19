@@ -30,7 +30,7 @@
 
 - [ ] **Step 1:** agregar la tabla a `shared/schema.ts` con las columnas de §5, índices `(team_id, status)` y `(user_id)`.
 - [ ] **Step 2:** escribir la migración SQL equivalente. **Incluir al final los `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` de cada columna**, porque un `CREATE TABLE IF NOT EXISTS` se salta entero si la tabla ya existe (nos pasó con `course_playbooks.source` y rompió el deploy).
-- [ ] **Step 3:** retirar `playbook_evidence` (nunca tuvo datos en producción): quitar la tabla del schema y agregar `DROP TABLE IF EXISTS playbook_evidence;` a la migración. Dejar el código que la usaba para la Task 10.
+- [ ] **Step 3:** **NO** retirar `playbook_evidence` aquí. Quitarla del schema mientras el código sigue importándola rompe la compilación para todas las tareas siguientes (pasó: `server/routes/playbook.ts` dejó de compilar). Su eliminación —schema + `DROP TABLE` + código— va completa en la **Task 10**.
 - [ ] **Step 4:** `npx tsc --noEmit` limpio y el SQL revisado contra el schema campo por campo.
 - [ ] **Step 5: Commit** — `feat(detector): tabla risk_findings + migración`
 

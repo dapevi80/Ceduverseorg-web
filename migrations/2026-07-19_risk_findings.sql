@@ -64,4 +64,6 @@ ALTER TABLE risk_findings ADD COLUMN IF NOT EXISTS resolved_by uuid REFERENCES u
 -- playbook_evidence queda retirada: nunca tuvo datos en producción. El código
 -- que aún la referencia (server/routes/playbook.ts, client/src/pages/dashboard.tsx)
 -- se retira en una tarea posterior; esta migración solo cubre el esquema.
-DROP TABLE IF EXISTS playbook_evidence;
+-- NOTA: el DROP de playbook_evidence NO va aqui. Se retira en la Task 10, junto
+-- con el codigo que todavia la consulta; borrarla antes deja rutas vivas apuntando
+-- a una tabla inexistente.
