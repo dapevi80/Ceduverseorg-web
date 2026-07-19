@@ -635,6 +635,51 @@ export const studioQuizzes = pgTable("studio_quizzes", {
   uniqueIndex("uq_studio_quizzes_course").on(table.courseId),
 ]);
 
+// Playbook del curso (spec 2026-07-18): un "libro de jugadas" IA por curso —
+// objetivos/resumen/estrategias/preguntas + 3-5 ejercicios de campo. Se genera
+// UNA VEZ por curso (pre-generado, cacheado) y se sirve a todos sus alumnos.
+// Las referencias son SIEMPRE las verbatim del curso (nunca inventadas por la IA):
+// ver server/playbook-generator.ts, que las arma con shared/playbook-assemble.ts,
+// no con la respuesta del LLM.
+export const coursePlaybooks = pgTable("course_playbooks", {
+  courseSlug: text("course_slug").primaryKey().references(() => studioCourses.slug, { onDelete: "cascade" }),
+  content: jsonb("content").notNull().$type<{
+    objetivos: string[];
+    resumen: string[];
+    estrategias: string[];
+    preguntas: string[];
+  }>(),
+  exercises: jsonb("exercises").notNull().$type<{ index: number; title: string; instruction: string }[]>(),
+  references: jsonb("references").notNull().$type<string[]>(),
+  // Procedencia del contenido: 'ai' = generación real de Claude; 'fallback' =
+  // playbook mínimo derivado del contenido del curso (server/playbook-generator.ts
+  // cayó a fallbackPlaybook() por falta de API key, cero módulos, error de la API,
+  // conteo de ejercicios inválido o cuerpo pedagógico vacío). Sin esta columna una
+  // fila fallback era indistinguible de una real y quedaba cacheada para siempre
+  // (C1 — [[feedback_no_silent_degradation]]). El lector (server/routes/playbook.ts)
+  // usa esto para reintentar la generación real tras un cooldown en vez de servir
+  // el fallback como si fuera definitivo.
+  source: text("source").notNull().default("ai").$type<"ai" | "fallback">(),
+  generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Evidencia fotográfica que un alumno sube por ejercicio de campo del Playbook.
+// Privada del alumno + visible a su empresa/admin (server/routes/playbook.ts),
+// NUNCA pública. Puede haber varias filas por (userId, courseSlug, exerciseIndex)
+// — el álbum las muestra todas; el ejercicio cuenta "hecho" con >=1
+// (shared/playbook-progress.ts).
+export const playbookEvidence = pgTable("playbook_evidence", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseSlug: text("course_slug").notNull().references(() => studioCourses.slug, { onDelete: "cascade" }),
+  exerciseIndex: integer("exercise_index").notNull(),
+  photoKey: text("photo_key").notNull(),
+  points: integer("points").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("idx_playbook_evidence_user_course").on(table.userId, table.courseSlug),
+]);
+
 export const studentProfiles = pgTable("student_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -789,6 +834,8 @@ export type InsertSupportMessage = z.infer<typeof insertSupportMessageSchema>;
 export const insertStudioCourseSchema = createInsertSchema(studioCourses).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertStudioModuleSchema = createInsertSchema(studioModules).omit({ id: true });
 export const insertStudioQuizSchema = createInsertSchema(studioQuizzes).omit({ id: true });
+export const insertCoursePlaybookSchema = createInsertSchema(coursePlaybooks).omit({ generatedAt: true });
+export const insertPlaybookEvidenceSchema = createInsertSchema(playbookEvidence).omit({ id: true, createdAt: true });
 export const insertStudentProfileSchema = createInsertSchema(studentProfiles).omit({ id: true });
 export const insertGeneratedContentSchema = createInsertSchema(generatedContent).omit({ id: true, generatedAt: true });
 export const insertStudioEnrollmentSchema = createInsertSchema(studioEnrollments).omit({ id: true, enrolledAt: true });
@@ -802,6 +849,10 @@ export type StudioModule = typeof studioModules.$inferSelect;
 export type InsertStudioModule = z.infer<typeof insertStudioModuleSchema>;
 export type StudioQuiz = typeof studioQuizzes.$inferSelect;
 export type InsertStudioQuiz = z.infer<typeof insertStudioQuizSchema>;
+export type CoursePlaybook = typeof coursePlaybooks.$inferSelect;
+export type InsertCoursePlaybook = z.infer<typeof insertCoursePlaybookSchema>;
+export type PlaybookEvidence = typeof playbookEvidence.$inferSelect;
+export type InsertPlaybookEvidence = z.infer<typeof insertPlaybookEvidenceSchema>;
 export type StudentProfile = typeof studentProfiles.$inferSelect;
 export type InsertStudentProfile = z.infer<typeof insertStudentProfileSchema>;
 export type GeneratedContent = typeof generatedContent.$inferSelect;
