@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   toCompanyView,
-  anonymousPhotoKey,
-  identifiedPhotoKey,
+  findingPhotoKey,
   type FindingRow,
 } from "./risk-anonymity";
 
@@ -71,13 +70,14 @@ describe("toCompanyView — anónimo: la identidad no sale del servidor", () => 
     expect(result.anonymous).toBe(true);
   });
 
-  it("no revela la identidad ni siquiera si reporterName/reporterEmail faltan como propiedades enumerables extra en el row", () => {
-    // Fila adversarial: alguien agregó un campo con un nombre distinto que
-    // por descuido replica el user id (p. ej. un futuro "createdByUserId").
-    // Esta prueba documenta la garantía esperada de toCompanyView para el
-    // shape declarado de FindingRow — no debe reflejar userId sin importar
-    // bajo qué llave del row declarado venga.
-    const row = baseRow({ anonymous: true, userId: USER_ID });
+  it("no revela la identidad ni siquiera si el row trae un campo de identidad futuro con otro nombre (ej. createdByUserId)", () => {
+    // Fila adversarial: alguien agregó una columna nueva que no está
+    // declarada en FindingRow pero de todos modos trae el user id bajo otra
+    // llave. Si toCompanyView alguna vez se reescribiera con un spread
+    // (`{ ...row, ... }`), este campo se colaría al resultado sin que nadie
+    // lo pidiera. Se castea a través de `unknown` porque el tipo declarado
+    // de FindingRow no incluye esta columna a propósito.
+    const row = { ...baseRow(), createdByUserId: USER_ID } as unknown as FindingRow;
     const result = toCompanyView(row);
     const serialized = JSON.stringify(result);
     expect(serialized).not.toContain(USER_ID);
@@ -102,6 +102,16 @@ describe("toCompanyView — identificado: sí trae al reportante", () => {
     expect(serialized).not.toContain(REPORTER_EMAIL);
   });
 
+  it("el user id NUNCA se expone a la empresa, ni identificado ni anónimo (CompanyFinding no declara userId)", () => {
+    // El reporter identificado expone el NOMBRE a propósito (spec §6), pero
+    // eso no es licencia para que el user_id crudo se cuele: la empresa
+    // sigue sin necesitarlo para nada de su flujo.
+    const row = baseRow({ anonymous: false });
+    const result = toCompanyView(row);
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain(USER_ID);
+  });
+
   it("mantiene el resto de los campos igual que en el caso anónimo", () => {
     const row = baseRow({ anonymous: false });
     const result = toCompanyView(row);
@@ -110,6 +120,43 @@ describe("toCompanyView — identificado: sí trae al reportante", () => {
     expect(result.normRef).toBe(row.normRef);
     expect(result.status).toBe(row.status);
     expect(result.anonymous).toBe(false);
+  });
+});
+
+describe("toCompanyView — photoRef opaco: nunca el photoKey crudo", () => {
+  it('el resultado no tiene la propiedad "photoKey"', () => {
+    const row = baseRow({ anonymous: true });
+    const result = toCompanyView(row);
+    expect("photoKey" in result).toBe(false);
+  });
+
+  it("el JSON serializado no contiene el photoKey crudo de la fila", () => {
+    const row = baseRow({ anonymous: true, photoKey: "risk/finding-0001/muy-secreto-token.jpg" });
+    const result = toCompanyView(row);
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain(row.photoKey);
+  });
+
+  it("photoRef es el id del hallazgo (el proxy autenticado resuelve id -> key en el servidor)", () => {
+    const row = baseRow();
+    const result = toCompanyView(row);
+    expect(result.photoRef).toBe(row.id);
+  });
+});
+
+describe("toCompanyView — createdAt se trunca al día en la vista de empresa", () => {
+  it("un timestamp con hora se reduce a YYYY-MM-DD", () => {
+    const row = baseRow({ createdAt: new Date("2026-07-18T23:59:59.999Z") });
+    const result = toCompanyView(row);
+    expect(result.createdAt).toBe("2026-07-18");
+  });
+
+  it("no deja rastro de la hora en el JSON serializado", () => {
+    const row = baseRow({ createdAt: new Date("2026-07-18T05:07:03.000Z") });
+    const result = toCompanyView(row);
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain("05:07:03");
+    expect(result.createdAt).toBe("2026-07-18");
   });
 });
 
@@ -155,48 +202,49 @@ describe("toCompanyView — nunca lanza con campos nulos/faltantes", () => {
   });
 });
 
-describe("anonymousPhotoKey — la llave de un hallazgo anónimo no delata al usuario", () => {
-  it("no contiene el user id pasado como argumento adicional de contexto", () => {
-    const key = anonymousPhotoKey("finding-0001", "jpg");
+describe("findingPhotoKey — una sola llave que nunca puede identificar al reportante", () => {
+  it("no contiene el user id, aunque exista uno en el contexto (la función ya no acepta ese parámetro)", () => {
+    const key = findingPhotoKey("finding-0001", "jpg");
     expect(key).not.toContain(USER_ID);
   });
 
   it("contiene el id del hallazgo (trazabilidad sin identidad)", () => {
-    const key = anonymousPhotoKey("finding-0001", "jpg");
+    const key = findingPhotoKey("finding-0001", "jpg");
     expect(key).toContain("finding-0001");
   });
 
-  it("respeta la extensión pedida", () => {
-    const key = anonymousPhotoKey("finding-0001", "png");
+  it("respeta una extensión permitida", () => {
+    const key = findingPhotoKey("finding-0001", "png");
     expect(key.endsWith(".png")).toBe(true);
   });
 
+  it("acepta jpg, jpeg, png y webp", () => {
+    for (const ext of ["jpg", "jpeg", "png", "webp"]) {
+      const key = findingPhotoKey("finding-0001", ext);
+      expect(key.endsWith(`.${ext}`)).toBe(true);
+    }
+  });
+
   it("dos llamadas para el mismo finding no colisionan (no determinístico/adivinable)", () => {
-    const a = anonymousPhotoKey("finding-0001", "jpg");
-    const b = anonymousPhotoKey("finding-0001", "jpg");
+    const a = findingPhotoKey("finding-0001", "jpg");
+    const b = findingPhotoKey("finding-0001", "jpg");
     expect(a).not.toBe(b);
   });
-});
 
-describe("identifiedPhotoKey — la llave de un hallazgo firmado sí puede incluir al usuario", () => {
-  it("contiene el user id", () => {
-    const key = identifiedPhotoKey(USER_ID, "finding-0003", "jpg");
-    expect(key).toContain(USER_ID);
+  it("una extensión maliciosa tipo path traversal se descarta y cae a un default seguro", () => {
+    const key = findingPhotoKey("finding-0001", "../../x");
+    expect(key).not.toContain("..");
+    expect(key.endsWith(".jpg")).toBe(true);
   });
 
-  it("contiene el id del hallazgo", () => {
-    const key = identifiedPhotoKey(USER_ID, "finding-0003", "jpg");
-    expect(key).toContain("finding-0003");
+  it("una extensión desconocida (no imagen) cae a un default seguro", () => {
+    const key = findingPhotoKey("finding-0001", "exe");
+    expect(key.endsWith(".exe")).toBe(false);
+    expect(key.endsWith(".jpg")).toBe(true);
   });
 
-  it("respeta la extensión pedida", () => {
-    const key = identifiedPhotoKey(USER_ID, "finding-0003", "webp");
-    expect(key.endsWith(".webp")).toBe(true);
-  });
-
-  it("la llave identificada y la anónima para el mismo finding son distintas rutas", () => {
-    const idKey = identifiedPhotoKey(USER_ID, "finding-0004", "jpg");
-    const anonKey = anonymousPhotoKey("finding-0004", "jpg");
-    expect(idKey).not.toBe(anonKey);
+  it("es insensible a mayúsculas para la extensión permitida", () => {
+    const key = findingPhotoKey("finding-0001", "PNG");
+    expect(key.endsWith(".png")).toBe(true);
   });
 });

@@ -34,8 +34,18 @@ export interface CompanyFinding {
   description: string;
   normRef: string | null;
   status: string;
-  createdAt: Date;
+  // Solo fecha (YYYY-MM-DD), truncada al día. En un taller de ocho personas
+  // una hora exacta + el rol de turno acota al reportante casi tanto como
+  // el nombre; el spec solo promete "fecha". La marca de tiempo completa
+  // vive en la vista propia del trabajador, que no es esta función.
+  createdAt: string;
   reporter: { name: string } | null; // null si anónimo
+  // Referencia opaca a la foto: es el finding id, NUNCA row.photoKey. Un
+  // proxy autenticado (fuera de este módulo) resuelve id -> photoKey en el
+  // servidor. Sin este campo, un autor de ruta razonablemente adjuntaría
+  // row.photoKey a mano para que el cliente pueda pedir la foto, y eso
+  // reintroduciría la fuga una línea fuera de este módulo.
+  photoRef: string;
 }
 
 /**
@@ -60,31 +70,45 @@ export function toCompanyView(row: FindingRow): CompanyFinding {
     description: row.description,
     normRef: row.normRef ?? null,
     status: row.status,
-    createdAt: row.createdAt,
+    createdAt: toDateOnly(row.createdAt),
     reporter,
+    photoRef: row.id,
   };
 }
 
+function toDateOnly(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+const ALLOWED_PHOTO_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp"]);
+const DEFAULT_PHOTO_EXTENSION = "jpg";
+
 /**
- * Llave R2 para la foto de un hallazgo ANÓNIMO. Nunca incluye el user id:
- * hoy la llave de evidencia del playbook lo incluye
- * (`evidence/${slug}/${userId}/...`), y si un hallazgo "anónimo" reutilizara
- * ese patrón, el nombre del propio archivo firmaría al reportante. En su
- * lugar usa el id del hallazgo (que ya es opaco y no identifica a nadie por
- * sí solo) más un token aleatorio para que la ruta no sea adivinable.
+ * `ext` normalmente viene del nombre de archivo que sube el cliente, así
+ * que no es de confianza: algo como "../../x" escaparía el prefijo de la
+ * llave. Solo se permiten extensiones de imagen conocidas; cualquier otra
+ * cosa cae a una extensión segura por default.
  */
-export function anonymousPhotoKey(findingId: string, ext: string): string {
-  const token = crypto.randomBytes(16).toString("hex");
-  return `risk/anon/${findingId}/${token}.${ext}`;
+function safePhotoExtension(ext: string): string {
+  const normalized = ext.toLowerCase();
+  return ALLOWED_PHOTO_EXTENSIONS.has(normalized) ? normalized : DEFAULT_PHOTO_EXTENSION;
 }
 
 /**
- * Llave R2 para la foto de un hallazgo FIRMADO (anonymous=false). Aquí sí
- * es correcto incluir el user id — el trabajador ya eligió que le
- * reconozcan el hallazgo — siguiendo el mismo patrón que
- * server/routes/playbook.ts usa para evidencia.
+ * Llave R2 para la foto de un hallazgo. Siempre se construye a partir del
+ * id del hallazgo (ya opaco, no identifica a nadie por sí solo) más
+ * aleatoriedad CSPRNG — NUNCA a partir del user id.
+ *
+ * Antes existían dos funciones (`anonymousPhotoKey` / `identifiedPhotoKey`).
+ * El flujo de reporte sube la foto ANTES de que el worker elija anonimato,
+ * así que una ruta de subida con sesión llamaría naturalmente a la variante
+ * identificada; si luego el worker marcaba el hallazgo como anónimo, el
+ * nombre del propio archivo delataba al reportante. La columna `user_id` en
+ * la base es el único vínculo que el sistema necesita entre un hallazgo y
+ * su autor; la llave de storage nunca debe ser ese vínculo, así que ahora
+ * hay una sola función que no puede identificar a nadie ni por accidente.
  */
-export function identifiedPhotoKey(userId: string, findingId: string, ext: string): string {
+export function findingPhotoKey(findingId: string, ext: string): string {
   const token = crypto.randomBytes(16).toString("hex");
-  return `risk/id/${userId}/${findingId}/${token}.${ext}`;
+  return `risk/${findingId}/${token}.${safePhotoExtension(ext)}`;
 }
