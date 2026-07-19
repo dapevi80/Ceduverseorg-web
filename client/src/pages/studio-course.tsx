@@ -196,7 +196,10 @@ function ModulePill({ index, title, active, completed, locked, onClick }: {
           active ? "bg-white/20 text-white" : "bg-black/[0.04] text-cedu-ink-muted"
         }`}>{index + 1}</span>
       )}
-      <span className="hidden sm:inline truncate max-w-[140px]">{title}</span>
+      {/* En movil el nombre solo se muestra en el modulo ACTIVO: asi sabes que
+          estas estudiando sin que la barra se vuelva ilegible. Los demas se
+          identifican por su numero. En pantallas grandes se muestran todos. */}
+      <span className={`truncate ${active ? "inline max-w-[190px]" : "hidden sm:inline max-w-[140px]"}`}>{title}</span>
     </button>
   );
 }
@@ -1899,7 +1902,7 @@ export default function StudioCoursePage() {
               className="gap-1 text-xs text-cedu-ink-muted border-black/10 dark:border-white/10 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 px-2 sm:px-3"
               data-testid="button-continue-later"
             >
-              <Clock size={12} /> <span className="hidden sm:inline">Continuar después</span>
+              <Clock size={12} /> <span>Continuar después</span>
             </Button>
             <Button
               variant="outline"

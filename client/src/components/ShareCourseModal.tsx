@@ -29,7 +29,7 @@ const courseTypeConfig = {
     sublabel: "Aula Virtual — Capacitación STPS",
     icon: Video,
     color: "cedu-blue",
-    bgClass: "bg-cedu-blue-light/50 border-cedu-blue/10",
+    bgClass: "bg-cedu-blue-light/50 dark:bg-cedu-blue/10 border-cedu-blue/10 dark:border-cedu-blue/20",
     shareIntro: "¡Te comparto esta conferencia pregrabada con expertos en",
     shareBody: "Es parte del Aula Virtual de Ceduverse — conferencias profesionales con especialistas certificados en cumplimiento STPS y desarrollo laboral.",
   },
@@ -38,7 +38,7 @@ const courseTypeConfig = {
     sublabel: "Tutor IA — Aprendizaje personalizado",
     icon: Sparkles,
     color: "cedu-violet",
-    bgClass: "bg-cedu-violet/[0.06] border-cedu-violet/10",
+    bgClass: "bg-cedu-violet/[0.06] dark:bg-cedu-violet/15 border-cedu-violet/10 dark:border-cedu-violet/25",
     shareIntro: "¡Mira nada más! 👀 Encontré un curso con tutor de IA que te va a encantar, sobre",
     shareBody: "Tienes un tutor de inteligencia artificial de Ceduverse que responde tus dudas al instante, avanzas a tu propio ritmo desde el cel y terminas con una certificación profesional. ¡Te lo dejo por si te late! 🚀",
   },
@@ -47,7 +47,7 @@ const courseTypeConfig = {
     sublabel: "Ceducap Academy — Certificación formal",
     icon: GraduationCap,
     color: "cedu-green",
-    bgClass: "bg-cedu-green-light/50 border-cedu-green/10",
+    bgClass: "bg-cedu-green-light/50 dark:bg-cedu-green/10 border-cedu-green/10 dark:border-cedu-green/20",
     shareIntro: "¡Te comparto este curso certificado sobre",
     shareBody: "Es parte de Ceducap Academy de Ceduverse — formación profesional con certificación válida ante STPS para Latinoamérica.",
   },
@@ -159,26 +159,26 @@ export default function ShareCourseModal({
         <div className="space-y-3 pt-1">
           <div className={`border rounded-xl p-2.5 ${config.bgClass}`}>
             <div className="flex items-center gap-2.5">
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/80 flex items-center justify-center">
+              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white/80 dark:bg-white/10 flex items-center justify-center">
                 <TypeIcon className={`h-4 w-4 text-${config.color}`} />
               </div>
-              <p className="text-sm font-semibold text-cedu-ink line-clamp-1 flex-1 min-w-0" data-testid="text-share-course-title">
+              <p className="text-sm font-semibold text-cedu-ink dark:text-gray-100 line-clamp-1 flex-1 min-w-0" data-testid="text-share-course-title">
                 {courseTitle}
               </p>
             </div>
           </div>
 
           {referralData && (
-            <div className="flex items-center gap-2 bg-cedu-green-light/50 border border-cedu-green/10 rounded-xl px-3 py-2">
+            <div className="flex items-center gap-2 bg-cedu-green-light/50 dark:bg-cedu-green/10 border border-cedu-green/10 dark:border-cedu-green/20 rounded-xl px-3 py-2">
               <Gift className="h-4 w-4 text-cedu-green flex-shrink-0" />
-              <span className="text-xs font-semibold text-cedu-ink whitespace-nowrap">Tu código:</span>
+              <span className="text-xs font-semibold text-cedu-ink dark:text-gray-100 whitespace-nowrap">Tu código:</span>
               <span className="text-sm font-mono font-bold text-cedu-green truncate" data-testid="text-referral-code">
                 {referralData.code}
               </span>
               {referralData.usageCount > 0 && (
-                <div className="flex items-center gap-1 bg-white/80 px-2 py-0.5 rounded-lg ml-auto flex-shrink-0">
+                <div className="flex items-center gap-1 bg-white/80 dark:bg-white/10 px-2 py-0.5 rounded-lg ml-auto flex-shrink-0">
                   <Users className="h-3 w-3 text-cedu-ink-muted" />
-                  <span className="text-xs font-semibold text-cedu-ink">{referralData.usageCount}</span>
+                  <span className="text-xs font-semibold text-cedu-ink dark:text-gray-100">{referralData.usageCount}</span>
                 </div>
               )}
             </div>
@@ -188,7 +188,7 @@ export default function ShareCourseModal({
             <Input
               value={shareUrl}
               readOnly
-              className="text-xs bg-gray-50 font-mono"
+              className="text-xs bg-gray-50 dark:bg-gray-800 dark:text-gray-100 dark:border-white/10 font-mono"
               data-testid="input-share-url"
             />
             <Button
@@ -238,14 +238,14 @@ export default function ShareCourseModal({
             )}
           </div>
 
-          <p className="text-[11px] text-cedu-ink-muted text-center">
+          <p className="text-[11px] text-cedu-ink-muted dark:text-gray-400 text-center">
             Al registrarse con tu link, quedará vinculado a tu red de referidos.
           </p>
 
           <Button
             onClick={() => onOpenChange(false)}
             variant="ghost"
-            className="w-full h-9 text-sm text-cedu-ink-muted"
+            className="w-full h-9 text-sm text-cedu-ink-muted dark:text-gray-300"
             data-testid="button-close-share"
           >
             Cerrar
