@@ -3,7 +3,7 @@
 **Fecha:** 2026-07-18
 **Producto:** Ceduverse — Tutor IA / Panel de empresa
 **Decisiones:** David
-**Estado:** Borrador para revisión. No implementar hasta aprobación.
+**Estado:** APROBADO por David (2026-07-18).
 **Reemplaza:** la actividad de campo del playbook (`2026-07-18-playbook-design.md` §4.4). La infraestructura construida ahí se recicla; el sentido cambia.
 
 ---
@@ -124,7 +124,9 @@ Vista y exportable: *"riesgo detectado el 12 de marzo, corregido el 14, con foto
 - `descartado` sin motivo → rechazado con mensaje claro.
 
 ## 13. Pendientes fuera de lo técnico
-- **Para Daniel (legal/laboral):** definir por escrito qué hace Ceduverse si una empresa exige la identidad de un reportante anónimo. Tecnológicamente se sabe; la pregunta es el compromiso. Tiene implicaciones laborales y conviene resolverlo **antes** de lanzar.
+- **DECIDIDO (David, 2026-07-18):** si una empresa solicita la identidad de un reportante anónimo, **Ceduverse NO la entrega** — el trabajador podría verse vulnerado. La política aplica también al personal interno de Ceduverse, no sólo a los endpoints.
+  - **Para Daniel:** redactar esta política en los términos con la empresa y en el aviso al trabajador, para que no sea sólo una decisión de producto sino un compromiso escrito y oponible.
+  - **Límite honesto:** la identidad SÍ existe en la base (hace falta para acreditar puntos y para que el trabajador vea sus hallazgos). O sea, la protección es de política y control de acceso, no de imposibilidad técnica: un administrador de Ceduverse con acceso a la base puede consultarla. Si se quiere endurecer, el siguiente paso es auditar todo acceso a esa columna. No se debe prometer al trabajador más de lo que la arquitectura sostiene.
 - Texto de la pantalla de reporte, que debe decir con claridad el límite del anonimato (§3).
 
 ## 14. Fuera de alcance
