@@ -21,11 +21,11 @@ import { totalPoints } from "@shared/playbook-points";
 import {
   EVIDENCE_MAX_MB,
   isImageMimetype,
-  extensionForMimetype,
   safeEvidenceContentType,
   validateEvidenceFile,
   isUniqueViolation,
 } from "../lib/playbook-upload";
+import { normalizeImageForStorage, ImageConversionError } from "../lib/image-normalize";
 import { toCompanyView, findingPhotoKey, type FindingRow } from "../lib/risk-anonymity";
 import { pickAllowedNorm } from "../lib/norm-validate";
 import { resolveTeamSelection } from "../lib/team-selection";
@@ -356,14 +356,29 @@ export function registerRiesgosRoutes(app: Express) {
         return res.status(503).json({ message: "Almacenamiento de fotos no configurado" });
       }
 
+      // webp/heic/heif se convierten a JPEG aquí (server/lib/image-normalize.ts) —
+      // pdfkit (historial de cumplimiento) y los navegadores del panel de la
+      // empresa no pintan HEIC, y es el formato por default del iPhone. Falla
+      // honesta: si la conversión truena, 400 explícito y NADA se sube a R2 ni
+      // se inserta — nunca se guarda el original sin convertir (eso solo mueve
+      // la foto rota río abajo).
+      let normalizedPhoto;
+      try {
+        normalizedPhoto = await normalizeImageForStorage(req.file!.buffer, req.file!.mimetype);
+      } catch (err) {
+        if (err instanceof ImageConversionError) {
+          return res.status(400).json({ message: "No se pudo procesar la foto; intenta con otro formato o tómala de nuevo" });
+        }
+        throw err;
+      }
+
       // El id se genera aquí (no lo asigna el default de la base) porque
       // findingPhotoKey lo necesita para construir la llave ANTES del insert
       // — subir primero, insertar después (spec §12: nunca un hallazgo
       // apuntando a una foto que no se guardó).
       const findingId = crypto.randomUUID();
-      const ext = extensionForMimetype(req.file!.mimetype);
-      const key = findingPhotoKey(findingId, ext);
-      await r2Storage.uploadBuffer(req.file!.buffer, key, req.file!.mimetype);
+      const key = findingPhotoKey(findingId, normalizedPhoto.extension);
+      await r2Storage.uploadBuffer(normalizedPhoto.buffer, key, normalizedPhoto.mimetype);
 
       const [inserted] = await db.insert(riskFindings).values({
         id: findingId,
@@ -843,11 +858,23 @@ export function registerRiesgosRoutes(app: Express) {
         // "atendido", se ignora deliberadamente: ni se sube a R2 (nada
         // huérfano) ni se guarda su llave (nada que luego se confunda con
         // evidencia de corrección).
+        // webp/heic/heif se convierten a JPEG (server/lib/image-normalize.ts —
+        // mismo razonamiento que la subida inicial: pdfkit/navegador no
+        // pintan HEIC). Falla honesta: 400 explícito, nada se sube ni se
+        // persiste — nunca la foto de corrección original sin convertir.
         let resolutionPhotoKey = row.resolutionPhotoKey;
         if (willUploadPhoto) {
-          const ext = extensionForMimetype(req.file!.mimetype);
-          const key = findingPhotoKey(row.id, ext);
-          await r2Storage.uploadBuffer(req.file!.buffer, key, req.file!.mimetype);
+          let normalizedPhoto;
+          try {
+            normalizedPhoto = await normalizeImageForStorage(req.file!.buffer, req.file!.mimetype);
+          } catch (err) {
+            if (err instanceof ImageConversionError) {
+              return res.status(400).json({ message: "No se pudo procesar la foto; intenta con otro formato o tómala de nuevo" });
+            }
+            throw err;
+          }
+          const key = findingPhotoKey(row.id, normalizedPhoto.extension);
+          await r2Storage.uploadBuffer(normalizedPhoto.buffer, key, normalizedPhoto.mimetype);
           resolutionPhotoKey = key;
         }
 
