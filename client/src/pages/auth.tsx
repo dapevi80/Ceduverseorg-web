@@ -293,6 +293,19 @@ function AuthPageContent() {
         });
         return;
       }
+      // Espejo del anterior: el correo NO tiene cuenta. Antes se le enviaba un
+      // codigo igual y la cuenta nacia sin nombre y sin pasar por el alta; peor
+      // aun, quien llegaba por un link compartido no veia el boton de
+      // registrarse (texto chico hasta abajo) y se quedaba esperando un codigo.
+      // Se conserva el correo tecleado: no se le pide de nuevo.
+      if (err.code === "USER_NOT_FOUND") {
+        setIsReturning(false);
+        toast({
+          title: "Vamos a crear tu cuenta",
+          description: "Ese correo aún no está registrado. Completa tus datos para continuar.",
+        });
+        return;
+      }
       const msg = err.message?.toLowerCase() || "";
       const isRateLimit = msg.includes("rate limit") || msg.includes("too many") || msg.includes("email rate") || msg.includes("espera") || msg.includes("429");
       if (isRateLimit) {
@@ -439,6 +452,40 @@ function AuthPageContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                {/* La eleccion va ARRIBA, antes del correo. Antes solo existia
+                    como texto chico al pie ("¿No tienes cuenta? Registrate"),
+                    asi que alguien nuevo —sobre todo quien llega por un link
+                    compartido— tecleaba su correo creyendo que iba bien y se
+                    quedaba esperando un codigo. En una invitacion de empresa no
+                    se muestra: ese flujo ya es un registro. */}
+                {!inviteCompany && (
+                  <div className="grid grid-cols-2 gap-2 mb-5 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl" data-testid="switch-auth-mode">
+                    <button
+                      type="button"
+                      onClick={() => setIsReturning(true)}
+                      className={`py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                        isReturning
+                          ? "bg-white dark:bg-gray-900 text-cedu-blue shadow-sm"
+                          : "text-cedu-ink-muted dark:text-gray-400 hover:text-cedu-ink dark:hover:text-gray-200"
+                      }`}
+                      data-testid="button-mode-login"
+                    >
+                      Ya tengo cuenta
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsReturning(false)}
+                      className={`py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                        !isReturning
+                          ? "bg-white dark:bg-gray-900 text-cedu-blue shadow-sm"
+                          : "text-cedu-ink-muted dark:text-gray-400 hover:text-cedu-ink dark:hover:text-gray-200"
+                      }`}
+                      data-testid="button-mode-register"
+                    >
+                      Soy nuevo
+                    </button>
+                  </div>
+                )}
                 <form onSubmit={handleSendCode} className="space-y-4">
                   {!isReturning && (
                     <div className="space-y-2">
