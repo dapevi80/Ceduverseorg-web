@@ -26,7 +26,15 @@ Restricción central del dueño: **el costo en tokens debe estar acotado y ser p
 - **Deflexión honesta:** fuera de tema o STT dudoso → el instructor lo dice y redirige al Tutor IA; nunca alucina.
 - **Consentimiento (T&C) en el primer uso:** al presionar el botón por primera vez, el alumno debe **aceptar términos y condiciones** que autorizan usar su pregunta como **material pedagógico**. Sin aceptar, no puede grabar.
 - **Moderación:** las grabaciones/preguntas con **mensajes ofensivos se eliminan de inmediato** (no se cachean, no se promueven, no se conservan) y el instructor responde con una negativa cortés.
-- **Anonimato del autor:** cuando una pregunta se reutiliza como material pedagógico, la **identidad del socio queda protegida**: solo se muestra su **código de referido**, nunca su nombre.
+- **Identidad del autor: TRES NIVELES que elige quien pregunta** (David, 2026-07-19; sustituye al binario "solo código de referido"):
+  1. **Anónimo con contexto** *(por omisión)* — se muestra el **puesto, la industria y el tamaño de empresa**, sin nombre ni empresa. Ej.: *"un supervisor de almacén, en logística, empresa de 200 personas"*. El instructor puede responder específico en vez de genérico, y quien escucha reconoce si su caso se parece.
+  2. **Firmado completo** — nombre, puesto y empresa. Habilita el **networking** entre asistentes.
+  3. **Anónimo total** — sin contexto. Para la pregunta que expone.
+- **Por qué tres y no dos:** las aulas **mezclan trabajadores de empresas distintas** (David, 2026-07-19). Eso hace el networking real, pero también sube la exposición: decir empresa y puesto identifica casi tanto como el nombre, y quien escucha puede ser del mismo sector o conocer a tu jefe. El nivel 1 conserva casi todo el valor pedagógico y cede sólo el networking, que es lo que cuesta caro.
+- **NO se usa el código de referido como identidad.** En esta plataforma ese folio sirve para referir y es rastreable a una persona: no es anonimato. La atribución anónima no lleva folio.
+- **La pantalla debe decir que la escucharán personas de otras empresas** antes de elegir nivel. No basta con ofrecer la opción: hay que decir frente a quién.
+- **La voz ya estaba resuelta** (§ privacidad): el audio del alumno se transcribe y **se descarta**; la respuesta se genera con la voz del instructor. La voz del alumno nunca se republica ni se archiva.
+- **Reúso:** la proyección anónima del Detector de Riesgos (`server/lib/risk-anonymity.ts`) ya está construida y auditada — misma regla de servidor: la identidad no sale del servidor cuando el nivel no la autoriza.
 
 ### Corrección de supuesto
 No existe un instructor "Luis" ahh si gracias jaja. Las familias de curso tienen `courses.instructor` = **"Psic. Yuridia Iturriaga"** o **"Lic. Jorge Armando Medina Castillo"**. El diseño es **instructor-agnóstico**: usa el nombre y la voz que trae cada curso.
