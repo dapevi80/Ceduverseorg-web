@@ -1720,7 +1720,7 @@ export default function StudioCoursePage() {
             size="lg"
             onClick={() => enrollMutation.mutate()}
             disabled={enrollMutation.isPending}
-            className="bg-cedu-blue hover:bg-cedu-blue/90 text-white gap-2 rounded-xl w-full max-w-xs min-h-12 text-base shadow-sm"
+            className="bg-cedu-blue hover:bg-cedu-blue/90 text-white gap-2 rounded-xl w-full max-w-[240px] min-h-11 text-sm sm:text-base shadow-sm"
             data-testid="button-start-course"
           >
             {enrollMutation.isPending ? (
@@ -1902,7 +1902,12 @@ export default function StudioCoursePage() {
               className="gap-1 text-xs text-cedu-ink-muted border-black/10 dark:border-white/10 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 px-2 sm:px-3"
               data-testid="button-continue-later"
             >
-              <Clock size={12} /> <span>Continuar después</span>
+              {/* Etiqueta corta en movil: con el texto completo la cabecera se
+                  llenaba y tapaba el titulo del curso. Con el reloj al lado,
+                  "Después" se entiende y deja respirar al titulo. */}
+              <Clock size={12} />
+              <span className="sm:hidden">Después</span>
+              <span className="hidden sm:inline">Continuar después</span>
             </Button>
             <Button
               variant="outline"
