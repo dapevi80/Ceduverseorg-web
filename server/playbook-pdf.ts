@@ -17,9 +17,13 @@ const MB = 60;
 
 export const PLAYBOOK_PUBLIC_BASE_URL = process.env.PLAYBOOK_PUBLIC_BASE_URL || "https://ceduverse.org";
 
-/** URL que codifica el QR de cada ejercicio: exige login (la página en sí gatea). */
-export function playbookExerciseUrl(courseSlug: string, exerciseIndex: number): string {
-  return `${PLAYBOOK_PUBLIC_BASE_URL}/playbook/${courseSlug}/ejercicio/${exerciseIndex}`;
+/** URL que codifica el QR impreso junto a las señales de riesgo del curso: el
+ * detector de riesgos reemplaza la actividad de campo (spec
+ * docs/superpowers/specs/2026-07-18-detector-riesgos-design.md §9) — el QR ya
+ * no sube evidencia de un ejercicio, abre el reporte real de un hallazgo para
+ * este curso. Exige login (la página en sí gatea). */
+export function playbookReportUrl(courseSlug: string): string {
+  return `${PLAYBOOK_PUBLIC_BASE_URL}/riesgos/reportar/${courseSlug}`;
 }
 
 // Mirrors the ensureSpace()/bottomLimit() pagination-guard pattern proven in kit-pdf.ts:
@@ -92,8 +96,9 @@ export async function renderPlaybookPdf(
   section(doc, PH, "Estrategias", playbook.content.estrategias, CEDU_ORANGE, ML, CW);
   section(doc, PH, "Preguntas de reflexión", playbook.content.preguntas, CEDU_VIOLET, ML, CW);
 
-  // Ejercicios de campo, cada uno con su QR. Cada ejercicio arranca en página propia
-  // (diseño de una página por ejercicio); dentro de esa página, la instrucción se
+  // Señales de riesgo (los `exercises` que la IA ya genera, reencuadrados — spec
+  // §9), cada una con el mismo QR de reporte. Cada señal arranca en página propia
+  // (diseño de una página por señal); dentro de esa página, la instrucción se
   // acota a la altura disponible (con elipsis) para que jamás dispare la paginación
   // automática de pdfkit a mitad de texto, lo cual dejaría el QR y el título huérfanos
   // en una página de continuación.
@@ -113,7 +118,7 @@ export async function renderPlaybookPdf(
     const titleH = doc.heightOfString(ex.title, { width: CW });
     ensureSpace(doc, PH, EX_LABEL_H + titleH + 10 + Math.max(qrSize + qrCaptionH, EX_MIN_INSTRUCTION));
 
-    doc.fontSize(9).font("Helvetica-Bold").fillColor(CEDU_ORANGE).text(`EJERCICIO ${ex.index + 1}`, ML, doc.y, { characterSpacing: 2 });
+    doc.fontSize(9).font("Helvetica-Bold").fillColor(CEDU_ORANGE).text(`SEÑAL DE RIESGO ${ex.index + 1}`, ML, doc.y, { characterSpacing: 2 });
     doc.moveDown(0.3);
     doc.fontSize(16).font("Helvetica-Bold").fillColor(INK).text(ex.title, ML, doc.y, { width: CW });
     doc.moveDown(0.5);
@@ -129,10 +134,10 @@ export async function renderPlaybookPdf(
       ellipsis: true,
     });
 
-    const url = playbookExerciseUrl(course.slug, ex.index);
+    const url = playbookReportUrl(course.slug);
     const qrPng = await QRCode.toBuffer(url, { type: "png", width: 220, margin: 1, color: { dark: CEDU_BLUE, light: "#ffffff" } });
     doc.image(qrPng, ML + CW * 0.66, textTop, { width: qrSize });
-    doc.fontSize(8).fillColor(INK_MUTED).text("Escanea para subir tu evidencia", ML + CW * 0.66, textTop + qrSize + 6, { width: qrSize, align: "center" });
+    doc.fontSize(8).fillColor(INK_MUTED).text("Escanea si detectas esto: reporta el riesgo", ML + CW * 0.66, textTop + qrSize + 6, { width: qrSize, align: "center" });
   }
 
   // Referencias verbatim

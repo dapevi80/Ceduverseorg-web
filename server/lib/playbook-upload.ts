@@ -1,17 +1,23 @@
-// Reglas de validación de evidencia del Playbook + dedupe del logro de finalización.
-// Sin dependencias de DB/auth a propósito: server/routes/playbook.ts importa db.ts y
+// Reglas de validación de foto compartidas por el detector de riesgos
+// (server/routes/riesgos.ts). El nombre del archivo es histórico: nació para la
+// evidencia del playbook (retirada en Task 10, ver
+// docs/superpowers/specs/2026-07-18-detector-riesgos-design.md §9 y §11 —
+// "reúso de lo ya construido"), pero las reglas mismas (mimetypes, tamaño,
+// unique-violation) siguen siendo las que usa el flujo real de hoy.
+// Sin dependencias de DB/auth a propósito: los módulos de rutas importan db.ts y
 // auth.ts, que hacen process.exit(1) si faltan env vars (DB_URL/SESSION_SECRET) — eso
-// rompe vitest al importar ese módulo directamente en tests. Esta lógica pura vive
+// rompe vitest al importar esos módulos directamente en tests. Esta lógica pura vive
 // aparte para poder testearse sin un harness de DB (ver playbook-upload.test.ts).
 
 export const EVIDENCE_MAX_MB = 8;
 
 /** Allowlist explícito de mimetypes de evidencia aceptados — solo formatos raster de
  * foto. image/svg+xml (y cualquier otro image/* no listado) queda deliberadamente
- * excluido: un SVG es XML capaz de traer <script>, y GET
- * /api/playbook/evidencia/:id/foto lo serviría inline desde el propio origen de la
- * app — el shape clásico de stored-XSS. Confiar en el prefijo "image/" que manda el
- * cliente (wildcard) no es suficiente; solo estos 5 valores exactos se aceptan. */
+ * excluido: un SVG es XML capaz de traer <script>, y los proxies autenticados de foto
+ * (hoy GET /api/riesgos/:id/foto y /api/riesgos/:id/foto-solucion) lo servirían
+ * inline desde el propio origen de la app — el shape clásico de stored-XSS. Confiar
+ * en el prefijo "image/" que manda el cliente (wildcard) no es suficiente; solo estos
+ * 5 valores exactos se aceptan. */
 export const ALLOWED_EVIDENCE_MIMETYPES = [
   "image/jpeg",
   "image/png",
@@ -42,8 +48,9 @@ export function extensionForMimetype(mimetype: string): string {
   return map[mimetype.toLowerCase()] || "jpg";
 }
 
-/** Content-Type seguro para servir de vuelta una foto de evidencia ya subida (GET
- * /api/playbook/evidencia/:evidenceId/foto). Defensa en profundidad: nunca refleja
+/** Content-Type seguro para servir de vuelta una foto ya subida por los proxies
+ * autenticados (hoy GET /api/riesgos/:id/foto y /api/riesgos/:id/foto-solucion).
+ * Defensa en profundidad: nunca refleja
  * ciegamente el valor guardado en DB como Content-Type de la respuesta — solo un
  * mimetype que esté en el mismo allowlist de subida se sirve tal cual; cualquier otro
  * valor (fila vieja, drift futuro en el filtro de subida, dato corrupto) cae a
@@ -66,26 +73,6 @@ export function validateEvidenceFile(file: { mimetype: string; size: number } | 
     return { ok: false, message: `La foto no puede pesar más de ${EVIDENCE_MAX_MB}MB` };
   }
   return { ok: true };
-}
-
-/** Decide si el bono de finalización del Playbook debe (re)otorgarse.
- * Regla de dedupe: a lo más una vez por usuario+curso — nunca se repite al volver a
- * subir evidencia. */
-export function shouldAwardCompletionBonus(complete: boolean, alreadyAwarded: boolean): boolean {
-  return complete && !alreadyAwarded;
-}
-
-/** Decide cuántos puntos otorga ESTA subida de evidencia (I2 — antifarming).
- * Solo la PRIMERA evidencia de un (userId, courseSlug, exerciseIndex) otorga
- * `evidencePoints`; subidas adicionales del mismo ejercicio se siguen
- * guardando (el álbum muestra varias fotos por ejercicio por diseño — ver
- * playbook-progress.ts) pero otorgan 0. Sin este límite, un alumno podía
- * loopear el endpoint de subida para inflar puntos sin tope y escribir
- * objetos de hasta 8MB ilimitados a R2 a cambio de nada real. El bono de
- * finalización (shouldAwardCompletionBonus arriba) ya estaba dedupeado; este
- * es el mismo tipo de regla para los puntos por evidencia individual. */
-export function evidencePointsToAward(isFirstEvidenceForExercise: boolean, evidencePoints: number): number {
-  return isFirstEvidenceForExercise ? evidencePoints : 0;
 }
 
 /** Detecta un unique-violation de Postgres (código 23505) en un error lanzado por el

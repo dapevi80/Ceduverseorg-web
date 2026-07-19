@@ -1255,8 +1255,6 @@ interface PlaybookTabData {
     exercises: PlaybookExerciseInfo[];
     references: string[];
   };
-  evidenceByExercise: Record<number, { count: number; photoUrls: string[] }>;
-  progress: { done: number; total: number; complete: boolean };
 }
 
 // apiRequest (client/src/lib/queryClient.ts) lanza `Error(`${status}: ${bodyText}`)`
@@ -1314,8 +1312,13 @@ function PlaybookTab({ slug }: { slug: string }) {
     );
   }
 
-  const { playbook, evidenceByExercise, progress } = data;
+  const { playbook } = data;
   const publicUrl = typeof window !== "undefined" ? window.location.origin : "";
+  // El detector de riesgos reemplaza la actividad de campo del playbook (spec
+  // docs/superpowers/specs/2026-07-18-detector-riesgos-design.md §9): el QR y el
+  // CTA de esta pestaña ya no suben evidencia de un ejercicio, apuntan al reporte
+  // real de un hallazgo para este curso.
+  const reportUrl = `${publicUrl}/riesgos/reportar/${slug}`;
 
   return (
     <div className="space-y-8" data-testid="view-playbook">
@@ -1323,7 +1326,7 @@ function PlaybookTab({ slug }: { slug: string }) {
         <div>
           <h3 className="font-serif text-lg text-cedu-ink dark:text-white">Playbook del curso</h3>
           <p className="text-sm text-cedu-ink-muted dark:text-gray-500">
-            {progress.done}/{progress.total} ejercicios completados{progress.complete ? " — ¡Playbook completo! 🏅" : ""}
+            Resumen, estrategias y señales de riesgo para aplicar lo que aprendiste
           </p>
         </div>
         <Button
@@ -1364,56 +1367,46 @@ function PlaybookTab({ slug }: { slug: string }) {
         </ul>
       </section>
 
-      <section>
-        <h4 className="text-sm font-bold text-cedu-ink dark:text-white uppercase tracking-wide mb-3">Ejercicios de campo</h4>
-        <div className="grid sm:grid-cols-2 gap-4">
-          {playbook.exercises.map((ex) => {
-            const done = (evidenceByExercise[ex.index]?.count || 0) > 0;
-            const exerciseUrl = `${publicUrl}/playbook/${slug}/ejercicio/${ex.index}`;
-            return (
-              <Card key={ex.index} className="p-4" data-testid={`card-exercise-${ex.index}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <Badge variant={done ? "default" : "outline"} className={done ? "bg-cedu-green text-white" : ""}>
-                    {done ? "✅ Hecho" : "Pendiente"}
-                  </Badge>
-                  <span className="text-xs text-cedu-ink-muted dark:text-gray-500">Ejercicio {ex.index + 1}</span>
-                </div>
-                <p className="font-semibold text-cedu-ink dark:text-white text-sm mb-1">{ex.title}</p>
-                <p className="text-xs text-cedu-ink-soft dark:text-gray-400 mb-3">{ex.instruction}</p>
-                <div className="flex items-center gap-3">
-                  <div className="bg-white p-1.5 rounded-lg border border-black/[0.06]">
-                    <QRCodeSVG value={exerciseUrl} size={64} level="M" fgColor="#1b5adf" bgColor="#ffffff" />
-                  </div>
-                  <Button
-                    size="sm"
-                    variant={done ? "outline" : "default"}
-                    onClick={() => navigate(`/playbook/${slug}/ejercicio/${ex.index}`)}
-                    className="gap-1.5"
-                    data-testid={`button-upload-exercise-${ex.index}`}
-                  >
-                    <Camera size={14} /> {done ? "Subir otra foto" : "Subir evidencia"}
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      </section>
-
-      {Object.keys(evidenceByExercise).length > 0 && (
+      {playbook.exercises.length > 0 && (
         <section>
-          <h4 className="text-sm font-bold text-cedu-ink dark:text-white uppercase tracking-wide mb-3">Tu álbum de evidencia</h4>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {Object.entries(evidenceByExercise).flatMap(([exIdx, bucket]) =>
-              bucket.photoUrls.map((url, i) => (
-                <a key={`${exIdx}-${i}`} href={url} target="_blank" rel="noopener noreferrer" data-testid={`link-album-photo-${exIdx}-${i}`}>
-                  <img src={url} alt={`Evidencia ejercicio ${Number(exIdx) + 1}`} className="w-full aspect-square object-cover rounded-lg border border-black/[0.06]" />
-                </a>
-              ))
-            )}
+          <h4 className="text-sm font-bold text-cedu-ink dark:text-white uppercase tracking-wide mb-1">
+            Señales de riesgo que puedes detectar
+          </h4>
+          <p className="text-xs text-cedu-ink-muted dark:text-gray-500 mb-3">
+            Después de este módulo, esto es lo que conviene revisar en tu lugar de trabajo:
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {playbook.exercises.map((ex) => (
+              <Card key={ex.index} className="p-4" data-testid={`card-exercise-${ex.index}`}>
+                <p className="font-semibold text-cedu-ink dark:text-white text-sm mb-1">{ex.title}</p>
+                <p className="text-xs text-cedu-ink-soft dark:text-gray-400">{ex.instruction}</p>
+              </Card>
+            ))}
           </div>
         </section>
       )}
+
+      <section className="rounded-xl border border-cedu-orange/20 bg-cedu-orange/5 dark:bg-cedu-orange/10 p-5 flex items-center gap-4 flex-wrap">
+        <div className="bg-white p-2 rounded-lg border border-black/[0.06] shrink-0">
+          <QRCodeSVG value={reportUrl} size={80} level="M" fgColor="#1b5adf" bgColor="#ffffff" />
+        </div>
+        <div className="flex-1 min-w-[220px]">
+          <h4 className="font-semibold text-cedu-ink dark:text-white text-sm mb-1">
+            ¿Detectaste alguna de estas señales en tu trabajo?
+          </h4>
+          <p className="text-xs text-cedu-ink-soft dark:text-gray-400 mb-3">
+            Escanea el QR o repórtalo desde aquí: foto + descripción. Ganas puntos cuando tu
+            empresa valide que el riesgo se corrigió.
+          </p>
+          <Button
+            onClick={() => navigate(`/riesgos/reportar/${slug}`)}
+            className="gap-1.5 bg-cedu-orange hover:bg-cedu-orange/90 text-white"
+            data-testid="button-report-risk"
+          >
+            <Camera size={14} /> Reportar un riesgo
+          </Button>
+        </div>
+      </section>
 
       {playbook.references.length > 0 && (
         <section>

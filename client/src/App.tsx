@@ -1,4 +1,4 @@
-import { Switch, Route, useSearch } from "wouter";
+import { Switch, Route, Redirect, useSearch, useParams } from "wouter";
 import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { captureReferralFromUrl } from "@/lib/referral-capture";
@@ -43,7 +43,8 @@ import TerminosPage from "@/pages/terminos";
 import PrivacidadPage from "@/pages/privacidad";
 import CookiesPage from "@/pages/cookies";
 import VerifySocioPage from "@/pages/verify-socio";
-import PlaybookExercisePage from "@/pages/playbook-exercise";
+import ReportarRiesgoPage from "@/pages/reportar-riesgo";
+import MisRiesgosPage from "@/pages/mis-riesgos";
 import PendingTermsModal from "@/components/PendingTermsModal";
 import LiveTutor from "@/pages/live-tutor";
 import PrivateSessionsPage from "@/pages/private-sessions";
@@ -60,6 +61,18 @@ function ReferralCapture() {
     captureReferralFromUrl(search);
   }, [search]);
   return null;
+}
+
+// El detector de riesgos reemplaza la actividad de campo del playbook (ver
+// docs/superpowers/specs/2026-07-18-detector-riesgos-design.md), pero un QR
+// ya impreso en un cuaderno físico puede seguir apuntando a la ruta vieja
+// /playbook/:slug/ejercicio/:n — esta redirección la mantiene funcionando en
+// vez de mostrarle un 404 a quien lo escanea. El índice de ejercicio (:n) no
+// tiene equivalente en el nuevo flujo (ya no es "sube evidencia de la tarea
+// N"), así que solo se conserva el curso de origen.
+function PlaybookExerciseRedirect() {
+  const params = useParams<{ slug: string }>();
+  return <Redirect to={`/riesgos/reportar/${params.slug}`} />;
 }
 
 function Router() {
@@ -101,7 +114,10 @@ function Router() {
       <Route path="/privacidad" component={PrivacidadPage} />
       <Route path="/cookies" component={CookiesPage} />
       <Route path="/verify/socio/:numero" component={VerifySocioPage} />
-      <Route path="/playbook/:slug/ejercicio/:n" component={PlaybookExercisePage} />
+      <Route path="/riesgos/reportar/:slug" component={ReportarRiesgoPage} />
+      <Route path="/riesgos/reportar" component={ReportarRiesgoPage} />
+      <Route path="/riesgos/mios" component={MisRiesgosPage} />
+      <Route path="/playbook/:slug/ejercicio/:n" component={PlaybookExerciseRedirect} />
       <Route path="/tutor-ia-vivo" component={LiveTutor as any} />
       <Route path="/sesiones-privadas" component={PrivateSessionsPage} />
       <Route path="/tienda/success" component={TiendaSuccess} />
