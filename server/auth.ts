@@ -280,6 +280,20 @@ export function setupAuth(app: Express): void {
             code: "USER_EXISTS",
           });
         }
+
+        // Decisión del dueño del producto (2026-07-19): toda cuenta de Ceduverse
+        // es una membresía de la cooperativa. La adhesión deja de ser opcional.
+        //
+        // El checkbox deshabilitado en el cliente NO es una barrera real —
+        // cualquiera puede llamar este endpoint directo. Por eso el registro se
+        // rechaza aquí si no llegan AMBAS aceptaciones, sin importar lo que haya
+        // pasado en el formulario.
+        if (req.body?.acceptedTerms !== true || req.body?.joinCoop !== true) {
+          return res.status(400).json({
+            message: "Para crear tu cuenta debes aceptar los Términos y Condiciones y la Adhesión Cooperativa. Toda cuenta en Ceduverse es una membresía de la cooperativa.",
+            code: "ADHESION_REQUIRED",
+          });
+        }
       }
 
       // Camino de INICIO DE SESION con un correo que no tiene cuenta.

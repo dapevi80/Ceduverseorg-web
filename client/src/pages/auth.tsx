@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, ArrowLeft, Mail, ShieldCheck, Award, ChevronDown, ChevronUp, AlertCircle, Lock } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, ShieldCheck, Award, AlertCircle, Lock } from "lucide-react";
 import { Link } from "wouter";
 import { captureReferralFromUrl } from "@/lib/referral-capture";
 
@@ -88,7 +88,6 @@ function AuthPageContent() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [joinCoop, setJoinCoop] = useState(false);
   const [phone, setPhone] = useState("");
-  const [showCoopDetails, setShowCoopDetails] = useState(false);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [inviteCompany, setInviteCompany] = useState<string | null>(null);
   const inviteAcceptedRef = useRef(false);
@@ -272,7 +271,7 @@ function AuthPageContent() {
       const mode = isReturning ? "login" : "register";
       const result = await sendCode(email, fullName || undefined, {
         mode,
-        ...(joinCoop ? { joinCoop, phone: phone || undefined } : {}),
+        ...(mode === "register" ? { acceptedTerms, joinCoop, phone: phone || undefined } : {}),
       });
       if (result.autoLogin) {
         redirectByRole();
@@ -377,7 +376,11 @@ function AuthPageContent() {
     if (resendCooldown > 0) return;
     setLoading(true);
     try {
-      await sendCode(email, fullName || undefined, joinCoop ? { joinCoop, phone: phone || undefined } : undefined);
+      const mode = isReturning ? "login" : "register";
+      await sendCode(email, fullName || undefined, {
+        mode,
+        ...(mode === "register" ? { acceptedTerms, joinCoop, phone: phone || undefined } : {}),
+      });
       startCooldown(60);
       toast({
         title: "Código reenviado",
@@ -540,65 +543,59 @@ function AuthPageContent() {
 
                   {!isReturning && (
                     <div className="rounded-xl border border-cedu-blue/10 bg-cedu-blue/[0.03] overflow-hidden" data-testid="section-coop-adhesion">
-                      <label className="flex items-center gap-3 p-3 cursor-pointer">
+                      <label className="flex items-start gap-3 p-3 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={joinCoop}
-                          onChange={(e) => {
-                            setJoinCoop(e.target.checked);
-                            if (e.target.checked) setShowCoopDetails(true);
-                          }}
-                          className="h-4 w-4 rounded border-gray-300 text-cedu-blue focus:ring-cedu-blue"
+                          onChange={(e) => setJoinCoop(e.target.checked)}
+                          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-cedu-blue focus:ring-cedu-blue"
                           data-testid="checkbox-join-coop"
                         />
-                        <div className="flex items-center gap-2 flex-1">
-                          <Award size={16} className="text-cedu-blue" />
-                          <span className="text-sm font-semibold text-cedu-ink">Adhesión Cooperativa</span>
-                        </div>
-                        {joinCoop && (
-                          <button
-                            type="button"
-                            onClick={(e) => { e.preventDefault(); setShowCoopDetails(!showCoopDetails); }}
-                            className="text-cedu-ink-muted hover:text-cedu-blue transition-colors"
-                          >
-                            {showCoopDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                          </button>
-                        )}
-                      </label>
-
-                      {joinCoop && showCoopDetails && (
-                        <div className="px-3 pb-3 space-y-3 border-t border-cedu-blue/10 pt-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Award size={16} className="text-cedu-blue" />
+                            <span className="text-sm font-semibold text-cedu-ink">Adhesión Cooperativa (obligatoria)</span>
+                          </div>
+                          {/* Toda cuenta de Ceduverse es una membresia de la cooperativa
+                              (decision del dueño del producto, 2026-07-19): la adhesion
+                              deja de ser opcional. El texto se queda siempre visible —no
+                              detras de un chevron— para que se entienda que se acepta,
+                              no solo para marcar mas rapido. */}
                           <p className="text-xs text-cedu-ink-muted leading-relaxed">
-                            Al marcar esta casilla, solicito mi adhesión como socio cooperativista de{" "}
+                            Toda cuenta en Ceduverse es una membresía de la cooperativa. Al marcar esta
+                            casilla, solicito mi adhesión como socio cooperativista de{" "}
                             <strong>Ceduverse S. C de C de Rl de CV</strong>, acepto sus estatutos sociales
                             y me comprometo a cumplir con las obligaciones cooperativas.
                           </p>
-                          <div className="space-y-2">
-                            <Label htmlFor="phone" className="text-cedu-ink-soft text-xs font-semibold">
-                              Teléfono (opcional)
-                            </Label>
-                            <Input
-                              id="phone"
-                              type="tel"
-                              placeholder="+52 55 1234 5678"
-                              value={phone}
-                              onChange={(e) => setPhone(e.target.value)}
-                              className="h-10 text-sm"
-                              data-testid="input-phone"
-                            />
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-cedu-green">
-                            <Award size={12} />
-                            <span>Recibirás tu certificado digital de membresía al registrarte</span>
-                          </div>
                         </div>
-                      )}
+                      </label>
+
+                      <div className="px-3 pb-3 space-y-3 border-t border-cedu-blue/10 pt-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="phone" className="text-cedu-ink-soft text-xs font-semibold">
+                            Teléfono (opcional)
+                          </Label>
+                          <Input
+                            id="phone"
+                            type="tel"
+                            placeholder="+52 55 1234 5678"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            className="h-10 text-sm"
+                            data-testid="input-phone"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-cedu-green">
+                          <Award size={12} />
+                          <span>Recibirás tu certificado digital de membresía al registrarte</span>
+                        </div>
+                      </div>
                     </div>
                   )}
 
                   <Button
                     type="submit"
-                    disabled={loading || sendCooldown > 0 || (!isReturning && !acceptedTerms)}
+                    disabled={loading || sendCooldown > 0 || (!isReturning && (!acceptedTerms || !joinCoop))}
                     className="w-full h-12 bg-cedu-blue hover:bg-cedu-blue-dark text-white font-bold text-[15px] rounded-[12px] transition-all"
                     data-testid="button-send-code"
                   >
