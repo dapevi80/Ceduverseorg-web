@@ -282,6 +282,30 @@ export function setupAuth(app: Express): void {
         }
       }
 
+      // Camino de INICIO DE SESION con un correo que no tiene cuenta.
+      //
+      // Antes se generaba y enviaba un OTP igual, y la cuenta se creaba al
+      // verificar — SIN nombre y sin pasar por el alta. Para quien llegaba por
+      // un link compartido eso era una trampa: la pantalla abre en "Iniciar
+      // sesion", el boton de registrarse es texto chico hasta abajo, tecleaba su
+      // correo y se quedaba esperando un codigo sin saber si iba por buen
+      // camino. Ahora se le dice y la interfaz lo pasa al alta.
+      //
+      // Nota: esto revela si un correo tiene cuenta (enumeracion). Es un costo
+      // aceptado a cambio de no dejar atorada a la gente; si algun dia importa,
+      // la alternativa es enviar el OTP igual y pedir el nombre DESPUES de
+      // verificarlo.
+      if (req.body?.mode !== "register") {
+        const [existingForLogin] = await db.select({ id: users.id }).from(users)
+          .where(eq(users.email, normalizedEmail)).limit(1);
+        if (!existingForLogin) {
+          return res.status(404).json({
+            message: "No encontramos una cuenta con ese correo. Vamos a crearla.",
+            code: "USER_NOT_FOUND",
+          });
+        }
+      }
+
       // Check for recent OTP to prevent spam (must wait 30s between requests)
       const [existing] = await db.select().from(otpCodes)
         .where(eq(otpCodes.email, normalizedEmail))
