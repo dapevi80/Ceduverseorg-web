@@ -1137,36 +1137,17 @@ export async function registerRoutes(
     } catch (err) { next(err); }
   });
 
-  app.post("/api/teams/:id/invite", requireAuth, async (req, res, next) => {
-    try {
-      const teamId = String((req.params.id as string));
-      const userId = req.supabaseUserId!;
-
-      const account = await storage.getAccount(userId);
-      if (account?.userRole !== "superadmin") {
-        const [membership] = await db.select().from(teamUsers)
-          .where(and(eq(teamUsers.teamId, teamId), eq(teamUsers.userId, userId)));
-        if (!membership || membership.role !== "admin") return res.status(403).json({ message: "Se requiere ser admin del equipo" });
-      }
-
-      const { email } = req.body;
-      if (!email) return res.status(400).json({ message: "Email requerido" });
-
-      const invitedUser = await storage.getUserByEmail(email);
-      if (!invitedUser) return res.status(404).json({ message: "Usuario no encontrado — debe registrarse primero" });
-
-      const existing = await db.select().from(teamUsers)
-        .where(and(eq(teamUsers.teamId, teamId), eq(teamUsers.userId, invitedUser.id)));
-      if (existing.length > 0) return res.status(409).json({ message: "El usuario ya es miembro del equipo" });
-
-      const [member] = await db.insert(teamUsers).values({
-        teamId,
-        userId: invitedUser.id,
-        role: "member",
-      }).returning();
-      res.status(201).json(member);
-    } catch (err) { next(err); }
-  });
+  // POST /api/teams/:id/invite eliminado (2026-07-19): no era una invitación
+  // real — solo buscaba el correo en `users` y respondía 404 "debe
+  // registrarse primero" si no existía, lo cual rompía el caso más común
+  // (invitar a alguien que aún no tiene cuenta). Su único llamador era el
+  // botón "Invitar" de Mi Organización en client/src/pages/dashboard.tsx, que
+  // ahora usa POST /api/empresa/invitations (server/routes/empresa.ts), la
+  // cual sí crea una invitación real (token + correo + flujo de aceptación,
+  // reusando el mismo núcleo que la carga masiva por Excel) y, si el correo
+  // ya tiene cuenta, agrega a esa persona directo al equipo en vez de
+  // fallar. Sin más llamadores en el código (verificado por búsqueda), no
+  // quedaba razón para conservarla.
 
   // ==================== USER OBJECTIVES ====================
 
