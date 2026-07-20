@@ -1338,7 +1338,7 @@ function PlaybookTab({ slug }: { slug: string }) {
           onClick={() => window.open(`/api/playbook/${slug}/export.pdf`, "_blank")}
           data-testid="button-download-playbook-pdf"
         >
-          <Download size={16} /> Descargar PDF
+          <Download size={16} /> Descargar cuaderno
         </Button>
       </div>
 
