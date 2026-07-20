@@ -1,4 +1,4 @@
-import { eq, and, ilike, or, asc, desc, sql } from "drizzle-orm";
+import { eq, ne, and, ilike, or, asc, desc, sql } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -159,7 +159,7 @@ export interface IStorage {
   updateCertificateRequest(id: string, data: Partial<InsertCertificateRequest>): Promise<CertificateRequest | undefined>;
   updateAchievementUser(id: string, data: Partial<InsertAchievementUser>): Promise<AchievementUser | undefined>;
 
-  getStudioCourses(filters?: { category?: string; search?: string; page?: number; limit?: number }): Promise<{ courses: StudioCourse[]; total: number }>;
+  getStudioCourses(filters?: { category?: string; search?: string; page?: number; limit?: number; excludeCategory?: string }): Promise<{ courses: StudioCourse[]; total: number }>;
   getStudioCourse(slug: string): Promise<StudioCourse | undefined>;
   getStudioModules(courseId: string): Promise<StudioModule[]>;
   getStudioModuleBySlugAndIndex(slug: string, moduleIndex: number): Promise<{ module: StudioModule; course: StudioCourse } | undefined>;
@@ -519,13 +519,19 @@ export class DatabaseStorage implements IStorage {
     return record;
   }
 
-  async getStudioCourses(filters?: { category?: string; search?: string; page?: number; limit?: number }): Promise<{ courses: StudioCourse[]; total: number }> {
+  async getStudioCourses(filters?: { category?: string; search?: string; page?: number; limit?: number; excludeCategory?: string }): Promise<{ courses: StudioCourse[]; total: number }> {
     const page = filters?.page || 1;
     const limit = filters?.limit || 12;
     const offset = (page - 1) * limit;
     const conditions: any[] = [];
     if (filters?.category) {
       conditions.push(eq(studioCourses.category, filters.category));
+    }
+    // La exclusión va en el SQL, no en el arreglo devuelto: si se filtrara
+    // después, `total` contaría cursos que no se muestran y la paginación
+    // dejaría huecos al final de cada página.
+    if (filters?.excludeCategory) {
+      conditions.push(ne(studioCourses.category, filters.excludeCategory));
     }
     if (filters?.search) {
       conditions.push(or(
