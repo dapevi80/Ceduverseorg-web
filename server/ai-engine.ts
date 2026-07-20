@@ -140,11 +140,11 @@ INSTRUCCIONES PARA reflections:
 - SÍ específicas: "Como ${jobTitle} en ${industry}, ¿cómo manejas..." ✅
 
 INSTRUCCIONES PARA suggestedSources (REGLA ANTI-ALUCINACIÓN — CRÍTICA):
-- SOLO incluye fuentes que REALMENTE citaste en lectureHtml (las NOMs, artículos de ley, normas y estándares que mencionaste en el texto) MÁS las "Referencias base" de arriba. NO agregues NINGUNA fuente que no aparezca en el contenido que escribiste.
-- PROHIBIDO INVENTAR URLs. NUNCA pongas una URL con código, número de nota, folio o ruta específica (ej. PROHIBIDO: "dof.gob.mx/nota_detalle.php?codigo=..."). Solo inventar esos links es una falta grave.
-- Para el campo "url" usa ÚNICAMENTE el dominio oficial RAÍZ según el tipo: NOM/LFT/normas → "https://www.dof.gob.mx", guías/normatividad STPS → "https://www.gob.mx/stps". Si no hay dominio oficial claro, deja "url": "".
-- El "title" debe ser el nombre EXACTO de la norma o artículo tal como lo citaste (ej. "NOM-006-STPS-2014", "LFT Art. 153-A"), no una descripción vaga.
-- Formato: {title, url, type: "NOM"|"LFT"|"guia"|"articulo"}. Mejor pocas fuentes reales del texto que muchas inventadas.
+- SOLO incluye INSTRUMENTOS OFICIALES que REALMENTE citaste en lectureHtml: leyes, NOMs, reglamentos, decretos, artículos constitucionales, códigos. NO incluyas libros, autores, conceptos ni guías genéricas aquí — esos van aparte, sin pasar por este campo.
+- Usa exactamente lo que citaste en el texto. NO agregues ningún instrumento que no aparezca citado en lectureHtml.
+- El "title" debe ser el nombre EXACTO del instrumento tal como lo citaste (ej. "NOM-006-STPS-2014", "LFT Art. 153-A"), no una descripción vaga.
+- PROHIBIDO ESCRIBIR CUALQUIER URL, inventada o de dominio raíz. Deja SIEMPRE "url": "". El link real —si existe— lo asigna después un catálogo verificado por un humano (server/data/fuentes-oficiales.ts); nunca el modelo. Poner una URL aquí, de cualquier tipo, es una falta grave.
+- Formato: {title, url: "", type: "NOM"|"LFT"|"reglamento"|"decreto"|"constitucion"|"codigo"}. Mejor pocas fuentes reales del texto que muchas.
 
 RESPONDE SOLO JSON VÁLIDO (sin markdown, sin backticks):
 {
@@ -416,10 +416,11 @@ function stubGenerateContent(
       "¿Qué obstáculos podrías encontrar al implementar estos conceptos?",
     ],
     adaptiveQuiz: [],
-    suggestedSources: [
-      { title: "STPS — Normatividad vigente", url: "https://www.gob.mx/stps", type: "NOM" },
-      { title: "OIT — Recursos sobre trabajo decente", url: "https://www.ilo.org/es", type: "guia" },
-    ],
+    // Stub sin API key / generación fallida: sin lectura real no hay nada que
+    // "citar", así que no hay fuentes que proponer. El link nunca lo pone
+    // este código — igual que el modelo, "url" siempre queda vacía; ver
+    // server/data/fuentes-oficiales.ts.
+    suggestedSources: [],
     isStub: true,
   };
 }
@@ -565,12 +566,13 @@ const CONTENT_TOOL: AnthropicTool = {
       },
       suggestedSources: {
         type: "array",
+        description: "Sólo instrumentos oficiales (leyes, NOMs, reglamentos, decretos) REALMENTE citados en lectureHtml.",
         items: {
           type: "object",
           properties: {
-            title: { type: "string" },
-            url: { type: "string" },
-            type: { type: "string", description: "NOM, ley, guia, articulo, etc." },
+            title: { type: "string", description: "Nombre exacto del instrumento tal como se citó (ej. 'NOM-006-STPS-2014')." },
+            url: { type: "string", description: "SIEMPRE cadena vacía \"\". El link lo asigna un catálogo verificado por un humano después; nunca el modelo." },
+            type: { type: "string", description: "NOM, LFT, reglamento, decreto, constitucion, codigo." },
           },
           required: ["title", "url", "type"],
         },

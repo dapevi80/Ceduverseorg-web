@@ -33,9 +33,7 @@ import {
   X,
   Award,
   Download,
-  FileText,
   Scale,
-  ExternalLink,
   RefreshCw,
   AlertTriangle,
   Zap,
@@ -54,6 +52,7 @@ import {
 import ShareCourseModal from "@/components/ShareCourseModal";
 import { QRCodeSVG } from "qrcode.react";
 import { certTabMessage, type CertTabState, type PaidCertType } from "@shared/cert-eligibility";
+import { classifySource } from "@shared/source-classify";
 import {
   Dialog,
   DialogContent,
@@ -855,26 +854,59 @@ function StepQuizView({ questions, onQuizComplete, courseSlug, moduleIndex, onNe
   );
 }
 
-const SOURCE_ICONS: Record<string, any> = {
-  NOM: FileText,
-  nom: FileText,
-  LFT: Scale,
-  lft: Scale,
-  guia: BookOpen,
-  "Guía": BookOpen,
-  articulo: ExternalLink,
-};
+// Regla (David, 2026-07-19): sólo LEYES, NORMAS y DECRETOS OFICIALES se
+// enlazan, y sólo cuando un humano verificó la URL en el catálogo del
+// servidor (server/data/fuentes-oficiales.ts, expuesto acá vía
+// /api/studio/fuentes-oficiales). Documentos internos y lecturas de
+// referencia NUNCA llevan link — el bucket lo decide classifySource
+// (shared/source-classify.ts), no este componente. Antes forzábamos todos
+// los links a la portada de dof.gob.mx: eso paraba las URLs inventadas pero
+// dejaba el link sin llevar a lo citado, igual de deshonesto. Ahora, sin
+// verificación humana en el catálogo, no hay link — punto.
+function useFuentesOficialesCatalog() {
+  return useQuery<{ fuentes: { cita: string; url: string }[] }>({
+    queryKey: ["/api/studio/fuentes-oficiales"],
+  });
+}
+
+function dedupeCitations(lists: (string | undefined | null)[][]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const list of lists) {
+    for (const raw of list) {
+      const cita = (raw || "").trim();
+      if (!cita) continue;
+      const key = cita.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(cita);
+    }
+  }
+  return out;
+}
 
 function SourcesView({ moduleRefs, aiSources }: {
   moduleRefs?: string[] | null;
   aiSources?: { title: string; url: string; type: string }[] | null;
 }) {
-  const allSources = [
-    ...(moduleRefs || []).map(r => ({ title: r, url: "", type: "referencia" })),
-    ...(aiSources || []),
-  ];
+  const { data: catalogData } = useFuentesOficialesCatalog();
 
-  if (allSources.length === 0) {
+  const verifiedUrlByCita = useMemo(() => {
+    // `Map` (mayúscula) es el ícono de lucide-react importado arriba, no el
+    // global — hay que calificarlo con globalThis para no chocar con él.
+    const map = new globalThis.Map<string, string>();
+    for (const f of catalogData?.fuentes || []) {
+      map.set(f.cita.trim(), f.url.trim());
+    }
+    return map;
+  }, [catalogData]);
+
+  const allCitations = useMemo(
+    () => dedupeCitations([moduleRefs || [], (aiSources || []).map(s => s.title)]),
+    [moduleRefs, aiSources],
+  );
+
+  if (allCitations.length === 0) {
     return (
       <div className="text-center py-12" data-testid="view-fuentes">
         <Link2 size={32} className="mx-auto text-cedu-ink-muted/30 dark:text-gray-600 mb-3" />
@@ -883,32 +915,83 @@ function SourcesView({ moduleRefs, aiSources }: {
     );
   }
 
+  const oficiales: string[] = [];
+  const internas: string[] = [];
+  const lecturas: string[] = [];
+  for (const cita of allCitations) {
+    const kind = classifySource(cita);
+    if (kind === "oficial") oficiales.push(cita);
+    else if (kind === "interna") internas.push(cita);
+    else lecturas.push(cita);
+  }
+
   return (
-    <div className="space-y-4 p-6" data-testid="view-fuentes">
+    <div className="space-y-6 p-6" data-testid="view-fuentes">
       <h3 className="font-serif text-lg text-cedu-ink dark:text-white">Fuentes y Referencias</h3>
-      <ul className="space-y-2">
-        {allSources.map((src, i) => {
-          const Icon = SOURCE_ICONS[src.type] || Link2;
-          return (
-            <li key={i} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-black/[0.06] dark:border-white/[0.08] flex items-start gap-3">
-              <Icon size={16} className="text-cedu-blue mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                {src.url ? (
-                  <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-sm text-cedu-blue hover:underline">
-                    {src.title}
-                  </a>
-                ) : (
-                  <span className="text-sm text-cedu-ink-soft dark:text-gray-300">{src.title}</span>
-                )}
-                <span className="text-[10px] text-cedu-ink-muted dark:text-gray-500 uppercase ml-2">{src.type}</span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="text-xs text-cedu-ink-muted dark:text-gray-500 text-center pt-2">
-        Fuentes sugeridas. Verifica en fuentes oficiales.
-      </p>
+
+      {oficiales.length > 0 && (
+        <section className="space-y-2" data-testid="fuentes-oficiales">
+          <h4 className="text-sm font-semibold text-cedu-ink dark:text-white flex items-center gap-2">
+            <Scale size={15} className="text-cedu-blue" /> Fuentes oficiales
+          </h4>
+          <ul className="space-y-2">
+            {oficiales.map((cita) => {
+              const url = verifiedUrlByCita.get(cita);
+              return (
+                <li key={cita} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-black/[0.06] dark:border-white/[0.08] flex items-start gap-3">
+                  <Scale size={16} className="text-cedu-blue mt-0.5 shrink-0" />
+                  {url ? (
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-cedu-blue hover:underline break-words">
+                      {cita}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-cedu-ink-soft dark:text-gray-300 break-words">{cita}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {internas.length > 0 && (
+        <section className="space-y-2" data-testid="fuentes-internas">
+          <h4 className="text-sm font-semibold text-cedu-ink dark:text-white flex items-center gap-2">
+            <Lock size={15} className="text-cedu-ink-muted dark:text-gray-400" /> Documentos internos
+          </h4>
+          <p className="text-xs text-cedu-ink-muted dark:text-gray-500">
+            Material propio de Ceduverse / BrainShield / Kakaw. No es un enlace externo.
+          </p>
+          <ul className="space-y-2">
+            {internas.map((cita) => (
+              <li key={cita} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-black/[0.06] dark:border-white/[0.08] flex items-start gap-3">
+                <Lock size={16} className="text-cedu-ink-muted dark:text-gray-400 mt-0.5 shrink-0" />
+                <span className="text-sm text-cedu-ink-soft dark:text-gray-300 break-words flex-1">{cita}</span>
+                <Badge variant="secondary" className="text-[10px] shrink-0">Interno</Badge>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {lecturas.length > 0 && (
+        <section className="space-y-2" data-testid="fuentes-lecturas">
+          <h4 className="text-sm font-semibold text-cedu-ink dark:text-white flex items-center gap-2">
+            <BookOpen size={15} className="text-cedu-ink-muted dark:text-gray-400" /> Lecturas de referencia
+          </h4>
+          <p className="text-xs text-cedu-ink-muted dark:text-gray-500">
+            Libros, autores y conceptos citados en la clase, sin link. El instructor podrá agregar materiales — incluidos videos — desde su panel próximamente.
+          </p>
+          <ul className="space-y-2">
+            {lecturas.map((cita) => (
+              <li key={cita} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-black/[0.06] dark:border-white/[0.08] flex items-start gap-3">
+                <BookOpen size={16} className="text-cedu-ink-muted dark:text-gray-400 mt-0.5 shrink-0" />
+                <span className="text-sm text-cedu-ink-soft dark:text-gray-300 break-words">{cita}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

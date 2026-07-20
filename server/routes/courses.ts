@@ -1040,6 +1040,18 @@ export function registerCourseRoutes(app: Express) {
     } catch (err) { next(err); }
   });
 
+  // Catálogo de fuentes oficiales verificadas por un humano (server/data/
+  // fuentes-oficiales.ts). Es la ÚNICA fuente de URLs para la pestaña de
+  // Fuentes del Tutor IA (regla 2026-07-19): sólo se exponen las entradas
+  // con `url` no vacía — si una cita no aparece aquí, el cliente no la
+  // enlaza. Dato estático y no sensible: sin auth, como /api/courses.
+  app.get("/api/studio/fuentes-oficiales", async (_req, res, next) => {
+    try {
+      const { getVerifiedFuentes } = await import("../data/fuentes-oficiales");
+      res.json({ fuentes: getVerifiedFuentes() });
+    } catch (err) { next(err); }
+  });
+
   app.get("/api/studio/courses/:slug", async (req, res, next) => {
     try {
       const slug = String((req.params.slug as string));
