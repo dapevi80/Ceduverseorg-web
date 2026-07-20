@@ -22,6 +22,7 @@ import * as facturapi from "../services/facturapi";
 import { sendEmployeeInvitationEmail, sendSamPartnerNotificationEmail } from "../email";
 import crypto from "crypto";
 import { determinePlan, UMA_VALUE_2026 } from "./admin";
+import { decideInvitation } from "../lib/invitation-decision";
 
 /**
  * Variante ESTRICTA para las rutas de evidencia del playbook (fotos del lugar
@@ -257,8 +258,23 @@ export function registerEmpresaRoutes(app: Express) {
           .map(r => r.email.toLowerCase())
       );
 
-      const existingUsers = new Set(
-        (await db.select({ email: users.email }).from(users)).map(r => r.email.toLowerCase())
+      // Antes se cargaba aquí la lista COMPLETA de correos de la plataforma
+      // (`select email from users`, sin filtro) para marcar las filas con
+      // "Usuario ya registrado". Eso hacía dos daños: un escaneo total de
+      // `users` en cada carga, y —peor— convertía la tabla de resultados en un
+      // oráculo: el admin subía correos ajenos y el sistema le confirmaba, uno
+      // por uno, cuáles tienen cuenta en Ceduverse. Ya no se consulta: tener
+      // cuenta no cambia lo que hay que hacer, que es invitar.
+      //
+      // Lo que sí se consulta es quién YA es miembro de ESTE equipo — acotado
+      // al equipo propio, así que no revela nada de la plataforma — para no
+      // mandarle una invitación redundante a alguien que ya está dentro.
+      const memberEmails = new Set(
+        (await db.select({ email: users.email })
+          .from(teamUsers)
+          .innerJoin(users, eq(teamUsers.userId, users.id))
+          .where(eq(teamUsers.teamId, team.id)))
+          .map(r => r.email.toLowerCase())
       );
 
       const referralCode = (await db.select({ code: referralCodes.code })
@@ -288,13 +304,20 @@ export function registerEmpresaRoutes(app: Express) {
           continue;
         }
 
-        if (existingEmails.has(email)) {
-          results.push({ row: i + 1, nombre, email, status: "error", reason: "Ya tiene invitación" });
+        // Misma regla que la invitación individual, un solo lugar donde vive.
+        const decision = decideInvitation({
+          tieneCuentaEnCeduverse: false, // no se consulta a propósito; no cambia el desenlace
+          yaEsMiembroDelEquipo: memberEmails.has(email),
+          yaTieneInvitacionPendiente: existingEmails.has(email),
+        });
+
+        if (decision.accion === "ya_es_miembro") {
+          results.push({ row: i + 1, nombre, email, status: "error", reason: "Ya es miembro de tu organización" });
           continue;
         }
 
-        if (existingUsers.has(email)) {
-          results.push({ row: i + 1, nombre, email, status: "error", reason: "Usuario ya registrado" });
+        if (decision.accion === "ya_invitado") {
+          results.push({ row: i + 1, nombre, email, status: "error", reason: "Ya tiene invitación" });
           continue;
         }
 
@@ -348,32 +371,16 @@ export function registerEmpresaRoutes(app: Express) {
         return res.status(400).json({ message: "El nombre es requerido" });
       }
 
-      // Si el correo ya tiene cuenta en Ceduverse (con la nueva regla, toda
-      // cuenta ya es socio de la cooperativa), no tiene caso mandarle un
-      // token de invitación/registro: se le agrega directo al equipo, igual
-      // que hacía el viejo POST /api/teams/:id/invite. Así el admin nunca se
-      // topa con un callejón sin salida por "usuario ya registrado".
+      // Tener cuenta en Ceduverse NO cambia el desenlace: se invita igual y la
+      // persona acepta. La regla vive en `decideInvitation` (probada aparte);
+      // aquí sólo se resuelven los hechos contra la base. Ver ahí por qué ya no
+      // existe el alta directa de membresía.
       const [existingUser] = await db.select().from(users).where(eq(users.email, email));
-      if (existingUser) {
-        const [existingMembership] = await db.select().from(teamUsers)
-          .where(and(eq(teamUsers.teamId, team.id), eq(teamUsers.userId, existingUser.id)));
 
-        if (existingMembership) {
-          return res.status(409).json({ message: "Esta persona ya es miembro de tu organización" });
-        }
-
-        const [member] = await db.insert(teamUsers).values({
-          teamId: team.id,
-          userId: existingUser.id,
-          role: "member",
-        }).returning();
-
-        return res.status(201).json({
-          message: "Esta persona ya tenía una cuenta en Ceduverse — se agregó directamente a tu organización",
-          addedExistingUser: true,
-          member,
-        });
-      }
+      const [existingMembership] = existingUser
+        ? await db.select().from(teamUsers)
+            .where(and(eq(teamUsers.teamId, team.id), eq(teamUsers.userId, existingUser.id)))
+        : [undefined];
 
       const [existingInvitation] = await db.select().from(employeeInvitations)
         .where(and(
@@ -382,10 +389,20 @@ export function registerEmpresaRoutes(app: Express) {
           eq(employeeInvitations.status, "pending"),
         ));
 
-      if (existingInvitation) {
+      const decision = decideInvitation({
+        tieneCuentaEnCeduverse: Boolean(existingUser),
+        yaEsMiembroDelEquipo: Boolean(existingMembership),
+        yaTieneInvitacionPendiente: Boolean(existingInvitation),
+      });
+
+      if (decision.accion === "ya_es_miembro") {
+        return res.status(409).json({ message: "Esta persona ya es miembro de tu organización" });
+      }
+
+      if (decision.accion === "ya_invitado") {
         return res.status(409).json({
           message: "Ya existe una invitación pendiente para este correo — puedes reenviarla",
-          invitationId: existingInvitation.id,
+          invitationId: existingInvitation!.id,
           canResend: true,
         });
       }
