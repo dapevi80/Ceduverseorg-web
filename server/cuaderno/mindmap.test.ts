@@ -1,7 +1,8 @@
 import PDFDocument from "pdfkit";
 import { describe, expect, it } from "vitest";
-import { mindMapLayout, drawMindMap, type MindMap } from "./mindmap";
+import { mindMapLayout, drawMindMap, layoutMindMapBoxes, hasBoxOverlap, type MindMap } from "./mindmap";
 import { MODULE_COLORS } from "./visuals";
+import { registerCuadernoFonts } from "./fonts";
 
 function branch(label: string, opts: { color?: string; children?: { label: string; detail?: string }[] } = {}) {
   return {
@@ -159,6 +160,77 @@ describe("drawMindMap — dibujo", () => {
     }).not.toThrow();
     expect(ok).toBe(true);
 
+    expect(() => doc.end()).not.toThrow();
+  });
+
+  it("pase de diseño 2026-07-19: un mapa real de 6 ramas con etiquetas largas no traslapa ninguna caja", () => {
+    // Datos representativos de lo que sí produce el Tutor IA: ramas y
+    // etiquetas largas, con acentos — exactamente el caso que el dueño
+    // reportó "saturado". Se verifica sobre medidas reales de pdfkit (no
+    // aproximadas), como pide la verificación del pase de diseño.
+    const doc = new PDFDocument({ bufferPages: true });
+    doc.on("data", () => {});
+    const fonts = registerCuadernoFonts(doc);
+
+    const m: MindMap = {
+      central: "Marco legal y normativo aplicable a las relaciones laborales",
+      branches: [
+        branch("Obligaciones patronales ante el IMSS", {
+          children: [
+            { label: "Registro ante el IMSS", detail: "Alta de trabajadores en los primeros 5 días" },
+            { label: "Contrato individual de trabajo escrito" },
+            { label: "Reparto de utilidades (PTU)" },
+          ],
+        }),
+        branch("Derechos y prestaciones del trabajador", {
+          children: [
+            { label: "Vacaciones y prima vacacional" },
+            { label: "Aguinaldo anual proporcional" },
+            { label: "Días de descanso obligatorio" },
+          ],
+        }),
+        branch("Seguridad e higiene en el centro de trabajo", {
+          children: [
+            { label: "Comisión mixta de seguridad e higiene" },
+            { label: "Equipo de protección personal (EPP)" },
+          ],
+        }),
+        branch("Terminación de la relación laboral", {
+          children: [
+            { label: "Rescisión con responsabilidad para el patrón" },
+            { label: "Finiquito y liquidación" },
+            { label: "Indemnización constitucional" },
+          ],
+        }),
+        branch("Normatividad oficial mexicana (NOM) aplicable", {
+          children: [
+            { label: "NOM-035-STPS-2018, factores de riesgo psicosocial" },
+            { label: "NOM-030-STPS-2009, servicios preventivos de seguridad" },
+          ],
+        }),
+        branch("Autoridades y organismos laborales", {
+          children: [
+            { label: "Secretaría del Trabajo y Previsión Social" },
+            { label: "Tribunales laborales locales" },
+            { label: "Procuraduría Federal de la Defensa del Trabajo" },
+          ],
+        }),
+      ],
+    };
+
+    // Mismas dimensiones que usa `render.ts` en producción (CW=520, areaH=480).
+    const w = 520;
+    const h = 480;
+    const layout = mindMapLayout(m, w, h);
+    const boxLayout = layoutMindMapBoxes(doc, layout, 54, 100, w, h, fonts);
+
+    expect(hasBoxOverlap(boxLayout)).toBe(false);
+
+    let ok = false;
+    expect(() => {
+      ok = drawMindMap(doc, m, 54, 100, w, h);
+    }).not.toThrow();
+    expect(ok).toBe(true);
     expect(() => doc.end()).not.toThrow();
   });
 });

@@ -5,7 +5,7 @@
  * El Tutor IA ya genera, por alumno y por módulo, un `mindMap` con 4-6 ramas
  * de 2-4 hijos cada una — es exactamente la forma de un mapa conceptual. Este
  * módulo lo dibuja en papel usando las primitivas de marca de `visuals.ts`
- * (`dashedConnector` para las líneas, `accentCard` para las cajas).
+ * (`dashedTrajectory` para las líneas, `accentCard` para las cajas).
  *
  * Split deliberado, igual que `html-blocks.ts`:
  * - `mindMapLayout()` es geometría **pura** (sin pdfkit, sin I/O) — calcula
@@ -21,8 +21,23 @@
  * Degradación (spec §8): si no hay ramas, `drawMindMap` devuelve `false` sin
  * dibujar nada — nunca un recuadro vacío. El llamador debe listar las ramas
  * como texto en ese caso.
+ *
+ * Pase de diseño 2026-07-19 ("el mapa conceptual sigue saturado — nodos que
+ * se encima y demasiado texto"): tres cambios sobre lo anterior.
+ * - Las etiquetas se truncan a un máximo de caracteres (`truncateLabel`) —
+ *   el detalle completo de cada hijo ya no se dibuja dentro del nodo; vive
+ *   en "Conceptos clave" (`drawKeyConcepts`, `render.ts`), que sí tiene
+ *   espacio para el texto completo. Truncar es sólo cosmético: no se pierde
+ *   ningún dato, `modulo.mindMap` sigue trayendo las etiquetas completas.
+ * - Después de medir cada caja con la fuente real se corre
+ *   `resolveBoxOverlaps` (geometría pura, sin pdfkit — testeable aislada):
+ *   separa cualquier par de cajas que todavía se traslape, determinista
+ *   (mismas cajas de entrada, mismo resultado siempre).
+ * - Los conectores usan `dashedTrajectory` (línea con una leve curva) en vez
+ *   de `dashedConnector` (recta), para el trazo "suelto" a mano que pidió el
+ *   dueño.
  */
-import { CUADERNO, MODULE_COLORS, accentCard, dashedConnector } from "./visuals";
+import { CUADERNO, MODULE_COLORS, accentCard, dashedTrajectory } from "./visuals";
 import { registerCuadernoFonts } from "./fonts";
 
 export interface MindMap {
@@ -144,6 +159,20 @@ const CHILD_RADIUS = 6;
 const DETAIL_FONT = 6.5;
 const DETAIL_GAP = 3;
 
+/** Máximo de caracteres por etiqueta dentro del mapa — el detalle completo
+ * (`child.detail`) ya no se dibuja aquí, vive en "Conceptos clave". */
+const CENTRAL_MAX_CHARS = 46;
+const BRANCH_MAX_CHARS = 30;
+const CHILD_MAX_CHARS = 24;
+
+/** Trunca una etiqueta a `maxChars`, con elipsis — nunca inventa texto, sólo
+ * recorta lo que ya vino de los datos. */
+function truncateLabel(label: string | undefined, maxChars: number): string {
+  const clean = (label ?? "").trim() || "—";
+  if (clean.length <= maxChars) return clean;
+  return `${clean.slice(0, Math.max(1, maxChars - 1)).trimEnd()}…`;
+}
+
 interface BoxDims {
   /** Ancho útil de texto (lo que se pasa como `width` a `doc.text`, para que la medida y el dibujo coincidan). */
   innerW: number;
@@ -209,6 +238,102 @@ function edgePoint(
   return { x: fromX + dx * t, y: fromY + dy * t };
 }
 
+// ---- Separación de traslapes (geometría pura, testeable sin pdfkit) ------
+
+export interface OverlapBox {
+  cx: number;
+  cy: number;
+  halfW: number;
+  halfH: number;
+  /** El nodo central nunca se mueve — es el ancla del mapa. */
+  fixed?: boolean;
+}
+
+const OVERLAP_ITERATIONS = 500;
+/** Separación mínima adicional entre cajas, más allá de que no se toquen. */
+const OVERLAP_PADDING = 5;
+
+/**
+ * Separa cajas (AABB) que se traslapan. Estrategia: en cada pasada, busca el
+ * par MÁS encimado (mayor área de traslape) y lo resuelve por completo (no a
+ * medias) por su eje de menor solape — nunca el promedio de todos los pares
+ * a la vez. Una relajación pareja (mover un poco cada par, cada pasada) se
+ * probó primero y se quedaba en un equilibrio estable con un par todavía
+ * encimado (las fuerzas de varios vecinos se cancelaban exactamente antes de
+ * cerrar el último hueco); resolver el peor par completo, uno a la vez, no
+ * tiene ese punto muerto. Determinista: mismas cajas de entrada, mismo
+ * resultado siempre — nada de `Math.random()`, así que el mismo mapa
+ * conceptual dibuja exactamente igual entre corridas. Las cajas `fixed` (el
+ * nodo central) nunca se mueven. Al final recorta cada caja movible para que
+ * su centro quede dentro de `[bx,bx+bw] × [by,by+bh]` respetando su
+ * medio-ancho/alto. Muta `boxes` in place y también lo devuelve, por
+ * conveniencia.
+ */
+export function resolveBoxOverlaps(
+  boxes: OverlapBox[],
+  bx: number,
+  by: number,
+  bw: number,
+  bh: number
+): OverlapBox[] {
+  for (let iter = 0; iter < OVERLAP_ITERATIONS; iter++) {
+    let worstI = -1;
+    let worstJ = -1;
+    let worstArea = 0;
+    let worstOverlapX = 0;
+    let worstOverlapY = 0;
+
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i];
+        const b = boxes[j];
+        const overlapX = a.halfW + b.halfW + OVERLAP_PADDING - Math.abs(b.cx - a.cx);
+        const overlapY = a.halfH + b.halfH + OVERLAP_PADDING - Math.abs(b.cy - a.cy);
+        if (overlapX <= 0 || overlapY <= 0) continue;
+
+        const area = overlapX * overlapY;
+        if (area > worstArea) {
+          worstArea = area;
+          worstI = i;
+          worstJ = j;
+          worstOverlapX = overlapX;
+          worstOverlapY = overlapY;
+        }
+      }
+    }
+
+    if (worstI === -1) break; // ningún par se traslapa — listo.
+
+    const a = boxes[worstI];
+    const b = boxes[worstJ];
+    // Se separa por el eje de MENOR solape: es el que resuelve el traslape
+    // con el desplazamiento más chico.
+    if (worstOverlapX < worstOverlapY) {
+      const sign = b.cx - a.cx < 0 ? -1 : 1;
+      const shift = worstOverlapX / 2;
+      if (!a.fixed) a.cx -= sign * shift;
+      if (!b.fixed) b.cx += sign * shift;
+    } else {
+      const sign = b.cy - a.cy < 0 ? -1 : 1;
+      const shift = worstOverlapY / 2;
+      if (!a.fixed) a.cy -= sign * shift;
+      if (!b.fixed) b.cy += sign * shift;
+    }
+  }
+
+  boxes.forEach((box) => {
+    if (box.fixed) return;
+    const minCx = bx + box.halfW;
+    const maxCx = bx + bw - box.halfW;
+    const minCy = by + box.halfH;
+    const maxCy = by + bh - box.halfH;
+    box.cx = minCx <= maxCx ? clamp(box.cx, minCx, maxCx) : bx + bw / 2;
+    box.cy = minCy <= maxCy ? clamp(box.cy, minCy, maxCy) : by + bh / 2;
+  });
+
+  return boxes;
+}
+
 function drawLabel(
   doc: PDFKit.PDFDocument,
   font: string,
@@ -223,6 +348,108 @@ function drawLabel(
   doc.font(font).fontSize(size).fillColor(color);
   doc.text(text || "—", cx - innerW / 2, topY, { width: innerW, align: "center", lineGap: 0 });
   doc.restore();
+}
+
+interface MindMapNodeBox {
+  dims: BoxDims;
+  label: string;
+  cx: number;
+  cy: number;
+  isBranch: boolean;
+  font: string;
+  size: number;
+}
+
+export interface MindMapBoxLayout {
+  central: { cx: number; cy: number; dims: BoxDims; label: string };
+  nodes: MindMapNodeBox[];
+}
+
+/**
+ * Mide todas las cajas del mapa con la fuente real (etiquetas ya truncadas)
+ * y separa cualquier traslape (`resolveBoxOverlaps`) — sin dibujar nada.
+ * Es la pieza que aísla "¿dónde y de qué tamaño queda cada caja?" para
+ * poder verificarla directo (no hay overlap) con datos reales, sin tener
+ * que rasterizar el PDF final — mismo espíritu que `mindMapLayout()` separa
+ * la geometría pura del dibujo.
+ */
+export function layoutMindMapBoxes(
+  doc: PDFKit.PDFDocument,
+  layout: MindMapLayout,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  fonts: ReturnType<typeof registerCuadernoFonts>
+): MindMapBoxLayout {
+  const centralLabel = truncateLabel(layout.central.label || "Mapa conceptual", CENTRAL_MAX_CHARS);
+  const centralDims = measureBox(doc, fonts.serif, CENTRAL_FONT, centralLabel, CENTRAL_MAX_W, CENTRAL_PAD);
+  const centralCx = x + layout.central.x;
+  const centralCy = y + layout.central.y;
+
+  const nodeDims: MindMapNodeBox[] = layout.nodes.map((node) => {
+    const isBranch = node.parent === -1;
+    const font = isBranch ? fonts.sansBold : fonts.sans;
+    const size = isBranch ? BRANCH_FONT : CHILD_FONT;
+    const maxW = isBranch ? BRANCH_MAX_W : CHILD_MAX_W;
+    const pad = isBranch ? BRANCH_PAD : CHILD_PAD;
+    const label = truncateLabel(node.label, isBranch ? BRANCH_MAX_CHARS : CHILD_MAX_CHARS);
+    const dims = measureBox(doc, font, size, label, maxW, pad);
+    return {
+      dims,
+      label,
+      cx: x + node.x,
+      cy: y + node.y,
+      isBranch,
+      font,
+      size,
+    };
+  });
+
+  // Separar cualquier caja que todavía se traslape (determinista — ver
+  // `resolveBoxOverlaps`). El central es el ancla, nunca se mueve.
+  const centralBox: OverlapBox = {
+    cx: centralCx,
+    cy: centralCy,
+    halfW: centralDims.w / 2,
+    halfH: centralDims.h / 2,
+    fixed: true,
+  };
+  const movableBoxes: OverlapBox[] = nodeDims.map((nd) => ({
+    cx: nd.cx,
+    cy: nd.cy,
+    halfW: nd.dims.w / 2,
+    halfH: nd.dims.h / 2,
+  }));
+  resolveBoxOverlaps([centralBox, ...movableBoxes], x, y, w, h);
+  nodeDims.forEach((nd, i) => {
+    nd.cx = movableBoxes[i].cx;
+    nd.cy = movableBoxes[i].cy;
+  });
+
+  return { central: { cx: centralCx, cy: centralCy, dims: centralDims, label: centralLabel }, nodes: nodeDims };
+}
+
+/**
+ * Devuelve `true` si algún par de cajas (incluido el central) de un
+ * `MindMapBoxLayout` ya resuelto todavía se traslapa (AABB) — para que un
+ * caller (o una prueba) pueda verificarlo directo sobre datos reales.
+ */
+export function hasBoxOverlap(layout: MindMapBoxLayout): boolean {
+  const boxes = [
+    { cx: layout.central.cx, cy: layout.central.cy, halfW: layout.central.dims.w / 2, halfH: layout.central.dims.h / 2 },
+    ...layout.nodes.map((n) => ({ cx: n.cx, cy: n.cy, halfW: n.dims.w / 2, halfH: n.dims.h / 2 })),
+  ];
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i];
+      const b = boxes[j];
+      const overlapsX = Math.abs(b.cx - a.cx) < a.halfW + b.halfW;
+      const overlapsY = Math.abs(b.cy - a.cy) < a.halfH + b.halfH;
+      if (overlapsX && overlapsY) return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -248,33 +475,17 @@ export function drawMindMap(
 
   try {
     const fonts = registerCuadernoFonts(doc);
+    const boxLayout = layoutMindMapBoxes(doc, layout, x, y, w, h, fonts);
+    const { central: centralBoxLayout, nodes: nodeDims } = boxLayout;
+    const centralLabel = centralBoxLayout.label;
+    const centralDims = centralBoxLayout.dims;
+    const centralCx = centralBoxLayout.cx;
+    const centralCy = centralBoxLayout.cy;
 
-    // Paso 1: medir todas las cajas con la fuente real (sin dibujar).
-    const centralLabel = layout.central.label || "Mapa conceptual";
-    const centralDims = measureBox(doc, fonts.serif, CENTRAL_FONT, centralLabel, CENTRAL_MAX_W, CENTRAL_PAD);
-    const centralCx = x + layout.central.x;
-    const centralCy = y + layout.central.y;
-
-    const nodeDims = layout.nodes.map((node) => {
-      const isBranch = node.parent === -1;
-      const font = isBranch ? fonts.sansBold : fonts.sans;
-      const size = isBranch ? BRANCH_FONT : CHILD_FONT;
-      const maxW = isBranch ? BRANCH_MAX_W : CHILD_MAX_W;
-      const pad = isBranch ? BRANCH_PAD : CHILD_PAD;
-      const dims = isBranch
-        ? measureBox(doc, font, size, node.label, maxW, pad)
-        : measureBox(doc, font, size, node.label, maxW, pad, fonts.sans, node.detail);
-      return {
-        dims,
-        cx: x + node.x,
-        cy: y + node.y,
-        isBranch,
-        font,
-        size,
-      };
-    });
-
-    // Paso 2: conectores primero, de la caja del padre a la caja del nodo, recortados al borde de cada una.
+    // Conectores — trayectoria suelta (leve curva) de la caja del
+    // padre a la del nodo, recortada al borde de cada una. El sentido de la
+    // curva alterna por índice (determinista, no al azar) para que no todas
+    // se doblen para el mismo lado.
     layout.nodes.forEach((node, i) => {
       const child = nodeDims[i];
       const parent =
@@ -284,10 +495,13 @@ export function drawMindMap(
 
       const a = edgePoint(parent.cx, parent.cy, child.cx, child.cy, parent.dims.w / 2, parent.dims.h / 2);
       const b = edgePoint(child.cx, child.cy, parent.cx, parent.cy, child.dims.w / 2, child.dims.h / 2);
-      dashedConnector(doc, a.x, a.y, b.x, b.y, node.color);
+      const segLen = Math.hypot(b.x - a.x, b.y - a.y);
+      const bendSign = i % 2 === 0 ? 1 : -1;
+      const bend = bendSign * clamp(segLen * 0.12, 4, 14);
+      dashedTrajectory(doc, a.x, a.y, b.x, b.y, node.color, { bend, opacity: 0.6 });
     });
 
-    // Paso 3: cajas y texto encima de los conectores.
+    // Cajas y texto encima de los conectores.
     doc.save();
     doc.roundedRect(
       centralCx - centralDims.w / 2,
@@ -309,27 +523,16 @@ export function drawMindMap(
     );
 
     layout.nodes.forEach((node, i) => {
-      const { dims, cx, cy, isBranch, font, size } = nodeDims[i];
+      const { dims, label, cx, cy, isBranch, font, size } = nodeDims[i];
       const boxX = cx - dims.w / 2;
       const boxY = cy - dims.h / 2;
 
       if (isBranch) {
         accentCard(doc, boxX, boxY, dims.w, dims.h, node.color, node.color);
-        drawLabel(doc, font, size, node.label, cx, cy - dims.labelH / 2, dims.innerW, "#ffffff");
+        drawLabel(doc, font, size, label, cx, cy - dims.labelH / 2, dims.innerW, "#ffffff");
       } else {
         accentCard(doc, boxX, boxY, dims.w, dims.h, node.color);
-        const contentTop = cy - (dims.labelH + (dims.detailH || 0)) / 2;
-        drawLabel(doc, font, size, node.label, cx, contentTop, dims.innerW, CUADERNO.INK);
-        if (node.detail) {
-          doc.save();
-          doc.font(fonts.sans).fontSize(DETAIL_FONT).fillColor(CUADERNO.INK_MUTED);
-          doc.text(node.detail, cx - dims.innerW / 2, contentTop + dims.labelH + DETAIL_GAP, {
-            width: dims.innerW,
-            align: "center",
-            lineGap: 0,
-          });
-          doc.restore();
-        }
+        drawLabel(doc, font, size, label, cx, cy - dims.labelH / 2, dims.innerW, CUADERNO.INK);
       }
     });
 

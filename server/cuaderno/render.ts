@@ -28,6 +28,31 @@
  * `server/routes/playbook.ts`): nunca se inventa una URL nueva. Se dibuja
  * chica, dentro de la columna de notas de la última página de la clase del
  * módulo — nunca ocupa página propia.
+ *
+ * Pase de diseño 2026-07-19 (verídico del dueño tras revisar ~76-86 páginas
+ * reales: "el margen de notas y los renglones están bien; la marca y lo
+ * visual no"). Cuatro cambios sobre lo anterior, todos en este archivo salvo
+ * donde se anota:
+ * - Marca: `drawBrandLockup()` reproduce el isotipo real de la landing
+ *   (`client/src/pages/landing.tsx` — cuadro azul `rounded-[10px]` con "C"
+ *   blanca serif + "Ceduverse") en la portada (grande) y en el pie de cada
+ *   página (chico) — con las fuentes de marca, nunca Helvetica.
+ * - Ornamentación: `drawPageOrnaments()` dibuja un motivo geométrico
+ *   distinto por página (línea/triángulo/círculo/trayectoria punteada,
+ *   trazo delgado, opacidad baja) usando las primitivas de `visuals.ts`,
+ *   SIEMPRE dentro de las dos franjas que están garantizadas vacías en
+ *   cualquier página (banda superior antes de `MT`, margen derecho después
+ *   de `CW`) — nunca puede competir con el texto porque nunca comparte
+ *   coordenadas con él. La combinación se deriva de un hash entero del
+ *   número de página (`pageHash()`, NO `Math.random()`), así que la misma
+ *   página dibuja siempre la misma figura.
+ * - Mapa conceptual: ver el pase equivalente documentado en `mindmap.ts`;
+ *   aquí sólo cambia `drawKeyConcepts()`, que ahora sí imprime el `detail`
+ *   de cada hijo (antes se perdía) — es donde debe vivir el texto completo
+ *   que el mapa ya no dibuja.
+ * - Academia (RVOE y titulación): `drawAcademySection()` + la constante
+ *   `ACADEMY_PARTNER_PROGRAMS` (vacía a propósito — ver su comentario) y el
+ *   aviso de IA (`drawAiDisclosureNote()`, en "Cómo usar" y en Academia).
  */
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
@@ -39,6 +64,9 @@ import {
   MODULE_COLORS,
   dotGrid,
   hexOutline,
+  circleOutline,
+  triangleOutline,
+  dashedTrajectory,
   ghostNumeral,
   accentCard,
   noteRules,
@@ -48,6 +76,25 @@ import { htmlToBlocks } from "./html-blocks";
 import { drawBlocks } from "./draw-blocks";
 import { drawMindMap } from "./mindmap";
 import { reflectionBlock, fillInTable, quizBlock, notesPage } from "./writables";
+
+/**
+ * Catálogo REAL de instituciones y programas con los que Ceduverse tiene
+ * convenio para preparatoria abierta / titulación con RVOE.
+ *
+ * HOY ESTÁ VACÍO A PROPÓSITO. Se verificó que ese catálogo no existe todavía
+ * en la base — `academy_courses_cache` (`shared/schema.ts`) sólo guarda
+ * cursos estilo STPS sincronizados de WordPress (`title`, `excerpt`,
+ * `content`, `url`...), sin campo de institución ni de nivel de titulación.
+ * Escribir aquí una universidad o un programa que no esté confirmado sería
+ * inventar una credencial académica — el tipo de invención más grave que
+ * este producto puede cometer.
+ *
+ * Rellenar ÚNICAMENTE con convenios reales y confirmados (nunca "para que
+ * la sección se vea completa"). Mientras siga vacío, `drawAcademySection()`
+ * imprime la oferta y el llamado a la acción sin listado de instituciones —
+ * nunca con uno inventado.
+ */
+export const ACADEMY_PARTNER_PROGRAMS: { institution: string; program: string; level: string }[] = [];
 
 // ---- Parámetros de página (spec §9) --------------------------------------
 
@@ -74,6 +121,158 @@ function bottomLimit(doc: PDFKit.PDFDocument): number {
 function ensureSpace(doc: PDFKit.PDFDocument, needed: number): void {
   if (doc.y + needed > bottomLimit(doc)) {
     doc.addPage();
+  }
+}
+
+// ---- Marca: isotipo real de la landing -------------------------------------
+
+/**
+ * Isotipo real de Ceduverse, calcado de `client/src/pages/landing.tsx`
+ * (`<div className="w-9 h-9 bg-cedu-blue rounded-[10px] ... font-serif
+ * text-xl">C</div>` seguido de "Cedu" + "verse" en azul itálico): cuadro
+ * azul de esquina redondeada (radio ≈ `size * 10/36`, la misma proporción
+ * que el `rounded-[10px]` sobre 36px) con una "C" blanca en serif, seguido
+ * del wordmark en la fuente de marca. Se usa grande en la portada y chico en
+ * el pie de página — mismo componente, un solo `size`. Devuelve el ancho
+ * total dibujado (cuadro + espacio + wordmark) para que el llamador pueda
+ * colocar lo que sigue sin adivinar.
+ */
+function drawBrandLockup(
+  doc: PDFKit.PDFDocument,
+  fonts: CuadernoFontNames,
+  x: number,
+  y: number,
+  size: number
+): number {
+  const RADIUS = size * (10 / 36);
+  doc.save();
+  doc.roundedRect(x, y, size, size, RADIUS).fill(CUADERNO.BLUE);
+  const markSize = size * 0.55;
+  doc.font(fonts.serif).fontSize(markSize).fillColor("#ffffff");
+  const markH = doc.heightOfString("C", { width: size });
+  doc.text("C", x, y + (size - markH) / 2, { width: size, align: "center", lineBreak: false });
+  doc.restore();
+
+  const wmSize = size * 0.62;
+  const wmGap = size * 0.28;
+  const wmX = x + size + wmGap;
+  const wmY = y + (size - wmSize) / 2 - wmSize * 0.08;
+
+  doc.save();
+  doc.font(fonts.serif).fontSize(wmSize);
+  const wCedu = doc.widthOfString("Cedu");
+  doc.font(fonts.serifItalic).fontSize(wmSize);
+  const wVerse = doc.widthOfString("verse");
+
+  doc.font(fonts.serif).fontSize(wmSize).fillColor(CUADERNO.INK).text("Cedu", wmX, wmY, { lineBreak: false });
+  doc.font(fonts.serifItalic).fontSize(wmSize).fillColor(CUADERNO.BLUE).text("verse", wmX + wCedu, wmY, {
+    lineBreak: false,
+  });
+  doc.restore();
+
+  return size + wmGap + wCedu + wVerse;
+}
+
+// ---- Ornamentación de página: geometría de la landing, sin abusar --------
+
+/**
+ * Hash entero determinista (Knuth multiplicative + mezcla xorshift): NO es
+ * `Math.random()` — mismo `n`, mismo valor siempre, corrida tras corrida.
+ * Es lo que permite que "la misma página siempre dibuje la misma figura"
+ * sin guardar estado en ningún lado: la página ya es el input.
+ */
+function pageHash(n: number): number {
+  let h = Math.imul(n + 1, 2654435761) >>> 0;
+  h ^= h >>> 15;
+  h = Math.imul(h, 0x85ebca6b) >>> 0;
+  h ^= h >>> 13;
+  return h >>> 0;
+}
+
+function pick<T>(arr: readonly T[], seed: number, salt: number): T {
+  return arr[(seed + salt * 97) % arr.length];
+}
+
+const ORNAMENT_SHAPES = ["hex", "triangle", "circle", "trajectory"] as const;
+
+/**
+ * Dibuja el motivo geométrico de una página — línea, triángulo, círculo o
+ * trayectoria punteada, trazo delgado, opacidad baja, colores de marca —
+ * pedido explícitamente por el dueño ("líneas, triángulos, círculos, líneas
+ * punteadas, como si figuraran jugadas de fútbol americano con trayectorias,
+ * yardaje — sin abusar"). "Sin abusar" se hace cumplir por construcción, no
+ * por criterio: todo vive en dos franjas que están garantizadas vacías en
+ * CUALQUIER página con contenido —
+ * - banda superior, `y` entre 6 y 46 (el texto real nunca empieza antes de
+ *   `MT` = 54);
+ * - margen derecho, `x` a partir de `PW - MR + 8` (el texto real nunca pasa
+ *   de `ML + CW` = 574 en una página de 612pt de ancho);
+ * — así que nunca puede competir con el texto, sin importar cuánto contenido
+ * traiga esa página. La combinación (forma, posición, rotación, color) se
+ * deriva de `pageHash(pageNumber)` — determinista, no al azar — para que la
+ * variación sea estable entre corridas. `withTopBand = false` omite la
+ * franja superior en las portadillas de módulo, que ya traen su propio
+ * numeral fantasma ahí.
+ */
+function drawPageOrnaments(
+  doc: PDFKit.PDFDocument,
+  pageNumber: number,
+  accent: string | undefined,
+  withTopBand: boolean = true
+): void {
+  const PW = doc.page.width;
+  const PH = doc.page.height;
+  const seed = pageHash(pageNumber);
+  const color = accent || MODULE_COLORS[seed % MODULE_COLORS.length];
+
+  if (withTopBand) {
+    const shape = pick(ORNAMENT_SHAPES, seed, 1);
+    const topX = pick([ML + 24, PW / 2, PW - MR - 40], seed, 2);
+    const topY = 26;
+    const rotation = pick([0, 12, -12, 24, -24], seed, 3);
+
+    doc.save();
+    switch (shape) {
+      case "hex":
+        hexOutline(doc, topX, topY, 15, color);
+        break;
+      case "triangle":
+        triangleOutline(doc, topX, topY, 24, rotation, color, 0.22);
+        break;
+      case "circle":
+        circleOutline(doc, topX, topY, 13, color, 0.24);
+        break;
+      case "trajectory": {
+        const len = 64;
+        const angle = (rotation * Math.PI) / 180;
+        dashedTrajectory(
+          doc,
+          topX - (len / 2) * Math.cos(angle),
+          topY - (len / 2) * Math.sin(angle),
+          topX + (len / 2) * Math.cos(angle),
+          topY + (len / 2) * Math.sin(angle),
+          color,
+          { bend: pick([6, -6, 9, -9], seed, 4), opacity: 0.22 }
+        );
+        break;
+      }
+    }
+    doc.restore();
+  }
+
+  // Margen derecho: trayectoria vertical tipo "yardaje" — siempre vacío
+  // (ver el comentario de la función), así que no hace falta condicionarlo.
+  const marginX = PW - MR + 8;
+  const trajTop = pick([88, 130, 170], seed, 5);
+  const trajLen = pick([150, 210, 270], seed, 6);
+  const trajBottom = Math.min(trajTop + trajLen, PH - 80);
+  if (trajBottom - trajTop > 20) {
+    doc.save();
+    dashedTrajectory(doc, marginX, trajTop, marginX, trajBottom, color, {
+      bend: pick([9, -9, 13, -13], seed, 7),
+      opacity: 0.14,
+    });
+    doc.restore();
   }
 }
 
@@ -111,13 +310,19 @@ function drawCover(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, datos: Dat
   hexOutline(doc, PW - 90, 90, 30, CUADERNO.ORANGE);
   hexOutline(doc, PW - 90, 90, 17, CUADERNO.VIOLET);
 
+  // Marca, prominente: el isotipo real de la landing, no un logo genérico.
+  drawBrandLockup(doc, fonts, ML, 58, 36);
+
   doc.y = PH * 0.2;
   doc.font(fonts.sansBold).fontSize(9).fillColor(CUADERNO.INK_MUTED).text("CUADERNO DE ESTUDIO", ML, doc.y, {
     characterSpacing: 3,
   });
   doc.moveDown(1);
-  const iconTitle = `${datos.course.icon ? datos.course.icon + "  " : ""}${datos.course.title}`;
-  doc.font(fonts.serif).fontSize(30).fillColor(CUADERNO.INK).text(iconTitle, ML, doc.y, { width: CW });
+  // `datos.course.icon` es un emoji (verificado en la base: 🛡️, 🧭, ⚖️...) y
+  // DM Serif Display es un subset latino — sin glifos de emoji, así que se
+  // ve un cuadro irreconocible si se imprime con la fuente de marca. Nunca
+  // se imprime aquí: el isotipo de arriba ya cumple ese rol, en marca.
+  doc.font(fonts.serif).fontSize(30).fillColor(CUADERNO.INK).text(datos.course.title, ML, doc.y, { width: CW });
   doc.moveDown(2);
   doc.rect(ML, doc.y, 60, 2).fill(CUADERNO.ORANGE);
   doc.moveDown(1.4);
@@ -139,6 +344,35 @@ function drawCover(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, datos: Dat
   });
 }
 
+// ---- Aviso: contenido generado con IA --------------------------------------
+
+/**
+ * Aviso de transparencia sobre el contenido, en español llano: se generó con
+ * IA, lo revisó un instructor certificado, puede tener errores, hay que
+ * consultar las fuentes oficiales. Se imprime dos veces (spec del pase de
+ * diseño): en el frente del cuaderno (`drawComoUsar`, lo primero que se lee)
+ * y otra vez en las páginas de cierre (`drawAcademySection`).
+ */
+function drawAiDisclosureNote(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames): void {
+  const text =
+    "Este cuaderno se generó con inteligencia artificial y lo revisaron instructores certificados. Aun así puede tener errores: antes de tomar una decisión importante con esta información, consulta siempre las fuentes oficiales.";
+  const innerW = CW - 32;
+  doc.font(fonts.sans).fontSize(9);
+  const bodyH = doc.heightOfString(text, { width: innerW, lineGap: 2 });
+  const boxH = bodyH + 32;
+  ensureSpace(doc, boxH + 12);
+  const y0 = doc.y;
+  accentCard(doc, ML, y0, CW, boxH, CUADERNO.INK_MUTED);
+  doc.font(fonts.sansBold).fontSize(8).fillColor(CUADERNO.INK_MUTED).text(
+    "AVISO SOBRE ESTE CONTENIDO",
+    ML + 16,
+    y0 + 12,
+    { characterSpacing: 1, width: innerW }
+  );
+  doc.font(fonts.sans).fontSize(9).fillColor(CUADERNO.INK).text(text, ML + 16, y0 + 24, { width: innerW, lineGap: 2 });
+  doc.y = y0 + boxH + 12;
+}
+
 // ---- Cómo usar este cuaderno -----------------------------------------------
 
 function drawComoUsar(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames): void {
@@ -156,6 +390,8 @@ function drawComoUsar(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames): void {
     doc.font(fonts.sans).fontSize(11).fillColor(CUADERNO.INK).text(p, ML, doc.y, { width: CW, lineGap: 4 });
     doc.moveDown(0.8);
   });
+  doc.moveDown(0.4);
+  drawAiDisclosureNote(doc, fonts);
 }
 
 // ---- Índice ------------------------------------------------------------
@@ -376,7 +612,13 @@ function drawConceptMapSection(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames
 
   doc.addPage();
   heading(doc, fonts, "Mapa conceptual", accent);
-  const areaH = 400;
+  // 480pt (antes 400pt): "más espacio para respirar" del pase de diseño —
+  // y, medido con `resolveBoxOverlaps` sobre datos reales de 6 ramas, es el
+  // margen que hace falta para que el mapa siempre resuelva sin traslapes
+  // (400pt deja casos límite sin salida geométrica posible, aun con más
+  // iteraciones: no caben 3 hijos en el arco disponible a esa altura). El
+  // área sigue holgada respecto al límite inferior de la página.
+  const areaH = 480;
   const y0 = doc.y;
   const ok = drawMindMap(doc, mindMap, ML, y0, CW, areaH);
   if (ok) {
@@ -404,7 +646,13 @@ function drawKeyConcepts(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, modu
 
   heading(doc, fonts, "Conceptos clave", accent);
   branches.forEach((b) => {
-    const children = (b.children ?? []).map((c) => c.label).filter(Boolean).join(" · ");
+    // El mapa conceptual (`mindmap.ts`) trunca las etiquetas y ya no dibuja
+    // el `detail` de cada hijo dentro del nodo — el pase de diseño lo movió
+    // aquí a propósito: es donde hay espacio real para el texto completo.
+    const children = (b.children ?? [])
+      .filter((c) => c.label)
+      .map((c) => (c.detail ? `${c.label} (${c.detail})` : c.label))
+      .join(" · ");
     doc.font(fonts.sansBold).fontSize(10.5);
     const titleH = doc.heightOfString(b.label || "—", { width: CW - 40 });
     let childH = 0;
@@ -567,21 +815,115 @@ function drawConsolidatedReferences(doc: PDFKit.PDFDocument, fonts: CuadernoFont
   });
 }
 
+// ---- Academia — RVOE y titulación ------------------------------------------
+
+/**
+ * Nueva sección (pase de diseño 2026-07-19): la oferta de Academia con
+ * presencia real en el cuaderno, con la copia exacta que pidió el dueño.
+ * Sin precios salvo donde el propio dueño lo autorizó (cursos con
+ * certificación SEP, que ya lo muestran en la plataforma) — todo lo demás
+ * remite a un consultor académico. El listado de instituciones sólo se
+ * imprime si `ACADEMY_PARTNER_PROGRAMS` trae convenios reales (ver su
+ * comentario) — nunca se inventa uno para llenar la página.
+ */
+function drawAcademySection(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames): void {
+  heading(doc, fonts, "Academia — RVOE y titulación", CUADERNO.ORANGE, 20);
+
+  const intro =
+    "Ceduverse también te lleva más allá de este curso: preparatoria abierta y titulación con reconocimiento oficial, con el mismo acompañamiento de instructores que ya conoces.";
+  doc.font(fonts.sans).fontSize(11);
+  let h = doc.heightOfString(intro, { width: CW, lineGap: 4 });
+  ensureSpace(doc, h + 16);
+  doc.font(fonts.sans).fontSize(11).fillColor(CUADERNO.INK).text(intro, ML, doc.y, { width: CW, lineGap: 4 });
+  doc.moveDown(1);
+
+  const offers: { title: string; duration: string }[] = [
+    { title: "Preparatoria abierta con acompañamiento de instructores", duration: "6 meses" },
+    { title: "Titulación por experiencia laboral, con título y cédula profesional", duration: "3 meses*" },
+  ];
+  offers.forEach((offer) => {
+    doc.font(fonts.sansBold).fontSize(11);
+    const titleH = doc.heightOfString(offer.title, { width: CW - 140 });
+    const boxH = Math.max(titleH, 15) + 26;
+    ensureSpace(doc, boxH + 12);
+    const y0 = doc.y;
+    accentCard(doc, ML, y0, CW, boxH, CUADERNO.ORANGE);
+    doc.font(fonts.sansBold).fontSize(11).fillColor(CUADERNO.INK).text(offer.title, ML + 16, y0 + 13, { width: CW - 140 });
+    doc.font(fonts.serif).fontSize(15).fillColor(CUADERNO.ORANGE).text(offer.duration, ML + CW - 116, y0 + boxH / 2 - 9, {
+      width: 100,
+      align: "right",
+    });
+    doc.y = y0 + boxH + 12;
+  });
+
+  const priceNote =
+    "Los cursos con certificación SEP sí muestran su precio — ya lo puedes ver en la plataforma. Todo lo demás — preparatoria abierta y titulación — no lleva precio aquí: escríbele a un consultor académico y te cotiza según tu caso.";
+  doc.font(fonts.sans).fontSize(10.5);
+  h = doc.heightOfString(priceNote, { width: CW, lineGap: 3 });
+  ensureSpace(doc, h + 16);
+  doc.font(fonts.sans).fontSize(10.5).fillColor(CUADERNO.INK).text(priceNote, ML, doc.y, { width: CW, lineGap: 3 });
+  doc.moveDown(1);
+
+  if (ACADEMY_PARTNER_PROGRAMS.length > 0) {
+    eyebrow(doc, fonts, "Instituciones con convenio", CUADERNO.ORANGE);
+    ACADEMY_PARTNER_PROGRAMS.forEach((p) => {
+      const line = `${p.institution} — ${p.program} (${p.level})`;
+      doc.font(fonts.sans).fontSize(10);
+      const lh = doc.heightOfString(line, { width: CW - 16, lineGap: 2 });
+      ensureSpace(doc, lh + 8);
+      doc.font(fonts.sans).fontSize(10).fillColor(CUADERNO.INK).text(line, ML, doc.y, { width: CW - 16, lineGap: 2 });
+      doc.moveDown(0.4);
+    });
+    doc.moveDown(0.6);
+  }
+
+  const disclosure =
+    "* Sujeto a la institución que emite el título y la cédula profesional, y a que el alumno cumpla todos los requisitos del programa.";
+  doc.font(fonts.sans).fontSize(8.5);
+  h = doc.heightOfString(disclosure, { width: CW, lineGap: 2 });
+  ensureSpace(doc, h + 20);
+  doc.font(fonts.sans).fontSize(8.5).fillColor(CUADERNO.INK_MUTED).text(disclosure, ML, doc.y, { width: CW, lineGap: 2 });
+  doc.moveDown(1.2);
+
+  // Aviso de IA otra vez, aquí en el cierre — spec del pase de diseño.
+  drawAiDisclosureNote(doc, fonts);
+}
+
 // ---- Pie de página (spec §9: en todas menos la portada) -------------------
 
-function drawFooters(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, courseTitle: string): void {
+/**
+ * Pie de página con marca (chica) además de curso + número. `ornamentPages`
+ * son los índices de página donde NO debe dibujarse la banda superior de
+ * ornamentación (las portadillas de módulo, que ya traen su propio numeral
+ * fantasma ahí) — el margen derecho sí se dibuja siempre, porque nunca
+ * comparte coordenadas con nada de lo que ya exista en esa página.
+ */
+function drawFooters(
+  doc: PDFKit.PDFDocument,
+  fonts: CuadernoFontNames,
+  courseTitle: string,
+  noTopBandPages: Set<number>
+): void {
   const total = doc.bufferedPageRange().count;
   for (let i = 1; i < total; i++) {
     doc.switchToPage(i);
     const PW = doc.page.width;
     const PH = doc.page.height;
     const footerY = PH - 34;
+
+    drawPageOrnaments(doc, i, undefined, !noTopBandPages.has(i));
+
     doc.save();
     doc.page.margins.bottom = 0;
     doc.moveTo(ML, footerY - 8).lineTo(PW - MR, footerY - 8).strokeColor(CUADERNO.INK).strokeOpacity(0.1).lineWidth(0.5).stroke();
-    doc.font(fonts.sans).fontSize(8).fillColor(CUADERNO.INK_MUTED).fillOpacity(1).text(courseTitle, ML, footerY, {
-      width: 320,
+
+    const lockupW = drawBrandLockup(doc, fonts, ML, footerY - 2, 13);
+    const titleX = ML + lockupW + 10;
+    const titleW = PW - MR - 90 - titleX;
+    doc.font(fonts.sans).fontSize(8).fillColor(CUADERNO.INK_MUTED).fillOpacity(1).text(courseTitle, titleX, footerY, {
+      width: Math.max(60, titleW),
       lineBreak: false,
+      ellipsis: true,
     });
     doc.text(`Página ${i + 1}`, PW - MR - 80, footerY, { width: 80, align: "right", lineBreak: false });
     doc.restore();
@@ -658,12 +1000,16 @@ export async function renderCuadernoPdf(datos: DatosCuaderno): Promise<Buffer> {
     drawGuiaEstudio(doc, fonts, datos.guiaEstudio);
   }
 
-  // Un capítulo por módulo.
+  // Un capítulo por módulo. Se registran los índices de las portadillas
+  // (`noTopBandPages`) para que el pase de ornamentación final no les
+  // dibuje la banda superior — ya traen su propio numeral fantasma ahí.
   const chapterMeta: ChapterMeta[] = [];
+  const noTopBandPages = new Set<number>();
   datos.modulos.forEach((modulo, i) => {
     const accent = MODULE_COLORS[i % MODULE_COLORS.length];
     doc.addPage();
     const idx = doc.bufferedPageRange().count - 1;
+    noTopBandPages.add(idx);
     tocEntries.push({
       label: `Módulo ${String(modulo.index + 1).padStart(2, "0")} — ${modulo.title}`,
       pageIdx: idx,
@@ -693,6 +1039,13 @@ export async function renderCuadernoPdf(datos: DatosCuaderno): Promise<Buffer> {
     drawConsolidatedReferences(doc, fonts, allRefs);
   }
 
+  // Academia — RVOE y titulación (spec del pase de diseño): siempre se
+  // imprime, con presencia real en el cierre del cuaderno.
+  doc.addPage();
+  const academyIdx = doc.bufferedPageRange().count - 1;
+  tocEntries.push({ label: "Academia — RVOE y titulación", pageIdx: academyIdx, color: CUADERNO.ORANGE });
+  drawAcademySection(doc, fonts);
+
   // Páginas de notas libres.
   const notesIdx = doc.bufferedPageRange().count;
   tocEntries.push({ label: "Notas libres", pageIdx: notesIdx, color: CUADERNO.INK });
@@ -704,7 +1057,7 @@ export async function renderCuadernoPdf(datos: DatosCuaderno): Promise<Buffer> {
   doc.switchToPage(tocIdx);
   drawIndexContent(doc, fonts, tocEntries);
 
-  drawFooters(doc, fonts, datos.course.title);
+  drawFooters(doc, fonts, datos.course.title, noTopBandPages);
 
   doc.end();
   return done;
