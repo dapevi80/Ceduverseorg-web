@@ -53,7 +53,16 @@ export interface ModuloCuaderno {
 }
 
 export interface DatosCuaderno {
-  course: { slug: string; title: string; icon: string | null; instructor: string | null };
+  course: {
+    slug: string;
+    title: string;
+    icon: string | null;
+    instructor: string | null;
+    /** Verbatim de `studio_courses.duration_minutes` — la Ficha de la sesión la expresa en horas. */
+    durationMinutes: number | null;
+    /** Verbatim de `studio_courses.dc3_available`. */
+    dc3Available: boolean | null;
+  };
   alumno: { nombre: string };
   guiaEstudio?: { objetivos: string[]; resumen: string[]; estrategias: string[]; preguntas: string[] };
   ejercicios: { index: number; title: string; instruction: string }[];
@@ -131,7 +140,14 @@ export async function gatherCuaderno(userId: string, courseSlug: string): Promis
   });
 
   return {
-    course: { slug: course.slug, title: course.title, icon: course.icon, instructor: course.instructor },
+    course: {
+      slug: course.slug,
+      title: course.title,
+      icon: course.icon,
+      instructor: course.instructor,
+      durationMinutes: course.durationMinutes,
+      dc3Available: course.dc3Available,
+    },
     alumno: { nombre: profile?.fullName || user?.email?.split("@")[0] || "Alumno" },
     guiaEstudio: playbook?.content,
     ejercicios: playbook?.exercises ?? [],

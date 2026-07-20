@@ -6,8 +6,31 @@
  * dibujan/miden `draw-blocks.ts`, `mindmap.ts` y `writables.ts` sobre las
  * primitivas de `visuals.ts`, con los datos ya reunidos por `gather.ts`. No
  * inventa contenido — sólo compone lo que ya existe, en el orden exacto del
- * §6: portada → cómo usar → índice → guía de estudio → un capítulo por
- * módulo → respuestas de autoevaluación → referencias consolidadas → notas.
+ * §6: portada → ficha de la sesión → cómo usar → índice → guía de estudio →
+ * un capítulo por módulo → respuestas de autoevaluación → referencias
+ * consolidadas → notas.
+ *
+ * La "ficha de la sesión" (página 2, después de la portada) es evidencia
+ * para el expediente de la CMCAP (Comisión Mixta de Capacitación,
+ * Adiestramiento y Productividad — bipartita por ley, y la empresa debe
+ * conservar la evidencia al menos 3 años; ver los módulos de CMCAP en
+ * `server/data/procadist-part2.ts`). Va después de la portada — no en ella,
+ * para no deshacer su tratamiento de marca — y antes de "Cómo usar", porque
+ * es lo que se fotocopia para el archivo. `drawFichaSesion()` sólo imprime
+ * datos que ya existen en `DatosCuaderno` (curso, duración, instructor,
+ * DC-3, alumno); todo lo demás —empresa, RFC, fecha, lugar, número de
+ * acta— son renglones en blanco para llenar a mano, nunca inventados.
+ *
+ * Deliberadamente NO imprime, ni deja como renglón en blanco, ningún número
+ * de registro/folio/licencia STPS del agente capacitador externo (corrección
+ * del dueño 2026-07-19): la STPS mantiene un localizador público donde se
+ * puede consultar el registro de un instructor, así que imprimir ese número
+ * —o invitar a escribirlo— en un documento que circula por empresas cliente
+ * republicaría el dato personal del instructor en cada copia. El nombre del
+ * instructor sí se imprime (ya es público en el curso); su número de
+ * registro no, ni impreso ni en blanco. Si algún trámite ante la STPS
+ * llegara a requerir esa credencial, se resuelve en ese momento, fuera de
+ * este documento.
  *
  * Reglas que este archivo hace cumplir directamente (las demás ya las
  * garantizan los módulos que consume):
@@ -353,11 +376,225 @@ function drawCover(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, datos: Dat
   field("INSTRUCTOR", datos.course.instructor || "Ceduverse — Tutor IA");
   field("FECHA", dateStr);
 
+  // El pie va deliberadamente por debajo del margen inferior (PH-70 = 722,
+  // contra un límite de PH-MB = 730): es un elemento de portada, no texto de
+  // flujo. `doc.text()` respeta ese margen y, al no caber la línea, agrega
+  // una página y dibuja el pie ahí — eso metía una página en blanco después
+  // de la portada y sacaba el pie a la cabecera de la siguiente. Se anula el
+  // margen inferior mientras se dibuja el pie y se restaura enseguida, que
+  // es la forma de PDFKit de posicionar algo en absoluto sin paginar.
+  const prevBottom = doc.page.margins.bottom;
+  doc.page.margins.bottom = 0;
   doc.font(fonts.sans).fontSize(8).fillColor(CUADERNO.INK_MUTED).text("ceduverse.org", ML, PH - 70, {
     width: CW,
     align: "right",
     lineBreak: false,
   });
+  doc.page.margins.bottom = prevBottom;
+}
+
+// ---- Ficha de la sesión: evidencia para el expediente de la CMCAP --------
+
+/**
+ * Convierte `studio_courses.duration_minutes` a horas — la unidad que pide
+ * la Ficha, nunca minutos crudos. `null`/`0`/negativo (dato ausente o
+ * corrupto) devuelve `null`: el llamador omite el renglón antes que imprimir
+ * una duración inventada.
+ */
+function formatHoras(minutes: number | null | undefined): string | null {
+  if (!minutes || minutes <= 0) return null;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h} h`;
+  return `${h} h ${m} min`;
+}
+
+const FICHA_LABEL_SIZE = 7.5;
+const FICHA_VALUE_SIZE = 11;
+
+/** Un par etiqueta/valor de los datos que llena el sistema — nunca a mano. */
+function systemField(
+  doc: PDFKit.PDFDocument,
+  fonts: CuadernoFontNames,
+  label: string,
+  value: string,
+  x: number,
+  y: number,
+  w: number
+): void {
+  doc.font(fonts.sansBold).fontSize(FICHA_LABEL_SIZE).fillColor(CUADERNO.INK_MUTED);
+  doc.text(label.toUpperCase(), x, y, { width: w, characterSpacing: 1 });
+  const labelH = doc.heightOfString(label.toUpperCase(), { width: w, characterSpacing: 1 });
+  doc.font(fonts.sans).fontSize(FICHA_VALUE_SIZE).fillColor(CUADERNO.INK);
+  doc.text(value, x, y + labelH + 3, { width: w, lineGap: 1 });
+}
+
+/** Alto que ocupará un `systemField` con este `value` a este ancho — para
+ * reservar espacio con `accentCard` antes de dibujar nada encima. */
+function systemFieldHeight(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, value: string, w: number): number {
+  doc.font(fonts.sansBold).fontSize(FICHA_LABEL_SIZE);
+  const labelH = doc.heightOfString("X", { width: w, characterSpacing: 1 });
+  doc.font(fonts.sans).fontSize(FICHA_VALUE_SIZE);
+  const valueH = doc.heightOfString(value, { width: w, lineGap: 1 });
+  return labelH + 3 + valueH;
+}
+
+const FICHA_BLANK_LABEL_SIZE = 8;
+const FICHA_BLANK_ROW_H = 34;
+
+/** Un campo en blanco para llenar a mano: etiqueta + un renglón real
+ * (`noteRules`) — nunca texto de relleno tipo placeholder. */
+function blankField(
+  doc: PDFKit.PDFDocument,
+  fonts: CuadernoFontNames,
+  label: string,
+  x: number,
+  y: number,
+  w: number
+): void {
+  doc.font(fonts.sansBold).fontSize(FICHA_BLANK_LABEL_SIZE).fillColor(CUADERNO.INK_MUTED);
+  doc.text(label.toUpperCase(), x, y, { width: w, characterSpacing: 0.5 });
+  const labelH = doc.heightOfString(label.toUpperCase(), { width: w, characterSpacing: 0.5 });
+  noteRules(doc, x, y + labelH + 12, w, 1, 22);
+}
+
+/** Una línea de firma: renglón + el cargo que la ocupa. Devuelve el alto
+ * dibujado, para que el llamador coloque lo que sigue sin adivinar. */
+function signatureField(
+  doc: PDFKit.PDFDocument,
+  fonts: CuadernoFontNames,
+  label: string,
+  x: number,
+  y: number,
+  w: number
+): number {
+  const LINE_OFFSET = 34;
+  const lineY = y + LINE_OFFSET;
+  doc.save();
+  doc.moveTo(x, lineY).lineTo(x + w, lineY).strokeColor(CUADERNO.INK).strokeOpacity(0.35).lineWidth(0.75).stroke();
+  doc.restore();
+  doc.font(fonts.sans).fontSize(8.5).fillColor(CUADERNO.INK);
+  const labelH = doc.heightOfString(label, { width: w, lineGap: 1 });
+  doc.text(label, x, lineY + 6, { width: w, align: "center", lineGap: 1 });
+  return LINE_OFFSET + 6 + labelH;
+}
+
+/**
+ * Aviso legal de la Ficha, impreso claro — nunca en gris chico como el aviso
+ * de IA (`drawAiDisclosureNote`): protege a la empresa cliente, que es quien
+ * responde en una inspección si alguien presenta este cuaderno creyendo que
+ * sustituye un DC-3.
+ */
+function drawFichaCaveat(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames): void {
+  const text =
+    "Este documento es evidencia del material utilizado. No sustituye los formatos oficiales DC-1, DC-3 ni DC-4.";
+  const innerW = CW - 32;
+  doc.font(fonts.sansBold).fontSize(11);
+  const bodyH = doc.heightOfString(text, { width: innerW, lineGap: 3 });
+  const boxH = bodyH + 34;
+  ensureSpace(doc, boxH + 12);
+  const y0 = doc.y;
+  accentCard(doc, ML, y0, CW, boxH, CUADERNO.ORANGE);
+  doc.font(fonts.sansBold).fontSize(8.5).fillColor(CUADERNO.ORANGE).text("AVISO IMPORTANTE", ML + 16, y0 + 12, {
+    characterSpacing: 1.5,
+    width: innerW,
+  });
+  doc.font(fonts.sansBold).fontSize(11).fillColor(CUADERNO.INK).text(text, ML + 16, y0 + 26, { width: innerW, lineGap: 3 });
+  doc.y = y0 + boxH + 12;
+}
+
+/**
+ * Ficha de la sesión (página 2, spec del comentario de cabecera): datos del
+ * curso llenados por el sistema desde `DatosCuaderno` (nunca inventados),
+ * renglones en blanco para la evidencia que sólo la empresa conoce (empresa,
+ * RFC, fecha, lugar, acta), firmas de la comisión bipartita (trabajadores +
+ * patrón) más el instructor, y el aviso legal que la protege. No imprime ni
+ * deja en blanco ningún número de registro STPS del instructor — ver el
+ * comentario de cabecera de este archivo.
+ */
+function drawFichaSesion(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, datos: DatosCuaderno): void {
+  heading(doc, fonts, "Ficha de la sesión", CUADERNO.BLUE, 20);
+
+  const intro =
+    "Evidencia de que la capacitación se impartió, para el expediente de la Comisión Mixta de Capacitación, Adiestramiento y Productividad (CMCAP). La empresa debe conservarla al menos 3 años.";
+  doc.font(fonts.sans).fontSize(9.5);
+  const introH = doc.heightOfString(intro, { width: CW, lineGap: 2 });
+  ensureSpace(doc, introH + 10);
+  doc.font(fonts.sans).fontSize(9.5).fillColor(CUADERNO.INK_MUTED).text(intro, ML, doc.y, { width: CW, lineGap: 2 });
+  doc.moveDown(1);
+
+  // ---- Datos del curso: llenado automático, tomados de DatosCuaderno -------
+  eyebrow(doc, fonts, "Datos del curso — llenado automático", CUADERNO.BLUE);
+
+  const pad = 16;
+  const innerW = CW - pad * 2;
+  const gapCol = 20;
+  const colW = (innerW - gapCol) / 2;
+  const col2X = ML + pad + colW + gapCol;
+
+  const duracion = formatHoras(datos.course.durationMinutes) ?? "No registrada en el sistema";
+  const instructor = datos.course.instructor || "Ceduverse — Tutor IA";
+  const modalidad = "En línea, autogestivo (Tutor IA de Ceduverse)";
+  const dc3Texto = datos.course.dc3Available ? "Sí" : "No";
+
+  const rowGap = 10;
+  const row1H = systemFieldHeight(doc, fonts, datos.course.title, innerW);
+  const row2H = Math.max(
+    systemFieldHeight(doc, fonts, duracion, colW),
+    systemFieldHeight(doc, fonts, instructor, colW)
+  );
+  const row3H = Math.max(
+    systemFieldHeight(doc, fonts, modalidad, colW),
+    systemFieldHeight(doc, fonts, dc3Texto, colW)
+  );
+  const row4H = systemFieldHeight(doc, fonts, datos.alumno.nombre, innerW);
+  const cardH = pad * 2 + row1H + rowGap + row2H + rowGap + row3H + rowGap + row4H;
+
+  ensureSpace(doc, cardH + 16);
+  const cardY = doc.y;
+  accentCard(doc, ML, cardY, CW, cardH, CUADERNO.BLUE);
+
+  let ry = cardY + pad;
+  systemField(doc, fonts, "Curso", datos.course.title, ML + pad, ry, innerW);
+  ry += row1H + rowGap;
+  systemField(doc, fonts, "Duración", duracion, ML + pad, ry, colW);
+  systemField(doc, fonts, "Instructor", instructor, col2X, ry, colW);
+  ry += row2H + rowGap;
+  systemField(doc, fonts, "Modalidad", modalidad, ML + pad, ry, colW);
+  systemField(doc, fonts, "¿Otorga DC-3?", dc3Texto, col2X, ry, colW);
+  ry += row3H + rowGap;
+  systemField(doc, fonts, "Alumno", datos.alumno.nombre, ML + pad, ry, innerW);
+
+  doc.y = cardY + cardH + 16;
+
+  // ---- Campos en blanco: evidencia que sólo la empresa conoce --------------
+  eyebrow(doc, fonts, "Llenar a mano", CUADERNO.ORANGE);
+  const blankColW = (CW - gapCol) / 2;
+  const blankCol2X = ML + blankColW + gapCol;
+
+  ensureSpace(doc, FICHA_BLANK_ROW_H * 3 + 10);
+  const by = doc.y;
+  blankField(doc, fonts, "Empresa o centro de trabajo", ML, by, blankColW);
+  blankField(doc, fonts, "RFC", ML, by + FICHA_BLANK_ROW_H, blankColW);
+  blankField(doc, fonts, "Fecha", ML, by + FICHA_BLANK_ROW_H * 2, blankColW);
+  blankField(doc, fonts, "Lugar", blankCol2X, by, blankColW);
+  blankField(doc, fonts, "Número de acta o sesión", blankCol2X, by + FICHA_BLANK_ROW_H, blankColW);
+  doc.y = by + FICHA_BLANK_ROW_H * 3 + 10;
+
+  // ---- Firmas: comisión bipartita (trabajadores + patrón) + instructor -----
+  eyebrow(doc, fonts, "Firmas — comisión mixta bipartita", CUADERNO.VIOLET);
+  ensureSpace(doc, 70);
+  const sigY = doc.y + 8;
+  const sigGap = 16;
+  const sigW = (CW - sigGap * 2) / 3;
+  const h1 = signatureField(doc, fonts, "Representante de los trabajadores", ML, sigY, sigW);
+  const h2 = signatureField(doc, fonts, "Representante del patrón", ML + sigW + sigGap, sigY, sigW);
+  const h3 = signatureField(doc, fonts, "Instructor", ML + (sigW + sigGap) * 2, sigY, sigW);
+  doc.y = sigY + Math.max(h1, h2, h3) + 16;
+
+  // ---- Aviso legal: protege a la empresa cliente ----------------------------
+  drawFichaCaveat(doc, fonts);
 }
 
 // ---- Aviso: contenido generado con IA --------------------------------------
@@ -995,6 +1232,14 @@ export async function renderCuadernoPdf(datos: DatosCuaderno): Promise<Buffer> {
   doc.addPage();
   drawCover(doc, fonts, datos, dateStr);
 
+  // Ficha de la sesión — página 2, evidencia para el expediente de la CMCAP
+  // (ver el comentario de cabecera de este archivo). Después de la portada
+  // para no deshacer su tratamiento de marca; antes de "Cómo usar" porque es
+  // lo que se fotocopia para el archivo.
+  doc.addPage();
+  const fichaIdx = doc.bufferedPageRange().count - 1;
+  drawFichaSesion(doc, fonts, datos);
+
   // Cómo usar este cuaderno
   doc.addPage();
   const comoUsarIdx = doc.bufferedPageRange().count - 1;
@@ -1005,7 +1250,10 @@ export async function renderCuadernoPdf(datos: DatosCuaderno): Promise<Buffer> {
   doc.addPage();
   const tocIdx = doc.bufferedPageRange().count - 1;
 
-  const tocEntries: TocEntry[] = [{ label: "Cómo usar este cuaderno", pageIdx: comoUsarIdx, color: CUADERNO.INK }];
+  const tocEntries: TocEntry[] = [
+    { label: "Ficha de la sesión (CMCAP)", pageIdx: fichaIdx, color: CUADERNO.ORANGE },
+    { label: "Cómo usar este cuaderno", pageIdx: comoUsarIdx, color: CUADERNO.INK },
+  ];
 
   // Guía de estudio del curso — sólo si existe (§8: sin course_playbooks, el
   // cuaderno se arma igual, sin inventar esta sección).
