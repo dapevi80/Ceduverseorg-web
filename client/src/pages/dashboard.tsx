@@ -315,6 +315,14 @@ function OverviewTab({ profile, account, enrollments, allCourses, userAchievemen
   const { data: studioEnrollmentsOverview = [] } = useQuery<StudioEnrollmentInfo[]>({
     queryKey: ["/api/studio/enrollments"],
   });
+  // El catalogo del Studio: sin el, la tarjeta mostraria el slug del curso
+  // ("nom-035-stps-medina") en vez de su titulo.
+  const { data: studioCatalogData } = useQuery<{ courses: StudioCourseInfo[] }>({
+    queryKey: ["/api/studio/courses"],
+  });
+  const studioTitulo = new Map(
+    (studioCatalogData?.courses || []).map((c) => [c.slug, c] as const),
+  );
 
   const studioCompletedCount = studioEnrollmentsOverview.filter(e => e.progressPercent >= 100).length;
   const completedCourses = enrollments.filter(e => e.completed === 100).length + studioCompletedCount;
@@ -330,6 +338,21 @@ function OverviewTab({ profile, account, enrollments, allCourses, userAchievemen
   // terminado; si todos están completos, caemos al primero como referencia.
   const lastCourse = enrollments.find(e => e.completed < 100) ?? (enrollments.length > 0 ? enrollments[0] : null);
   const lastCourseInfo = lastCourse ? courseLookup.get(lastCourse.courseId) : null;
+
+  // "Continuar aprendiendo" tambien mira el Tutor IA.
+  //
+  // Este dashboard YA conocia los cursos del Studio (los usa para contar cursos
+  // completados, modulos y horas), pero esta tarjeta solo miraba las
+  // inscripciones del Aula. Quien solo lleva cursos del Tutor IA veia "Aún no
+  // has empezado un curso" con varios en curso. Se toma el mas reciente en
+  // curso; el Aula manda solo si tambien tiene uno en curso.
+  const studioEnCurso = [...studioEnrollmentsOverview]
+    .filter((e) => (e.progressPercent ?? 0) < 100)
+    .sort((a, b) => {
+      const ta = a.lastAccessedAt ? new Date(a.lastAccessedAt).getTime() : new Date(a.enrolledAt).getTime();
+      const tb = b.lastAccessedAt ? new Date(b.lastAccessedAt).getTime() : new Date(b.enrolledAt).getTime();
+      return tb - ta;
+    })[0] || null;
 
   const recentAchievements = userAchievements
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -473,7 +496,27 @@ function OverviewTab({ profile, account, enrollments, allCourses, userAchievemen
         </div>
       )}
 
-      {lastCourseInfo ? (
+      {!lastCourseInfo && studioEnCurso ? (
+        <Link href={`/tutor-ia/${studioEnCurso.courseIdentifier}`} className="no-underline">
+          <div className="bg-white rounded-2xl p-4 border border-black/[0.06] hover:border-cedu-blue/30 transition-colors" data-testid="card-continue-studio">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-cedu-violet-light flex items-center justify-center shrink-0">
+                <Brain size={18} className="text-cedu-violet" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-cedu-ink line-clamp-2" data-testid="text-continue-studio-course">
+                  {studioTitulo.get(studioEnCurso.courseIdentifier)?.title || studioEnCurso.courseIdentifier}
+                </p>
+                <p className="text-xs text-cedu-ink-muted mt-0.5">Tutor IA</p>
+                <div className="mt-2">
+                  <Progress value={studioEnCurso.progressPercent || 0} className="h-2" />
+                </div>
+                <p className="text-[11px] text-cedu-ink-muted mt-1">{studioEnCurso.progressPercent || 0}% completado</p>
+              </div>
+            </div>
+          </div>
+        </Link>
+      ) : lastCourseInfo ? (
         <Card className="border-black/[0.06]" data-testid="card-continue-learning">
           <CardContent className="pt-5 pb-5">
             <h3 className="font-serif text-base text-cedu-ink mb-3">Continuar aprendiendo</h3>

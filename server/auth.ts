@@ -1,14 +1,14 @@
 import type { Express, Request, Response, NextFunction, RequestHandler } from "express";
 import { storage } from "./storage";
 import { db } from "./db";
-import { users, accounts, profiles, teamUsers, teams, cooperativeMemberships, termsVersions, userTermsAcceptances, otpCodes, auditLogs } from "@shared/schema";
+import { users, accounts, profiles, teamUsers, teams, termsVersions, userTermsAcceptances, otpCodes, auditLogs } from "@shared/schema";
 import { eq, and, sql, lte, inArray, notInArray } from "drizzle-orm";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
 import { sendOtpEmail } from "./email";
 import { getEffectiveRole } from "./lib/effective-role";
-import { ensureReferralCode } from "./lib/ensure-referral-code";
+import { acceptTermsForUser, resolveActiveVersionIds } from "./lib/accept-terms";
 
 // Cap how many OTP requests/verifications a single IP can make. Belt-and-suspenders
 // alongside the existing 30s send cooldown and progressive verify lockout in this file.
@@ -280,6 +280,20 @@ export function setupAuth(app: Express): void {
             code: "USER_EXISTS",
           });
         }
+
+        // Decisión del dueño del producto (2026-07-19): toda cuenta de Ceduverse
+        // es una membresía de la cooperativa. La adhesión deja de ser opcional.
+        //
+        // El checkbox deshabilitado en el cliente NO es una barrera real —
+        // cualquiera puede llamar este endpoint directo. Por eso el registro se
+        // rechaza aquí si no llegan AMBAS aceptaciones, sin importar lo que haya
+        // pasado en el formulario.
+        if (req.body?.acceptedTerms !== true || req.body?.joinCoop !== true) {
+          return res.status(400).json({
+            message: "Para crear tu cuenta debes aceptar los Términos y Condiciones y la Adhesión Cooperativa. Toda cuenta en Ceduverse es una membresía de la cooperativa.",
+            code: "ADHESION_REQUIRED",
+          });
+        }
       }
 
       // Camino de INICIO DE SESION con un correo que no tiene cuenta.
@@ -405,36 +419,25 @@ export function setupAuth(app: Express): void {
           .where(eq(profiles.id, userId));
       }
 
+      // entry.joinCoop solo llega en true si /send-code paso por el modo
+      // "register" con acceptedTerms=true Y joinCoop=true (ambos exigidos
+      // juntos ahi, ver arriba) — o sea, exactamente cuando la persona acepto
+      // los T&C, el Aviso de Privacidad Y la Adhesion Cooperativa en el
+      // formulario de alta. Por eso aqui se registran los TRES como
+      // aceptados, no solo la adhesion: dejar sin registrar cualquiera de
+      // ellos deja a la cuenta recien creada bloqueada por
+      // checkPendingTerms, que compara contra user_terms_acceptances y no
+      // contra cooperative_memberships.
       let membershipNumber: string | null = null;
       if (entry.joinCoop) {
-        const [existingMembership] = await db.select().from(cooperativeMemberships).where(eq(cooperativeMemberships.userId, userId));
-        if (!existingMembership) {
-          const { generateMembershipCode } = await import("./seed-terms");
-          membershipNumber = await generateMembershipCode();
-
-          const acceptanceData = `${normalizedEmail}|${entry.fullName || ''}|${new Date().toISOString()}|accepted_statutes`;
-          const acceptanceHash = crypto.createHash('sha256').update(acceptanceData).digest('hex');
-
-          await db.insert(cooperativeMemberships).values({
-            userId,
-            fullName: entry.fullName || normalizedEmail.split('@')[0],
-            email: normalizedEmail,
-            membershipNumber,
-            membershipType: "consumo",
-            status: "activo",
-            acceptedStatutes: true,
-            acceptanceHash,
-          });
-
-          await db.update(accounts)
-            .set({ referralCode: membershipNumber })
-            .where(eq(accounts.id, userId));
-          // El folio tambien debe existir como codigo de referido, o sus links
-          // de invitacion salen como "link incorrecto" y no acreditan nada.
-          await ensureReferralCode(userId, membershipNumber);
-        } else {
-          membershipNumber = existingMembership.membershipNumber;
-        }
+        const userAgent = req.headers["user-agent"] || "";
+        const versionIds = await resolveActiveVersionIds([
+          "adhesion_cooperativa",
+          "terminos_condiciones",
+          "aviso_privacidad",
+        ]);
+        const result = await acceptTermsForUser({ userId, versionIds, ip: clientIp, userAgent });
+        membershipNumber = result.membershipNumber;
       }
 
       clearOtpFailures(clientIp);

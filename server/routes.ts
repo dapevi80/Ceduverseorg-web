@@ -36,7 +36,6 @@ import {
   instructorCourses,
   instructorApplications,
   courseModules,
-  cooperativeMemberships,
   termsVersions,
   userTermsAcceptances,
   roleDefinitions,
@@ -51,7 +50,6 @@ import { eq, and, or, sql, count, desc, asc, gte, lte, inArray, ilike, type SQL 
 import { r2Storage } from "./services/r2-storage";
 import { z } from "zod";
 import sanitizeHtml from "sanitize-html";
-import crypto from "crypto";
 import bcrypt from "bcryptjs";
 
 // Route modules
@@ -61,6 +59,7 @@ import { registerRiesgosRoutes } from "./routes/riesgos";
 import { registerAdminRoutes } from "./routes/admin";
 import { registerCrmRoutes } from "./routes/crm";
 import { ensureReferralCode } from "./lib/ensure-referral-code";
+import { acceptTermsForUser } from "./lib/accept-terms";
 import { registerGoogleMeetRoutes } from "./routes/google-meet";
 import { registerMembershipRoutes } from "./routes/membership";
 import { registerCertificateRoutes } from "./routes/certificates";
@@ -229,78 +228,20 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Formato inválido de versionIds" });
       }
 
-      const account = await storage.getAccount(userId);
-      const userRole = account?.userRole || "socio_estudiante";
-
       const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket.remoteAddress || "";
       const userAgent = req.headers["user-agent"] || "";
-      const [userRow] = await db.select().from(users).where(eq(users.id, userId));
-      const profile = await storage.getProfile(userId);
 
-      let acceptedCount = 0;
-      let membershipNumber: string | null = null;
+      // Lógica compartida con el alta nueva (server/auth.ts, verify-code) —
+      // ver server/lib/accept-terms.ts. No duplicar: ahí vive el hash de
+      // evidencia y el alta de membresía cooperativa.
+      const result = await acceptTermsForUser({
+        userId,
+        versionIds: parsed.data.versionIds,
+        ip,
+        userAgent,
+      });
 
-      for (const versionId of parsed.data.versionIds) {
-        const [version] = await db.select().from(termsVersions)
-          .where(and(eq(termsVersions.id, versionId), eq(termsVersions.isActive, true)));
-        if (!version) continue;
-
-        if (!version.requiredForRoles || !version.requiredForRoles.includes(userRole)) continue;
-
-        const now = new Date();
-        const acceptanceData = `${userId}|${versionId}|${now.toISOString()}|${ip}|${userAgent}`;
-        const acceptanceHash = crypto.createHash("sha256").update(acceptanceData).digest("hex");
-
-        const [acceptance] = await db.insert(userTermsAcceptances).values({
-          userId,
-          termsVersionId: versionId,
-          acceptedAt: now,
-          acceptanceIp: ip,
-          acceptanceUserAgent: userAgent,
-          acceptanceHash,
-        }).onConflictDoNothing().returning();
-
-        if (acceptance) acceptedCount++;
-
-        if (version.docType === "adhesion_cooperativa") {
-          const [existingMembership] = await db.select().from(cooperativeMemberships)
-            .where(eq(cooperativeMemberships.userId, userId));
-
-          if (!existingMembership) {
-            const { generateMembershipCode } = await import("./seed-terms");
-            membershipNumber = await generateMembershipCode();
-
-            const memberName = profile?.fullName || userRow?.email?.split("@")[0] || "Usuario";
-            const memberEmail = userRow?.email || "";
-
-            await db.insert(cooperativeMemberships).values({
-              userId,
-              fullName: memberName,
-              email: memberEmail,
-              membershipNumber,
-              membershipType: "consumo",
-              status: "activo",
-              acceptedStatutes: true,
-              acceptanceIp: ip,
-              acceptanceUserAgent: userAgent,
-              acceptanceHash,
-            }).onConflictDoNothing();
-
-            await db.update(accounts)
-              .set({ referralCode: membershipNumber })
-              .where(eq(accounts.id, userId));
-            // El folio tambien debe existir como codigo de referido, o sus links
-            // de invitacion salen como "link incorrecto" y no acreditan nada.
-            await ensureReferralCode(userId, membershipNumber);
-
-            createOrUpdateContactCard(userId, { title: "Socio Cooperativo" }).catch(() => {});
-          } else {
-            membershipNumber = existingMembership.membershipNumber;
-          }
-        }
-      }
-
-      res.json({ accepted: acceptedCount, membershipNumber });
+      res.json({ accepted: result.acceptedVersionIds.length, membershipNumber: result.membershipNumber });
     } catch (err) { next(err); }
   });
 
