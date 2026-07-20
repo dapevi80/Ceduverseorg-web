@@ -225,11 +225,19 @@ function drawPageOrnaments(
   const seed = pageHash(pageNumber);
   const color = accent || MODULE_COLORS[seed % MODULE_COLORS.length];
 
-  if (withTopBand) {
-    const shape = pick(ORNAMENT_SHAPES, seed, 1);
-    const topX = pick([ML + 24, PW / 2, PW - MR - 40], seed, 2);
+  // Densidad: 3 figuras en la banda superior en vez de 1 (David 2026-07-19:
+  // "se ven muy pocos, quizas 3x mas lo que ya tienes aun no seria muy
+  // atascado"). Siguen confinadas a la MISMA franja garantizada vacia, asi que
+  // subir la densidad no puede invadir el texto: sólo llena mejor el espacio
+  // que ya era suyo. Cada una toma su forma/posicion/rotacion de una semilla
+  // distinta (seed + i*13) para que no salgan tres figuras iguales en fila.
+  const TOP_X = [ML + 24, ML + 120, PW / 2, PW / 2 + 90, PW - MR - 40];
+  for (let i = 0; withTopBand && i < 3; i++) {
+    const s2 = seed + i * 13;
+    const shape = pick(ORNAMENT_SHAPES, s2, 1);
+    const topX = TOP_X[(s2 + i) % TOP_X.length];
     const topY = 26;
-    const rotation = pick([0, 12, -12, 24, -24], seed, 3);
+    const rotation = pick([0, 12, -12, 24, -24], s2, 3);
 
     doc.save();
     switch (shape) {
@@ -243,7 +251,7 @@ function drawPageOrnaments(
         circleOutline(doc, topX, topY, 13, color, 0.24);
         break;
       case "trajectory": {
-        const len = 64;
+        const len = pick([54, 64, 78], s2, 4);
         const angle = (rotation * Math.PI) / 180;
         dashedTrajectory(
           doc,
@@ -263,15 +271,23 @@ function drawPageOrnaments(
   // Margen derecho: trayectoria vertical tipo "yardaje" — siempre vacío
   // (ver el comentario de la función), así que no hace falta condicionarlo.
   const marginX = PW - MR + 8;
-  const trajTop = pick([88, 130, 170], seed, 5);
-  const trajLen = pick([150, 210, 270], seed, 6);
-  const trajBottom = Math.min(trajTop + trajLen, PH - 80);
-  if (trajBottom - trajTop > 20) {
+  for (let i = 0; i < 3; i++) {
+    const s3 = seed + i * 29;
+    const trajTop = pick([88, 130, 170, 240, 330, 420], s3, 5) + i * 6;
+    const trajLen = pick([110, 150, 190], s3, 6);
+    const trajBottom = Math.min(trajTop + trajLen, PH - 80);
+    if (trajBottom - trajTop <= 20) continue;
+    const x = marginX + pick([0, 6, 12], s3, 8);
     doc.save();
-    dashedTrajectory(doc, marginX, trajTop, marginX, trajBottom, color, {
-      bend: pick([9, -9, 13, -13], seed, 7),
-      opacity: 0.14,
+    dashedTrajectory(doc, x, trajTop, x, trajBottom, color, {
+      bend: pick([9, -9, 13, -13], s3, 7),
+      opacity: 0.12,
     });
+    doc.restore();
+    // Marca de "yardaje": un circulito al final de la trayectoria, como el
+    // nodo de una jugada. Es de la misma familia visual, no un elemento nuevo.
+    doc.save();
+    circleOutline(doc, x, trajBottom, 3.5, color, 0.16);
     doc.restore();
   }
 }
