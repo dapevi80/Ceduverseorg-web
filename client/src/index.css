@@ -297,6 +297,34 @@
   }
 }
 
+/* Título que no cabe en su renglón: se desliza de ida y vuelta para poder
+   leerlo completo, en vez de cortarse con puntos suspensivos. Pasa sobre todo
+   en el móvil con nombres de curso largos ("Diagnóstico, Prevención e
+   Intervención del Bullying").
+
+   La distancia la fija quien lo usa, en `--marquee-distance`, porque sólo se
+   conoce midiendo el texto ya renderizado. Si vale 0 el elemento no se mueve,
+   así que un título que sí cabe queda quieto sin necesidad de otra clase.
+
+   Los tramos 0-18% y 82-100% son pausas: el texto se detiene al principio y al
+   final para que se pueda leer, en lugar de arrastrarse sin descanso. */
+@keyframes marquee-ida-vuelta {
+  0%, 18% { transform: translateX(0); }
+  82%, 100% { transform: translateX(calc(-1 * var(--marquee-distance, 0px))); }
+}
+
+.animate-marquee {
+  animation: marquee-ida-vuelta 9s ease-in-out infinite alternate;
+}
+
+/* Quien pidió menos movimiento en su sistema no recibe el desplazamiento: el
+   texto se queda quieto al inicio y se lee con scroll horizontal. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}
+
 @keyframes float-y {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-12px); }

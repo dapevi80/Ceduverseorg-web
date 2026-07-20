@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { MarqueeText } from "@/components/MarqueeText";
 import DOMPurify from "dompurify";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
@@ -1962,7 +1963,13 @@ export default function StudioCoursePage() {
   return (
     <div className="min-h-screen bg-cedu-cream dark:bg-gray-950 transition-colors">
       <header className="bg-white dark:bg-gray-900 border-b border-black/[0.06] dark:border-white/[0.08] sticky top-0 z-30">
-        <div className="max-w-[1600px] mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2">
+        {/* En el teléfono la cabecera se parte en dos renglones: arriba el
+            título (que necesita todo el ancho para leerse) y abajo los
+            controles. Antes iba todo en una fila de 14 y los cinco botones
+            aplastaban al título hasta dejarlo ilegible; acortar sus etiquetas
+            —lo que se intentó antes— no alcanzó. Desde `sm` vuelve a ser una
+            sola fila, que ahí sí hay ancho de sobra. */}
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-4 py-2 sm:py-0 sm:h-14 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               onClick={() => navigate("/tutor-ia")}
@@ -1971,12 +1978,16 @@ export default function StudioCoursePage() {
             >
               <ArrowLeft size={18} />
             </button>
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <span className="text-2xl shrink-0">{course.icon || "📘"}</span>
-              <div className="min-w-0">
-                <h1 className="font-semibold text-cedu-ink dark:text-white text-sm leading-none truncate" data-testid="text-course-title">
-                  {course.title}
-                </h1>
+              <div className="min-w-0 flex-1">
+                {/* El título se desliza si no cabe, en vez de truncarse: es el
+                    dato que el alumno necesita leer completo. */}
+                <MarqueeText
+                  text={course.title}
+                  className="font-semibold text-cedu-ink dark:text-white text-sm leading-tight"
+                  data-testid="text-course-title"
+                />
                 <p className="text-[10px] text-cedu-ink-muted dark:text-gray-500 truncate">
                   {course.category} · {course.durationMinutes || 60} min
                   {course.instructor ? ` · ${course.instructor}` : ""}
@@ -1984,7 +1995,7 @@ export default function StudioCoursePage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center justify-end gap-1 sm:gap-2 shrink-0">
             {course.dc3Available && (
               <Badge variant="outline" className="hidden md:inline-flex text-green-600 border-green-300 dark:text-green-400 dark:border-green-700 text-[10px] gap-1">
                 <FileCheck size={10} /> DC3 STPS
@@ -2008,9 +2019,10 @@ export default function StudioCoursePage() {
               className="gap-1 text-xs text-cedu-ink-muted border-black/10 dark:border-white/10 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 px-2 sm:px-3"
               data-testid="button-continue-later"
             >
-              {/* Etiqueta corta en movil: con el texto completo la cabecera se
-                  llenaba y tapaba el titulo del curso. Con el reloj al lado,
-                  "Después" se entiende y deja respirar al titulo. */}
+              {/* Etiqueta corta en móvil. Ya no es por el título —ahora vive en
+                  su propio renglón— sino porque en un teléfono angosto estos
+                  cinco controles con texto completo se salen de la fila. Con el
+                  reloj al lado, "Después" se entiende. */}
               <Clock size={12} />
               <span className="sm:hidden">Después</span>
               <span className="hidden sm:inline">Continuar después</span>
