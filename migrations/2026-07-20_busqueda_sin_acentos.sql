@@ -1,0 +1,22 @@
+-- La búsqueda del Tutor IA ignora los acentos.
+--
+-- Por qué: `ILIKE '%guia%'` no encuentra "Guía para Socios Comerciales". 32 de
+-- los 59 cursos llevan acento en el título, y nadie escribe acentos en el
+-- buscador de un celular. Medido contra este mismo catálogo, 8 de 10 términos
+-- realistas devolvían CERO resultados:
+--
+--   guia 0, ergonomia 0, comunicacion 0, proteccion 0, energia 0,
+--   capacitacion 0, senales 0, analitica 0  (montacargas y organizacion sí)
+--
+-- `unaccent` es la extensión estándar de Postgres para esto y Supabase la trae
+-- disponible. Se instala en el esquema `extensions`, que es donde Supabase pone
+-- las suyas (pgcrypto, uuid-ossp, pg_stat_statements ya viven ahí).
+--
+-- Sin índice a propósito: `studio_courses` tiene 59 filas y el seq scan es
+-- instantáneo. Un índice funcional sobre unaccent() exigiría envolverla en una
+-- función IMMUTABLE (unaccent es STABLE porque depende del diccionario), y eso
+-- no se paga solo para este tamaño. Cuando esto se lleve a `empresas_prospectos`
+-- o `sat69b`, que sí son grandes, ahí sí hará falta el wrapper + índice GIN con
+-- pg_trgm.
+
+CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA extensions;
