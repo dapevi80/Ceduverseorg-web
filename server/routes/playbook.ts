@@ -5,8 +5,9 @@ import { db } from "../db";
 import { coursePlaybooks } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { buildPlaybook } from "../playbook-generator";
-import { renderPlaybookPdf } from "../playbook-pdf";
 import { shouldRetryFallbackPlaybook } from "../lib/playbook-retry";
+import { gatherCuaderno } from "../cuaderno/gather";
+import { renderCuadernoPdf } from "../cuaderno/render";
 
 // El detector de riesgos (server/routes/riesgos.ts) reemplaza la actividad de
 // campo de este archivo (spec docs/superpowers/specs/2026-07-18-detector-riesgos-design.md,
@@ -82,20 +83,33 @@ export function registerPlaybookRoutes(app: Express) {
   // para quien lo dispara. El navegador manda la cookie de sesión en
   // window.open (mismo origen), así que un alumno logueado sigue
   // descargando el PDF sin fricción.
+  //
+  // El Cuaderno de estudio (server/cuaderno/) reemplaza al playbook resumen
+  // como PDF descargable (spec docs/superpowers/specs/2026-07-18-cuaderno-estudio-design.md,
+  // plan Task 9): trae el curso completo, módulo por módulo, y el
+  // `lectureHtml` de CADA módulo se resuelve por alumno (personalizado si el
+  // Tutor IA ya lo generó para este usuario, base con aviso si no) — es la
+  // **edición personal** de quien pide la descarga, nunca de un userId
+  // arbitrario. `req.supabaseUserId` (puesto por requireAuth) es la única
+  // fuente del alumno; jamás se toma de query/params.
   app.get("/api/playbook/:slug/export.pdf", requireAuth, async (req, res, next) => {
     try {
       const slug = String(req.params.slug);
       const course = await storage.getStudioCourse(slug);
       if (!course) return res.status(404).json({ message: "Curso no encontrado" });
-      const playbook = await getOrGeneratePlaybook(slug);
-      if (!playbook) return res.status(503).json({ message: "No se pudo generar el playbook" });
 
-      const pdf = await renderPlaybookPdf(
-        { content: playbook.content as any, exercises: playbook.exercises as any, references: playbook.references as any, source: playbook.source as any },
-        { slug: course.slug, title: course.title, icon: course.icon },
-      );
+      const userId = req.supabaseUserId!;
+      const datos = await gatherCuaderno(userId, slug);
+      const pdf = await renderCuadernoPdf(datos);
+      // Nunca se manda una descarga vacía o a medias como si fuera éxito
+      // ([[feedback_no_silent_degradation]]): un PDF real siempre empieza
+      // con la cabecera `%PDF`.
+      if (!pdf || pdf.length === 0 || pdf.subarray(0, 4).toString("latin1") !== "%PDF") {
+        throw new Error("Cuaderno: el PDF generado salió vacío o corrupto");
+      }
+
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="playbook-${slug}.pdf"`);
+      res.setHeader("Content-Disposition", `attachment; filename="cuaderno-${slug}.pdf"`);
       res.send(pdf);
     } catch (err) { next(err); }
   });

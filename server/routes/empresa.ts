@@ -105,6 +105,43 @@ export async function getEmpresaTeam(userId: string) {
   return team[0] || null;
 }
 
+/**
+ * Núcleo compartido de creación de invitación: lo usan tanto la carga masiva
+ * por Excel (/invitations/upload) como la invitación individual
+ * (/invitations, más abajo). Un solo lugar que inserta el registro en
+ * employee_invitations y dispara el correo, para que los dos caminos generen
+ * exactamente el mismo tipo de invitación (mismo token, misma plantilla de
+ * correo, mismo flujo de aceptación). No dupliques este bloque en otro
+ * endpoint — dos caminos de invitación que divergen es como un token deja de
+ * corresponder con la plantilla del correo sin que nadie lo note.
+ */
+async function createAndSendEmployeeInvitation(
+  team: { id: string; name: string },
+  data: { email: string; nombre: string; apellido?: string | null; puesto?: string | null; departamento?: string | null },
+  referralCode: string | null,
+  baseUrl: string,
+) {
+  const token = crypto.randomBytes(24).toString("hex");
+  const [invitation] = await db.insert(employeeInvitations).values({
+    teamId: team.id,
+    email: data.email,
+    nombre: data.nombre,
+    apellido: data.apellido || null,
+    puesto: data.puesto || null,
+    departamento: data.departamento || null,
+    token,
+    referralCode: referralCode || null,
+    status: "pending",
+  }).returning();
+
+  const inviteUrl = `${baseUrl}/auth?ref=${referralCode || ""}&invite=${token}`;
+  sendEmployeeInvitationEmail(data.email, data.nombre, team.name, inviteUrl).catch((err) =>
+    console.error(`[invite] Failed to send email to ${data.email}:`, err.message)
+  );
+
+  return invitation;
+}
+
 export function registerEmpresaRoutes(app: Express) {
   app.get("/api/empresa/invoices", requireAuth, async (req, res, next) => {
     try {
@@ -261,31 +298,112 @@ export function registerEmpresaRoutes(app: Express) {
           continue;
         }
 
-        const token = crypto.randomBytes(24).toString("hex");
-        await db.insert(employeeInvitations).values({
-          teamId: team.id,
-          email,
-          nombre,
-          apellido: apellido || null,
-          puesto: puesto || null,
-          departamento: depto || null,
-          token,
-          referralCode: referralCode || null,
-          status: "pending",
-        });
+        await createAndSendEmployeeInvitation(
+          team,
+          { email, nombre, apellido, puesto, departamento: depto },
+          referralCode,
+          baseUrl,
+        );
 
         existingEmails.add(email);
-
-        const inviteUrl = `${baseUrl}/auth?ref=${referralCode || ""}&invite=${token}`;
-        sendEmployeeInvitationEmail(email, nombre, team.name, inviteUrl).catch(err =>
-          console.error(`[invite] Failed to send email to ${email}:`, err.message)
-        );
 
         results.push({ row: i + 1, nombre, email, status: "ok", reason: "Invitación enviada" });
         successCount++;
       }
 
       res.json({ total: dataRows.length, success: successCount, errors: dataRows.length - successCount, results });
+    } catch (err) { next(err); }
+  });
+
+  /**
+   * Invitación individual — la ruta que faltaba. Antes, la única forma de
+   * invitar a alguien nuevo era subir un Excel con /invitations/upload; para
+   * una sola persona no existía nada, y el botón "Invitar" del panel Mi
+   * Organización llamaba a POST /api/teams/:id/invite, que en realidad NO
+   * invita: busca el correo en `users` y responde 404 "debe registrarse
+   * primero" si no existe. Ese endpoint sirve para agregar a alguien que YA
+   * tiene cuenta; nunca fue una invitación real (sin token, sin correo, sin
+   * flujo de aceptación).
+   *
+   * Reusa createAndSendEmployeeInvitation (arriba) — el mismo núcleo que usa
+   * la carga masiva — para que el registro creado y el correo enviado sean
+   * idénticos a los de una fila del Excel.
+   */
+  app.post("/api/empresa/invitations", requireAuth, async (req, res, next) => {
+    try {
+      const userId = req.supabaseUserId!;
+      const team = await getEmpresaTeam(userId);
+      if (!team) return res.status(403).json({ message: "No tienes una organización" });
+
+      const email = String(req.body?.email || "").trim().toLowerCase();
+      const nombre = String(req.body?.nombre || "").trim();
+      const apellido = req.body?.apellido ? String(req.body.apellido).trim() : null;
+      const puesto = req.body?.puesto ? String(req.body.puesto).trim() : null;
+      const departamento = req.body?.departamento ? String(req.body.departamento).trim() : null;
+
+      if (!email || !email.includes("@")) {
+        return res.status(400).json({ message: "Escribe un correo electrónico válido" });
+      }
+      if (!nombre) {
+        return res.status(400).json({ message: "El nombre es requerido" });
+      }
+
+      // Si el correo ya tiene cuenta en Ceduverse (con la nueva regla, toda
+      // cuenta ya es socio de la cooperativa), no tiene caso mandarle un
+      // token de invitación/registro: se le agrega directo al equipo, igual
+      // que hacía el viejo POST /api/teams/:id/invite. Así el admin nunca se
+      // topa con un callejón sin salida por "usuario ya registrado".
+      const [existingUser] = await db.select().from(users).where(eq(users.email, email));
+      if (existingUser) {
+        const [existingMembership] = await db.select().from(teamUsers)
+          .where(and(eq(teamUsers.teamId, team.id), eq(teamUsers.userId, existingUser.id)));
+
+        if (existingMembership) {
+          return res.status(409).json({ message: "Esta persona ya es miembro de tu organización" });
+        }
+
+        const [member] = await db.insert(teamUsers).values({
+          teamId: team.id,
+          userId: existingUser.id,
+          role: "member",
+        }).returning();
+
+        return res.status(201).json({
+          message: "Esta persona ya tenía una cuenta en Ceduverse — se agregó directamente a tu organización",
+          addedExistingUser: true,
+          member,
+        });
+      }
+
+      const [existingInvitation] = await db.select().from(employeeInvitations)
+        .where(and(
+          eq(employeeInvitations.teamId, team.id),
+          eq(employeeInvitations.email, email),
+          eq(employeeInvitations.status, "pending"),
+        ));
+
+      if (existingInvitation) {
+        return res.status(409).json({
+          message: "Ya existe una invitación pendiente para este correo — puedes reenviarla",
+          invitationId: existingInvitation.id,
+          canResend: true,
+        });
+      }
+
+      const referralCode = (await db.select({ code: referralCodes.code })
+        .from(referralCodes)
+        .where(eq(referralCodes.ownerId, team.partnerId || userId))
+        .limit(1))[0]?.code || null;
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const invitation = await createAndSendEmployeeInvitation(
+        team,
+        { email, nombre, apellido, puesto, departamento },
+        referralCode,
+        baseUrl,
+      );
+
+      res.status(201).json({ message: "Invitación enviada", invitation });
     } catch (err) { next(err); }
   });
 

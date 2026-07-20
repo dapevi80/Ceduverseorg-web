@@ -1480,11 +1480,35 @@ type TeamProgressItem = {
   objectivesCompleted: number;
 };
 
+/**
+ * apiRequest lanza `Error(`${status}: ${body}`)` con el body crudo de la
+ * respuesta (ver client/src/lib/queryClient.ts). Nuestras rutas siempre
+ * responden JSON con { message }, así que aquí lo extraemos para mostrar el
+ * mensaje real del servidor en el toast en vez de "404: {"message":"..."}"
+ * tal cual.
+ */
+function extractServerMessage(err: unknown): string {
+  if (err instanceof Error) {
+    const raw = err.message;
+    const idx = raw.indexOf(": ");
+    const body = idx >= 0 ? raw.slice(idx + 2) : raw;
+    try {
+      const parsed = JSON.parse(body);
+      if (parsed && typeof parsed.message === "string") return parsed.message;
+    } catch {
+      // body no era JSON — usamos el mensaje crudo abajo
+    }
+    return raw;
+  }
+  return "Ocurrió un error inesperado";
+}
+
 function OrgTab({ userTeams }: { userTeams: TeamInfo[] }) {
   const { toast } = useToast();
   const adminTeams = userTeams.filter(t => t.role === "admin");
   const [selectedTeam, setSelectedTeam] = useState(adminTeams[0]?.team?.id || "");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteNombre, setInviteNombre] = useState("");
 
   const { data: objectives = [], isLoading: objLoading } = useQuery<OrgObjectiveItem[]>({
     queryKey: ["/api/teams", selectedTeam, "objectives"],
@@ -1498,16 +1522,18 @@ function OrgTab({ userTeams }: { userTeams: TeamInfo[] }) {
 
   const inviteMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", `/api/teams/${selectedTeam}/invite`, { email: inviteEmail });
+      const res = await apiRequest("POST", "/api/empresa/invitations", { email: inviteEmail, nombre: inviteNombre });
       return res.json();
     },
-    onSuccess: () => {
-      toast({ title: "Miembro invitado" });
+    onSuccess: (data: { message?: string }) => {
+      toast({ title: data?.message || "Invitación enviada" });
       setInviteEmail("");
+      setInviteNombre("");
       queryClient.invalidateQueries({ queryKey: ["/api/teams", selectedTeam, "progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/empresa/invitations"] });
     },
     onError: (err: any) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "No se pudo invitar", description: extractServerMessage(err), variant: "destructive" });
     },
   });
 
@@ -1636,23 +1662,32 @@ function OrgTab({ userTeams }: { userTeams: TeamInfo[] }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex gap-2 mb-4">
-              <Input
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="Email para invitar..."
-                className="flex-1 h-9"
-                data-testid="input-invite-email"
-              />
-              <Button
-                size="sm"
-                className="bg-cedu-violet hover:bg-cedu-violet/90"
-                onClick={() => inviteMutation.mutate()}
-                disabled={!inviteEmail || inviteMutation.isPending}
-                data-testid="button-invite-member"
-              >
-                {inviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
-              </Button>
+            <div className="flex flex-col gap-2 mb-4">
+              <div className="flex gap-2">
+                <Input
+                  value={inviteNombre}
+                  onChange={(e) => setInviteNombre(e.target.value)}
+                  placeholder="Nombre..."
+                  className="flex-1 h-9"
+                  data-testid="input-invite-nombre"
+                />
+                <Input
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="Email para invitar..."
+                  className="flex-1 h-9"
+                  data-testid="input-invite-email"
+                />
+                <Button
+                  size="sm"
+                  className="bg-cedu-violet hover:bg-cedu-violet/90"
+                  onClick={() => inviteMutation.mutate()}
+                  disabled={!inviteEmail || !inviteNombre || inviteMutation.isPending}
+                  data-testid="button-invite-member"
+                >
+                  {inviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
+                </Button>
+              </div>
             </div>
 
             {progressLoading ? (

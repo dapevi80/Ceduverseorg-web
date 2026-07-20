@@ -8,6 +8,16 @@
  * capilar con barra de acento, y numerales fantasma — para que el cuaderno
  * impreso se vea del mismo sistema visual que el producto.
  *
+ * Pase de diseño 2026-07-19 (revisión del dueño: "el margen de notas y los
+ * renglones están bien; la marca y lo visual no"): se agregan `circleOutline`
+ * y `triangleOutline` (mismo trato de `hexOutline` — contorno delgado, sin
+ * relleno) y `dashedTrajectory` (variante de `dashedConnector` con una leve
+ * curva, para el trazo "suelto" a mano). El propio dueño pidió el vocabulario:
+ * "líneas, triángulos, círculos, líneas punteadas, como si figuraran jugadas
+ * de fútbol americano con trayectorias, yardaje — sin abusar". La
+ * composición por página (qué figura, dónde, con qué rotación) vive en
+ * `render.ts`, que es quien decide "sin abusar"; aquí sólo están las piezas.
+ *
  * Convenciones reusadas de `server/kit-pdf.ts`:
  * - Puntas de flecha: `lineTo` + `closePath().fill()` (ver `drawFlow()`).
  * - Bandas de tinte: `fillOpacity()` antes de `fill()`, restaurando después.
@@ -133,6 +143,124 @@ export function dashedConnector(
     .lineTo(baseX + px * HEAD_WIDTH, baseY + py * HEAD_WIDTH)
     .lineTo(baseX - px * HEAD_WIDTH, baseY - py * HEAD_WIDTH)
     .closePath()
+    .fill(color);
+  doc.restore();
+}
+
+/**
+ * Círculo de contorno (ornamento de página): mismo trato que `hexOutline` —
+ * trazo delgado, sin relleno — pero circular. `opacity` es parametrizable
+ * porque este primitivo también se usa para la ornamentación de márgenes
+ * (§2 del pase de diseño: "sin abusar" — ahí se usa mucho más tenue que en
+ * la portada).
+ */
+export function circleOutline(
+  doc: PDFKit.PDFDocument,
+  cx: number,
+  cy: number,
+  r: number,
+  color: string,
+  opacity: number = 0.3
+): void {
+  doc.save();
+  doc.circle(cx, cy, r).lineWidth(1.2).strokeColor(color).strokeOpacity(opacity).stroke();
+  doc.restore();
+}
+
+/**
+ * Triángulo de contorno (ornamento de página), mismo lenguaje que
+ * `hexOutline`/`circleOutline`: tres vértices equiláteros centrados en
+ * `(cx, cy)` con radio `size`, rotados `rotationDeg` grados para que la
+ * misma figura se vea distinta según la página que la use.
+ */
+export function triangleOutline(
+  doc: PDFKit.PDFDocument,
+  cx: number,
+  cy: number,
+  size: number,
+  rotationDeg: number,
+  color: string,
+  opacity: number = 0.3
+): void {
+  const ANGLES_DEG = [-90, 30, 150];
+  const points = ANGLES_DEG.map((deg) => {
+    const rad = ((deg + rotationDeg) * Math.PI) / 180;
+    return [cx + size * Math.cos(rad), cy + size * Math.sin(rad)] as const;
+  });
+
+  doc.save();
+  doc.moveTo(points[0][0], points[0][1]);
+  doc.lineTo(points[1][0], points[1][1]);
+  doc.lineTo(points[2][0], points[2][1]);
+  doc.closePath();
+  doc.lineWidth(1.2).strokeColor(color).strokeOpacity(opacity).stroke();
+  doc.restore();
+}
+
+/**
+ * Trayectoria punteada "suelta": variante de `dashedConnector` pensada para
+ * el trazo a mano — línea con una leve curva (`bend`, desplazamiento
+ * perpendicular del punto de control) en vez de recta rígida, guionado y
+ * punta de flecha chica al final. Se usa tanto para la ornamentación de
+ * página (líneas/yardaje estilo jugada de fútbol americano, opacidad baja)
+ * como para los conectores del mapa conceptual (§3 del pase de diseño:
+ * "conectores dibujados como trayectorias sueltas en vez de líneas
+ * rígidas"), con más opacidad ahí porque sí necesitan leerse.
+ */
+export function dashedTrajectory(
+  doc: PDFKit.PDFDocument,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  color: string,
+  opts: { bend?: number; opacity?: number; lineWidth?: number } = {}
+): void {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  if (len < 1) return;
+
+  const bend = opts.bend ?? 0;
+  const opacity = opts.opacity ?? 0.5;
+  const strokeW = opts.lineWidth ?? 0.9;
+
+  const ux = dx / len;
+  const uy = dy / len;
+  const px = -uy;
+  const py = ux;
+  const mx = (x1 + x2) / 2 + px * bend;
+  const my = (y1 + y2) / 2 + py * bend;
+
+  const HEAD_LEN = 6;
+  const HEAD_WIDTH = 3;
+  // Tangente aproximada en el destino: dirección del punto de control hacia
+  // el punto final — suficiente para orientar una punta de flecha chica sin
+  // resolver la derivada exacta de la cuadrática.
+  const tdx = x2 - mx;
+  const tdy = y2 - my;
+  const tlen = Math.hypot(tdx, tdy) || 1;
+  const tux = tdx / tlen;
+  const tuy = tdy / tlen;
+  const baseX = x2 - tux * HEAD_LEN;
+  const baseY = y2 - tuy * HEAD_LEN;
+  const tpx = -tuy;
+  const tpy = tux;
+
+  doc.save();
+  doc.moveTo(x1, y1).quadraticCurveTo(mx, my, baseX, baseY)
+    .dash(5, { space: 4 })
+    .strokeColor(color)
+    .strokeOpacity(opacity)
+    .lineWidth(strokeW)
+    .stroke();
+  doc.undash();
+
+  doc.moveTo(x2, y2)
+    .lineTo(baseX + tpx * HEAD_WIDTH, baseY + tpy * HEAD_WIDTH)
+    .lineTo(baseX - tpx * HEAD_WIDTH, baseY - tpy * HEAD_WIDTH)
+    .closePath()
+    .fillOpacity(opacity)
     .fill(color);
   doc.restore();
 }
