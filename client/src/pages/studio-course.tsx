@@ -101,6 +101,7 @@ interface StudioCourse {
   icon: string | null;
   color: string | null;
   source: string | null;
+  instructor: string | null;
 }
 
 function getYouTubeEmbedUrl(url: string): string {
@@ -1976,7 +1977,10 @@ export default function StudioCoursePage() {
                 <h1 className="font-semibold text-cedu-ink dark:text-white text-sm leading-none truncate" data-testid="text-course-title">
                   {course.title}
                 </h1>
-                <p className="text-[10px] text-cedu-ink-muted dark:text-gray-500 truncate">{course.category} · {course.durationMinutes || 60} min</p>
+                <p className="text-[10px] text-cedu-ink-muted dark:text-gray-500 truncate">
+                  {course.category} · {course.durationMinutes || 60} min
+                  {course.instructor ? ` · ${course.instructor}` : ""}
+                </p>
               </div>
             </div>
           </div>

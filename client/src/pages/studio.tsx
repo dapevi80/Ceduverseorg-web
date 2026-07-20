@@ -21,6 +21,7 @@ import {
   BookOpen,
   Brain,
   Filter,
+  User,
 } from "lucide-react";
 
 interface StudioCourse {
@@ -37,6 +38,9 @@ interface StudioCourse {
   icon: string | null;
   color: string | null;
   source: string | null;
+  /** Quien imparte el curso. Va impreso en el cuaderno y, cuando el curso
+   *  otorga DC-3, es quien responde por la constancia — por eso se muestra. */
+  instructor: string | null;
 }
 
 interface StudioResponse {
@@ -121,6 +125,14 @@ function CourseCard({ course, profileComplete }: { course: StudioCourse; profile
           <p className="text-xs text-cedu-ink-muted line-clamp-2 mb-3 flex-1">
             {course.description}
           </p>
+          {course.instructor && (
+            <div className="flex items-center gap-1.5 text-cedu-ink-muted mb-2">
+              <User size={12} className="shrink-0" />
+              <span className="text-[11px] truncate" data-testid={`text-studio-instructor-${course.slug}`}>
+                {course.instructor}
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 text-cedu-ink-muted">
               <Clock size={12} />
