@@ -1,4 +1,4 @@
-import { eq, and, ilike, or, asc, desc, sql } from "drizzle-orm";
+import { eq, and, or, asc, desc, sql } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -528,9 +528,15 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(studioCourses.category, filters.category));
     }
     if (filters?.search) {
+      // Los dos lados pasan por unaccent: nadie escribe acentos en el buscador
+      // de un celular y 32 de los 59 cursos los llevan en el título, así que un
+      // ILIKE crudo dejaba "guia", "ergonomia" o "proteccion" en cero
+      // resultados. `description` puede ser NULL y unaccent(NULL) es NULL, que
+      // no compara — de ahí el coalesce.
+      const term = `%${filters.search}%`;
       conditions.push(or(
-        ilike(studioCourses.title, `%${filters.search}%`),
-        ilike(studioCourses.description, `%${filters.search}%`)
+        sql`extensions.unaccent(${studioCourses.title}) ILIKE extensions.unaccent(${term})`,
+        sql`extensions.unaccent(coalesce(${studioCourses.description}, '')) ILIKE extensions.unaccent(${term})`
       ));
     }
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
