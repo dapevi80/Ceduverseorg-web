@@ -17,9 +17,18 @@
  * `server/data/procadist-part2.ts`). Va después de la portada — no en ella,
  * para no deshacer su tratamiento de marca — y antes de "Cómo usar", porque
  * es lo que se fotocopia para el archivo. `drawFichaSesion()` sólo imprime
- * datos que ya existen en `DatosCuaderno` (curso, duración, instructor,
- * DC-3, alumno); todo lo demás —empresa, RFC, fecha, lugar, número de
- * acta— son renglones en blanco para llenar a mano, nunca inventados.
+ * datos que ya existen en `DatosCuaderno` (curso, instructor, DC-3, alumno);
+ * todo lo demás —empresa, RFC, fecha, lugar, número de acta— son renglones
+ * en blanco para llenar a mano, nunca inventados.
+ *
+ * Deliberadamente NO imprime la duración del curso (decisión del dueño
+ * 2026-07-19). `studio_courses.duration_minutes` vale 60 para todos los
+ * cursos, pero los mismos programas están registrados ante la STPS de 4 a 20
+ * horas. Como la Ficha es evidencia de expediente, imprimir "1 h" contra un
+ * programa registrado de 9 h es una contradicción visible en una revisión.
+ * Hasta que Daniel fije el criterio —modificar el programa registrado, o
+ * tratar el curso en línea como parte de uno más largo— la Ficha calla el
+ * dato en vez de arriesgar el número equivocado.
  *
  * Deliberadamente NO imprime, ni deja como renglón en blanco, ningún número
  * de registro/folio/licencia STPS del agente capacitador externo (corrección
@@ -395,21 +404,6 @@ function drawCover(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, datos: Dat
 
 // ---- Ficha de la sesión: evidencia para el expediente de la CMCAP --------
 
-/**
- * Convierte `studio_courses.duration_minutes` a horas — la unidad que pide
- * la Ficha, nunca minutos crudos. `null`/`0`/negativo (dato ausente o
- * corrupto) devuelve `null`: el llamador omite el renglón antes que imprimir
- * una duración inventada.
- */
-function formatHoras(minutes: number | null | undefined): string | null {
-  if (!minutes || minutes <= 0) return null;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m} min`;
-  if (m === 0) return `${h} h`;
-  return `${h} h ${m} min`;
-}
-
 const FICHA_LABEL_SIZE = 7.5;
 const FICHA_VALUE_SIZE = 11;
 
@@ -533,7 +527,6 @@ function drawFichaSesion(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, dato
   const colW = (innerW - gapCol) / 2;
   const col2X = ML + pad + colW + gapCol;
 
-  const duracion = formatHoras(datos.course.durationMinutes) ?? "No registrada en el sistema";
   const instructor = datos.course.instructor || "Ceduverse — Tutor IA";
   const modalidad = "En línea, autogestivo (Tutor IA de Ceduverse)";
   const dc3Texto = datos.course.dc3Available ? "Sí" : "No";
@@ -541,13 +534,10 @@ function drawFichaSesion(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, dato
   const rowGap = 10;
   const row1H = systemFieldHeight(doc, fonts, datos.course.title, innerW);
   const row2H = Math.max(
-    systemFieldHeight(doc, fonts, duracion, colW),
-    systemFieldHeight(doc, fonts, instructor, colW)
-  );
-  const row3H = Math.max(
-    systemFieldHeight(doc, fonts, modalidad, colW),
+    systemFieldHeight(doc, fonts, instructor, colW),
     systemFieldHeight(doc, fonts, dc3Texto, colW)
   );
+  const row3H = systemFieldHeight(doc, fonts, modalidad, innerW);
   const row4H = systemFieldHeight(doc, fonts, datos.alumno.nombre, innerW);
   const cardH = pad * 2 + row1H + rowGap + row2H + rowGap + row3H + rowGap + row4H;
 
@@ -558,11 +548,10 @@ function drawFichaSesion(doc: PDFKit.PDFDocument, fonts: CuadernoFontNames, dato
   let ry = cardY + pad;
   systemField(doc, fonts, "Curso", datos.course.title, ML + pad, ry, innerW);
   ry += row1H + rowGap;
-  systemField(doc, fonts, "Duración", duracion, ML + pad, ry, colW);
-  systemField(doc, fonts, "Instructor", instructor, col2X, ry, colW);
-  ry += row2H + rowGap;
-  systemField(doc, fonts, "Modalidad", modalidad, ML + pad, ry, colW);
+  systemField(doc, fonts, "Instructor", instructor, ML + pad, ry, colW);
   systemField(doc, fonts, "¿Otorga DC-3?", dc3Texto, col2X, ry, colW);
+  ry += row2H + rowGap;
+  systemField(doc, fonts, "Modalidad", modalidad, ML + pad, ry, innerW);
   ry += row3H + rowGap;
   systemField(doc, fonts, "Alumno", datos.alumno.nombre, ML + pad, ry, innerW);
 
