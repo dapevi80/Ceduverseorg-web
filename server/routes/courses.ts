@@ -995,45 +995,47 @@ export function registerCourseRoutes(app: Express) {
   app.get("/api/studio/courses", optionalAuth, async (req, res, next) => {
     try {
       const { category, search, page, limit } = req.query;
+      const {
+        shouldExcludeOnboarding,
+        allowedOnboardingSubcategories,
+        filterOnboardingByRole,
+      } = await import("../lib/onboarding-visibility");
+
+      // La vista por defecto del Tutor IA ya pinta Onboarding en su propia
+      // franja "Aprende Ceduverse" (consulta aparte con category=Onboarding).
+      // Si la reja general los trajera además, cada curso saldría dos veces.
+      // Se excluye en el SQL, no en el cliente, para que `total` y la
+      // paginación cuadren.
+      const excludeCategory = shouldExcludeOnboarding(
+        category as string | undefined,
+        search as string | undefined,
+      ) ? "Onboarding" : undefined;
+
       const result = await storage.getStudioCourses({
         category: category as string | undefined,
         search: search as string | undefined,
         page: page ? Number(page) : undefined,
         limit: limit ? Number(limit) : undefined,
+        excludeCategory,
       });
 
-      if (category === "Onboarding" && result.courses.length > 0) {
-        let allowedSubcategories: string[] = ["Para Todos"];
+      // El gateo por rol aplica a CUALQUIER respuesta que traiga Onboarding: la
+      // franja y también la búsqueda, que sí los incluye para que "bienvenido"
+      // siga siendo encontrable.
+      if (result.courses.some(c => c.category === "Onboarding")) {
         const userId = req.supabaseUserId;
-
+        let role: string | null = null;
+        let isTeamAdmin = false;
         if (userId) {
           const account = await storage.getAccount(userId);
-          const role = getEffectiveRole(req, account);
-
-          if (role === "admin" || role === "superadmin") {
-            allowedSubcategories = ["Para Todos", "Empresas", "Socios", "Comercial"];
-          } else if (role === "socio_comercial" || role === "partner" || role === "director") {
-            allowedSubcategories = ["Para Todos", "Socios", "Comercial"];
-          } else if (role === "empresa" || role === "empresa_rh") {
-            allowedSubcategories = ["Para Todos", "Empresas", "Comercial"];
-          } else {
-            // Fallback preexistente: quien administra un equipo ve los cursos de
-            // "Empresas" aunque su user_role no sea empresa (el frontend cuenta
-            // con esto, ver getOnboardingSlugsForUser(role, isTeamAdmin)).
-            // NO recibe "Comercial": esa subcategoría lleva la capa legal-fiscal
-            // y se reserva a roles comerciales/empresa explícitos.
-            const userTeams = await storage.getUserTeams(userId);
-            const isTeamAdmin = userTeams.some(t => t.role === "admin");
-            if (isTeamAdmin) {
-              allowedSubcategories = ["Para Todos", "Empresas"];
-            }
-          }
+          role = getEffectiveRole(req, account);
+          const userTeams = await storage.getUserTeams(userId);
+          isTeamAdmin = userTeams.some(t => t.role === "admin");
         }
-
-        const filtered = result.courses.filter(c =>
-          c.subcategory && allowedSubcategories.includes(c.subcategory)
-        );
-        return res.json({ courses: filtered, total: filtered.length });
+        const allowed = allowedOnboardingSubcategories(role, isTeamAdmin);
+        const filtered = filterOnboardingByRole(result.courses, allowed);
+        const removed = result.courses.length - filtered.length;
+        return res.json({ courses: filtered, total: result.total - removed });
       }
 
       res.json(result);
