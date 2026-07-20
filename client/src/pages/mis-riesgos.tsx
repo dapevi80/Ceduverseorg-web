@@ -61,10 +61,10 @@ const STATUS_LABELS: Record<RiskStatus, string> = {
 };
 
 const STATUS_BADGE_CLASS: Record<RiskStatus, string> = {
-  nuevo: "bg-amber-100 text-amber-800 border-amber-200",
-  en_revision: "bg-blue-100 text-blue-800 border-blue-200",
-  atendido: "bg-green-100 text-green-800 border-green-200",
-  descartado: "bg-gray-100 text-gray-700 border-gray-200",
+  nuevo: "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 border-amber-200 dark:border-amber-700/50",
+  en_revision: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border-blue-200 dark:border-blue-700/50",
+  atendido: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-200 dark:border-green-700/50",
+  descartado: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700",
 };
 
 // apiRequest (client/src/lib/queryClient.ts) lanza `Error(`${status}: ${bodyText}`)`
@@ -124,18 +124,18 @@ export default function MisRiesgosPage() {
   // Nunca decidir con `if (!user)` a secas: `user` es null mientras carga.
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-cedu-cream flex items-center justify-center">
+      <div className="min-h-screen bg-cedu-cream dark:bg-gray-950 flex items-center justify-center">
         <Loader2 className="animate-spin text-cedu-blue" size={32} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-cedu-cream" data-testid="page-mis-riesgos">
+    <div className="min-h-screen bg-cedu-cream dark:bg-gray-950" data-testid="page-mis-riesgos">
       <div className="max-w-2xl mx-auto px-6 py-10">
         <button
           onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-1 text-sm text-cedu-ink-muted hover:text-cedu-blue mb-6"
+          className="flex items-center gap-1 text-sm text-cedu-ink-muted dark:text-gray-400 hover:text-cedu-blue mb-6"
           data-testid="button-back"
         >
           <ArrowLeft size={16} /> Volver a mi panel
@@ -144,12 +144,12 @@ export default function MisRiesgosPage() {
         <p className="text-xs font-bold text-cedu-orange uppercase tracking-wide mb-1">
           Detector de riesgos
         </p>
-        <h1 className="font-serif text-2xl text-cedu-ink mb-6" data-testid="text-page-title">
+        <h1 className="font-serif text-2xl text-cedu-ink dark:text-white mb-6" data-testid="text-page-title">
           Mis hallazgos
         </h1>
 
         {query.isLoading && (
-          <div className="py-16 text-center text-cedu-ink-muted" data-testid="view-mis-riesgos-loading">
+          <div className="py-16 text-center text-cedu-ink-muted dark:text-gray-400" data-testid="view-mis-riesgos-loading">
             <Loader2 className="animate-spin mx-auto mb-3" size={28} />
             Cargando tus hallazgos…
           </div>
@@ -160,8 +160,8 @@ export default function MisRiesgosPage() {
         {query.isError && (
           <div className="py-16 text-center" data-testid="view-mis-riesgos-error">
             <AlertTriangle size={36} className="mx-auto text-red-500 mb-3" />
-            <h3 className="font-serif text-lg text-cedu-ink mb-1">No se pudieron cargar tus hallazgos</h3>
-            <p className="text-sm text-cedu-ink-muted">{misRiesgosErrorMessage(query.error)}</p>
+            <h3 className="font-serif text-lg text-cedu-ink dark:text-white mb-1">No se pudieron cargar tus hallazgos</h3>
+            <p className="text-sm text-cedu-ink-muted dark:text-gray-400">{misRiesgosErrorMessage(query.error)}</p>
           </div>
         )}
 
@@ -187,9 +187,9 @@ export default function MisRiesgosPage() {
 
             {query.data.hallazgos.length === 0 ? (
               <div className="py-16 text-center" data-testid="view-mis-riesgos-empty">
-                <ShieldAlert size={36} className="mx-auto text-cedu-ink-muted/30 mb-3" />
-                <h3 className="font-serif text-lg text-cedu-ink mb-1">Todavía no has reportado hallazgos</h3>
-                <p className="text-sm text-cedu-ink-muted">
+                <ShieldAlert size={36} className="mx-auto text-cedu-ink-muted/30 dark:text-gray-400/30 mb-3" />
+                <h3 className="font-serif text-lg text-cedu-ink dark:text-white mb-1">Todavía no has reportado hallazgos</h3>
+                <p className="text-sm text-cedu-ink-muted dark:text-gray-400">
                   Cuando reportes un riesgo real en tu trabajo, aquí verás su estado y, si tu
                   empresa lo corrige, la foto de la corrección.
                 </p>
@@ -217,24 +217,24 @@ function FindingRow({ finding, index }: { finding: MyFinding; index: number }) {
         <Badge className={`border ${STATUS_BADGE_CLASS[finding.status]}`} data-testid={`badge-status-${index}`}>
           {STATUS_LABELS[finding.status]}
         </Badge>
-        <span className="text-xs text-cedu-ink-muted">{formatDate(finding.createdAt)}</span>
+        <span className="text-xs text-cedu-ink-muted dark:text-gray-400">{formatDate(finding.createdAt)}</span>
       </div>
 
-      <p className="text-sm text-cedu-ink mb-1" data-testid={`text-description-${index}`}>
+      <p className="text-sm text-cedu-ink dark:text-white mb-1" data-testid={`text-description-${index}`}>
         {finding.description}
       </p>
 
-      <p className="text-xs text-cedu-ink-muted mb-1" data-testid={`text-norm-${index}`}>
+      <p className="text-xs text-cedu-ink-muted dark:text-gray-400 mb-1" data-testid={`text-norm-${index}`}>
         {finding.normRef ? (
           <>
-            Norma citada: <span className="font-medium text-cedu-ink">{finding.normRef}</span>
+            Norma citada: <span className="font-medium text-cedu-ink dark:text-white">{finding.normRef}</span>
           </>
         ) : (
           "Sin norma citada"
         )}
       </p>
 
-      <p className="text-xs text-cedu-ink-muted mb-2" data-testid={`text-anonymous-${index}`}>
+      <p className="text-xs text-cedu-ink-muted dark:text-gray-400 mb-2" data-testid={`text-anonymous-${index}`}>
         {finding.anonymous ? "Enviado como anónimo" : "Enviado con tu nombre"}
       </p>
 
@@ -245,12 +245,12 @@ function FindingRow({ finding, index }: { finding: MyFinding; index: number }) {
       )}
 
       {isClosed && (
-        <div className="bg-cedu-ink/[0.03] rounded-lg p-3 space-y-2" data-testid={`view-resolution-${index}`}>
+        <div className="bg-cedu-ink/[0.03] dark:bg-white/[0.06] rounded-lg p-3 space-y-2" data-testid={`view-resolution-${index}`}>
           {finding.resolvedAt && (
-            <p className="text-xs text-cedu-ink-muted">Cerrado el {formatDate(finding.resolvedAt)}</p>
+            <p className="text-xs text-cedu-ink-muted dark:text-gray-400">Cerrado el {formatDate(finding.resolvedAt)}</p>
           )}
           {finding.resolutionNote && (
-            <p className="text-xs text-cedu-ink-soft">{finding.resolutionNote}</p>
+            <p className="text-xs text-cedu-ink-soft dark:text-gray-300">{finding.resolutionNote}</p>
           )}
           {/* La foto de solución solo existe cuando la empresa cerró el
               hallazgo como "atendido" — el proxy autenticado
@@ -266,7 +266,7 @@ function FindingRow({ finding, index }: { finding: MyFinding; index: number }) {
               <img
                 src={solutionPhotoUrl(finding.id)}
                 alt="Foto de la corrección hecha por tu empresa"
-                className="w-full aspect-video object-cover rounded-lg border border-black/[0.06]"
+                className="w-full aspect-video object-cover rounded-lg border border-black/[0.06] dark:border-white/10"
                 data-testid={`img-solution-photo-${index}`}
               />
             </a>

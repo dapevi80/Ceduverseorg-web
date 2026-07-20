@@ -218,7 +218,7 @@ export default function ReportarRiesgoPage() {
   // `user` es null mientras carga, y eso rebotaría a un trabajador con sesión.
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-cedu-cream flex items-center justify-center">
+      <div className="min-h-screen bg-cedu-cream dark:bg-gray-950 flex items-center justify-center">
         <Loader2 className="animate-spin text-cedu-blue" size={32} />
       </div>
     );
@@ -232,11 +232,11 @@ export default function ReportarRiesgoPage() {
     !submitMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-cedu-cream" data-testid="page-reportar-riesgo">
+    <div className="min-h-screen bg-cedu-cream dark:bg-gray-950" data-testid="page-reportar-riesgo">
       <div className="max-w-lg mx-auto px-6 py-10">
         <button
           onClick={() => navigate(backTarget)}
-          className="flex items-center gap-1 text-sm text-cedu-ink-muted hover:text-cedu-blue mb-6"
+          className="flex items-center gap-1 text-sm text-cedu-ink-muted dark:text-gray-400 hover:text-cedu-blue mb-6"
           data-testid="button-back"
         >
           <ArrowLeft size={16} /> {backLabel}
@@ -246,7 +246,7 @@ export default function ReportarRiesgoPage() {
           <p className="text-xs font-bold text-cedu-orange uppercase tracking-wide mb-1">
             Detector de riesgos
           </p>
-          <h1 className="font-serif text-xl text-cedu-ink mb-3" data-testid="text-page-title">
+          <h1 className="font-serif text-xl text-cedu-ink dark:text-white mb-3" data-testid="text-page-title">
             Reporta un riesgo real
           </h1>
 
@@ -254,8 +254,8 @@ export default function ReportarRiesgoPage() {
             <div className="py-4" data-testid="view-report-confirmed">
               <div className="text-center mb-4">
                 <CheckCircle2 size={48} className="mx-auto text-cedu-green mb-3" />
-                <p className="font-semibold text-cedu-ink">¡Hallazgo enviado!</p>
-                <p className="text-sm text-cedu-ink-soft mt-1">
+                <p className="font-semibold text-cedu-ink dark:text-white">¡Hallazgo enviado!</p>
+                <p className="text-sm text-cedu-ink-soft dark:text-gray-300 mt-1">
                   {result.finding.anonymous
                     ? "Se envió sin tu nombre."
                     : "Se envió con tu nombre."}{" "}
@@ -265,11 +265,11 @@ export default function ReportarRiesgoPage() {
 
               {result.normRefRejected && (
                 <div
-                  className="flex gap-2 items-start bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4"
+                  className="flex gap-2 items-start bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 rounded-lg p-3 mb-4"
                   data-testid="banner-norm-rejected"
                 >
-                  <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
-                  <p className="text-sm text-amber-800">
+                  <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-sm text-amber-800 dark:text-amber-300">
                     La norma que elegiste no coincidió con las referencias del curso: el
                     hallazgo se guardó <strong>sin norma asociada</strong>.
                   </p>
@@ -277,8 +277,8 @@ export default function ReportarRiesgoPage() {
               )}
 
               {!result.normRefRejected && result.finding.normRef && (
-                <p className="text-sm text-cedu-ink-soft mb-4" data-testid="text-confirmed-norm">
-                  Norma citada: <span className="font-medium text-cedu-ink">{result.finding.normRef}</span>
+                <p className="text-sm text-cedu-ink-soft dark:text-gray-300 mb-4" data-testid="text-confirmed-norm">
+                  Norma citada: <span className="font-medium text-cedu-ink dark:text-white">{result.finding.normRef}</span>
                 </p>
               )}
 
@@ -313,7 +313,7 @@ export default function ReportarRiesgoPage() {
                     <img
                       src={photoPreview}
                       alt="Foto del riesgo"
-                      className="w-full rounded-lg border border-cedu-ink/10 max-h-64 object-cover"
+                      className="w-full rounded-lg border border-cedu-ink/10 dark:border-white/10 max-h-64 object-cover"
                       data-testid="img-photo-preview"
                     />
                     <Button
@@ -339,7 +339,7 @@ export default function ReportarRiesgoPage() {
 
               {/* Descripción */}
               <div>
-                <Label htmlFor="riesgo-description" className="text-cedu-ink mb-2 block">
+                <Label htmlFor="riesgo-description" className="text-cedu-ink dark:text-white mb-2 block">
                   Describe lo que ves
                 </Label>
                 <Textarea
@@ -372,16 +372,16 @@ export default function ReportarRiesgoPage() {
                 {suggestion && (
                   <div className="mt-3" data-testid="view-norm-suggestion">
                     {suggestion.opciones.length === 0 ? (
-                      <p className="text-sm text-cedu-ink-soft">
+                      <p className="text-sm text-cedu-ink-soft dark:text-gray-300">
                         No hay referencias registradas para este curso, así que el hallazgo se
                         guardará sin norma.
                       </p>
                     ) : (
                       <>
-                        <p className="text-sm text-cedu-ink-soft mb-2">
+                        <p className="text-sm text-cedu-ink-soft dark:text-gray-300 mb-2">
                           {suggestion.normRef ? (
                             <>
-                              La IA sugiere: <span className="font-medium text-cedu-ink">{suggestion.normRef}</span>.
+                              La IA sugiere: <span className="font-medium text-cedu-ink dark:text-white">{suggestion.normRef}</span>.
                               Puedes corregirla eligiendo otra de la lista.
                             </>
                           ) : (
@@ -412,10 +412,10 @@ export default function ReportarRiesgoPage() {
 
               {/* Empresa, solo si hay más de una */}
               {empresasQuery.isLoading && (
-                <p className="text-sm text-cedu-ink-soft">Cargando tus empresas...</p>
+                <p className="text-sm text-cedu-ink-soft dark:text-gray-300">Cargando tus empresas...</p>
               )}
               {empresasQuery.isError && (
-                <p className="text-sm text-red-600" data-testid="text-empresas-error">
+                <p className="text-sm text-red-600 dark:text-red-400" data-testid="text-empresas-error">
                   {empresasQuery.error instanceof Error
                     ? empresasQuery.error.message
                     : "No se pudieron cargar tus empresas"}
@@ -423,7 +423,7 @@ export default function ReportarRiesgoPage() {
               )}
               {needsCompanyChoice && (
                 <div data-testid="view-company-choice">
-                  <Label className="text-cedu-ink mb-2 block">¿A qué empresa reportas este hallazgo?</Label>
+                  <Label className="text-cedu-ink dark:text-white mb-2 block">¿A qué empresa reportas este hallazgo?</Label>
                   {/* Perteneces a más de una empresa (a veces por un empleo
                       anterior cuya membresía nunca se borró). Se pregunta antes
                       de enviar para que nunca reportes, sin darte cuenta, a un
@@ -444,7 +444,7 @@ export default function ReportarRiesgoPage() {
 
               {/* Anonimato: la copia respeta al pie de la letra el límite honesto
                   del spec §3 — no promete más de lo que el sistema puede cumplir. */}
-              <div className="flex items-start gap-3 bg-cedu-ink/5 rounded-lg p-3">
+              <div className="flex items-start gap-3 bg-cedu-ink/5 dark:bg-white/5 rounded-lg p-3">
                 <Switch
                   checked={anonymous}
                   onCheckedChange={setAnonymous}
@@ -452,10 +452,10 @@ export default function ReportarRiesgoPage() {
                   data-testid="switch-anonymous"
                 />
                 <div>
-                  <Label htmlFor="anonymous-toggle" className="text-cedu-ink font-medium">
+                  <Label htmlFor="anonymous-toggle" className="text-cedu-ink dark:text-white font-medium">
                     Enviar como anónimo
                   </Label>
-                  <p className="text-xs text-cedu-ink-soft mt-1" data-testid="text-anonymous-disclaimer">
+                  <p className="text-xs text-cedu-ink-soft dark:text-gray-300 mt-1" data-testid="text-anonymous-disclaimer">
                     La empresa no sabrá quién reportó este hallazgo. Aun así, el anonimato tiene
                     un límite físico: en un taller pequeño, la foto de una máquina específica
                     puede delatar quién la tomó, así que no podemos garantizarte que nadie lo

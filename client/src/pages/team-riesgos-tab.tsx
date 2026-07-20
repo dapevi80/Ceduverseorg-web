@@ -78,10 +78,10 @@ const STATUS_LABELS: Record<RiskStatus, string> = {
 };
 
 const STATUS_BADGE_CLASS: Record<RiskStatus, string> = {
-  nuevo: "bg-amber-100 text-amber-800 border-amber-200",
-  en_revision: "bg-blue-100 text-blue-800 border-blue-200",
-  atendido: "bg-green-100 text-green-800 border-green-200",
-  descartado: "bg-gray-100 text-gray-700 border-gray-200",
+  nuevo: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700/50",
+  en_revision: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/50",
+  atendido: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700/50",
+  descartado: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
 };
 
 // Espejo puro, SOLO para decidir qué botones mostrar, de
@@ -221,7 +221,7 @@ export function TeamRiesgosTab() {
 
   if (isLoading) {
     return (
-      <div className="py-12 text-center text-cedu-ink-muted" data-testid="view-team-riesgos-loading">
+      <div className="py-12 text-center text-cedu-ink-muted dark:text-gray-400" data-testid="view-team-riesgos-loading">
         <Loader2 className="animate-spin mx-auto mb-3" size={28} />
         Cargando hallazgos del equipo…
       </div>
@@ -237,8 +237,8 @@ export function TeamRiesgosTab() {
     return (
       <div className="py-12 text-center" data-testid="view-team-riesgos-error">
         <AlertTriangle size={36} className="mx-auto text-red-500 mb-3" />
-        <h3 className="font-serif text-lg text-cedu-ink mb-1">No se pudieron cargar los hallazgos</h3>
-        <p className="text-sm text-cedu-ink-muted">{riesgosErrorMessage(error)}</p>
+        <h3 className="font-serif text-lg text-cedu-ink dark:text-white mb-1">No se pudieron cargar los hallazgos</h3>
+        <p className="text-sm text-cedu-ink-muted dark:text-gray-400">{riesgosErrorMessage(error)}</p>
       </div>
     );
   }
@@ -248,9 +248,9 @@ export function TeamRiesgosTab() {
   if (hallazgos.length === 0) {
     return (
       <div className="py-12 text-center" data-testid="view-team-riesgos-empty">
-        <ShieldAlert size={36} className="mx-auto text-cedu-ink-muted/30 mb-3" />
-        <h3 className="font-serif text-lg text-cedu-ink mb-1">Sin hallazgos todavía</h3>
-        <p className="text-sm text-cedu-ink-muted">
+        <ShieldAlert size={36} className="mx-auto text-cedu-ink-muted/30 dark:text-gray-600 mb-3" />
+        <h3 className="font-serif text-lg text-cedu-ink dark:text-white mb-1">Sin hallazgos todavía</h3>
+        <p className="text-sm text-cedu-ink-muted dark:text-gray-400">
           Aquí verás los riesgos reales que tu equipo reporte después de sus capacitaciones.
         </p>
       </div>
@@ -276,7 +276,7 @@ export function TeamRiesgosTab() {
   return (
     <div data-testid="view-team-riesgos">
       <div className="flex items-start justify-between gap-3 mb-1">
-        <h3 className="font-serif text-lg text-cedu-ink">Hallazgos del equipo</h3>
+        <h3 className="font-serif text-lg text-cedu-ink dark:text-white">Hallazgos del equipo</h3>
         <Button
           size="sm"
           variant="outline"
@@ -287,14 +287,14 @@ export function TeamRiesgosTab() {
           Historial de cumplimiento (PDF)
         </Button>
       </div>
-      <p className="text-sm text-cedu-ink-muted mb-6">
+      <p className="text-sm text-cedu-ink-muted dark:text-gray-400 mb-6">
         {hallazgos.length} hallazgo{hallazgos.length !== 1 ? "s" : ""} reportado
         {hallazgos.length !== 1 ? "s" : ""} por tu equipo
       </p>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6" data-testid="view-riesgos-filters">
         <div>
-          <Label htmlFor="riesgos-filter-status" className="text-xs text-cedu-ink-muted mb-1 block">
+          <Label htmlFor="riesgos-filter-status" className="text-xs text-cedu-ink-muted dark:text-gray-400 mb-1 block">
             Estado
           </Label>
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as "todos" | RiskStatus)}>
@@ -312,7 +312,7 @@ export function TeamRiesgosTab() {
         </div>
 
         <div className="sm:col-span-2">
-          <Label htmlFor="riesgos-filter-search" className="text-xs text-cedu-ink-muted mb-1 block">
+          <Label htmlFor="riesgos-filter-search" className="text-xs text-cedu-ink-muted dark:text-gray-400 mb-1 block">
             Buscar (descripción o norma)
           </Label>
           <Input
@@ -325,7 +325,7 @@ export function TeamRiesgosTab() {
         </div>
 
         <div className="flex items-end gap-2 pb-1.5">
-          <label className="flex items-center gap-2 text-sm text-cedu-ink-muted cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-cedu-ink-muted dark:text-gray-400 cursor-pointer">
             <input
               type="checkbox"
               checked={onlyWithSolutionPhoto}
@@ -337,7 +337,7 @@ export function TeamRiesgosTab() {
         </div>
 
         <div>
-          <Label htmlFor="riesgos-filter-from" className="text-xs text-cedu-ink-muted mb-1 block">
+          <Label htmlFor="riesgos-filter-from" className="text-xs text-cedu-ink-muted dark:text-gray-400 mb-1 block">
             Desde
           </Label>
           <Input
@@ -349,7 +349,7 @@ export function TeamRiesgosTab() {
           />
         </div>
         <div>
-          <Label htmlFor="riesgos-filter-to" className="text-xs text-cedu-ink-muted mb-1 block">
+          <Label htmlFor="riesgos-filter-to" className="text-xs text-cedu-ink-muted dark:text-gray-400 mb-1 block">
             Hasta
           </Label>
           <Input
@@ -364,8 +364,8 @@ export function TeamRiesgosTab() {
 
       {filtered.length === 0 ? (
         <div className="py-10 text-center" data-testid="view-riesgos-filtered-empty">
-          <ImageOff size={32} className="mx-auto text-cedu-ink-muted/30 mb-2" />
-          <p className="text-sm text-cedu-ink-muted">Ningún hallazgo coincide con estos filtros.</p>
+          <ImageOff size={32} className="mx-auto text-cedu-ink-muted/30 dark:text-gray-600 mb-2" />
+          <p className="text-sm text-cedu-ink-muted dark:text-gray-400">Ningún hallazgo coincide con estos filtros.</p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
@@ -464,25 +464,25 @@ function FindingCard({ finding, index }: { finding: CompanyFinding; index: numbe
         <Badge className={`border ${STATUS_BADGE_CLASS[finding.status]}`} data-testid={`badge-status-${index}`}>
           {STATUS_LABELS[finding.status]}
         </Badge>
-        <span className="text-xs text-cedu-ink-muted">{formatFlexibleDate(finding.createdAt)}</span>
+        <span className="text-xs text-cedu-ink-muted dark:text-gray-400">{formatFlexibleDate(finding.createdAt)}</span>
       </div>
 
       <a href={hazardPhotoUrl(finding.photoRef)} target="_blank" rel="noopener noreferrer">
         <img
           src={hazardPhotoUrl(finding.photoRef)}
           alt="Foto del riesgo reportado"
-          className="w-full aspect-video object-cover rounded-lg mb-2 border border-black/[0.06]"
+          className="w-full aspect-video object-cover rounded-lg mb-2 border border-black/[0.06] dark:border-white/10"
           data-testid={`img-riesgo-photo-${index}`}
         />
       </a>
 
-      <p className="text-sm text-cedu-ink mb-1" data-testid={`text-riesgo-description-${index}`}>
+      <p className="text-sm text-cedu-ink dark:text-white mb-1" data-testid={`text-riesgo-description-${index}`}>
         {finding.description}
       </p>
-      <p className="text-xs text-cedu-ink-muted mb-1">
+      <p className="text-xs text-cedu-ink-muted dark:text-gray-400 mb-1">
         {finding.normRef ? (
           <>
-            Norma citada: <span className="font-medium text-cedu-ink">{finding.normRef}</span>
+            Norma citada: <span className="font-medium text-cedu-ink dark:text-white">{finding.normRef}</span>
           </>
         ) : (
           "Sin norma citada"
@@ -492,24 +492,24 @@ function FindingCard({ finding, index }: { finding: CompanyFinding; index: numbe
       {/* Identidad: si es anónimo, `finding.reporter` viene null desde el
           servidor y aquí NO hay ningún atajo para pedirla — ni botón, ni
           mailto. Un hallazgo anónimo simplemente no trae ese dato. */}
-      <p className="text-xs text-cedu-ink-muted mb-3" data-testid={`text-riesgo-reporter-${index}`}>
+      <p className="text-xs text-cedu-ink-muted dark:text-gray-400 mb-3" data-testid={`text-riesgo-reporter-${index}`}>
         Reportado por: {finding.reporter ? finding.reporter.name : "Anónimo"}
       </p>
 
       {isClosed && (
-        <div className="bg-cedu-ink/[0.03] rounded-lg p-3 mb-3 space-y-1" data-testid={`view-riesgo-resolution-${index}`}>
+        <div className="bg-cedu-ink/[0.03] dark:bg-white/[0.04] rounded-lg p-3 mb-3 space-y-1" data-testid={`view-riesgo-resolution-${index}`}>
           {finding.resolvedAt && (
-            <p className="text-xs text-cedu-ink-muted">Cerrado el {formatFlexibleDate(finding.resolvedAt)}</p>
+            <p className="text-xs text-cedu-ink-muted dark:text-gray-400">Cerrado el {formatFlexibleDate(finding.resolvedAt)}</p>
           )}
           {finding.resolutionNote && (
-            <p className="text-xs text-cedu-ink-soft">{finding.resolutionNote}</p>
+            <p className="text-xs text-cedu-ink-soft dark:text-gray-300">{finding.resolutionNote}</p>
           )}
           {finding.status === "atendido" && hasSolutionPhoto && (
             <a href={solutionPhotoUrl(finding.id)} target="_blank" rel="noopener noreferrer" className="inline-block mt-1">
               <img
                 src={solutionPhotoUrl(finding.id)}
                 alt="Foto de la corrección"
-                className="w-full aspect-video object-cover rounded-lg border border-black/[0.06]"
+                className="w-full aspect-video object-cover rounded-lg border border-black/[0.06] dark:border-white/10"
                 data-testid={`img-riesgo-solution-photo-${index}`}
               />
             </a>
@@ -584,7 +584,7 @@ function FindingCard({ finding, index }: { finding: CompanyFinding; index: numbe
                   data-testid={`input-riesgo-solution-photo-${index}`}
                 />
                 {resolutionPhoto && (
-                  <p className="text-xs text-cedu-ink-muted mt-1">{resolutionPhoto.name}</p>
+                  <p className="text-xs text-cedu-ink-muted dark:text-gray-400 mt-1">{resolutionPhoto.name}</p>
                 )}
               </div>
               <div>
