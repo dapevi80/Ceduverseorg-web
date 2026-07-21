@@ -1957,7 +1957,9 @@ export default function Dashboard() {
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <h1 className="font-serif text-lg text-cedu-ink" data-testid="text-page-title">
-              {navItems.find(n => n.id === activeTab)?.label || "Dashboard"}
+              {activeTab === "courses"
+                ? "Mis Cursos y Conferencias"
+                : navItems.find(n => n.id === activeTab)?.label || "Dashboard"}
             </h1>
           </div>
           <div className="flex items-center gap-3">
