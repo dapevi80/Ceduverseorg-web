@@ -85,9 +85,32 @@ type Placa = {
   createdAt: string | null;
   rejected: boolean;
   rejectReason: string | null;
+  tookInAula: boolean; // el socio ya completó el curso gemelo en el Aula Virtual (match confiable)
 };
 
 const FMT = (iso: string) => new Date(iso).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+
+// Aula Virtual (tabla `courses`) y Tutor IA (studio_courses) son catálogos
+// distintos con títulos parecidos pero NO idénticos. Solo afirmamos "ya lo
+// llevaste en el Aula" con un match CONFIABLE (regla no-claims-falsos): título
+// idéntico normalizado, o el mismo código NOM. Si es difuso, no se afirma nada.
+const norm = (s: string) =>
+  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+const nomCode = (s: string) => {
+  const m = norm(s).match(/nom\s?0?(\d{3})/);
+  return m ? `nom${m[1]}` : null;
+};
+function matchesAula(placaTitle: string, aulaTitles: string[]): boolean {
+  const np = norm(placaTitle);
+  const cp = nomCode(placaTitle);
+  return aulaTitles.some((a) => {
+    const na = norm(a);
+    if (na && na === np) return true;
+    const ca = nomCode(a);
+    if (ca && cp && ca === cp) return true;
+    return false;
+  });
+}
 
 export function CertificatesTab() {
   const { toast } = useToast();
@@ -108,6 +131,21 @@ export function CertificatesTab() {
     queryKey: ["/api/me/cert-elegibles"],
   });
   const courses = coursesData?.courses ?? [];
+
+  // Aula Virtual: inscripciones + catálogo (ya en caché, los pide el dashboard).
+  // Sirven para el PUENTE: explicar por qué un curso completado en el Aula no
+  // aparece como certificado, y marcar las placas cuyo gemelo del Aula ya llevó.
+  const { data: aulaEnrollments = [] } = useQuery<{ id: number; courseId: string; courseSlug: string; completed: number }[]>({
+    queryKey: ["/api/me/courses"],
+  });
+  const { data: aulaCatalog = [] } = useQuery<{ id: string; slug: string; title: string }[]>({
+    queryKey: ["/api/courses"],
+  });
+  const aulaLookup = new Map(aulaCatalog.map((c) => [c.id, c]));
+  const completedAulaTitles = aulaEnrollments
+    .filter((e) => e.completed >= 100)
+    .map((e) => aulaLookup.get(e.courseId)?.title)
+    .filter((t): t is string => Boolean(t));
 
   // Cursos elegibles para AL MENOS un certificado de pago: para el selector del diálogo.
   const eligibleCourses = courses.filter((c) => c.certs.dc3.eligible || c.certs.sep.eligible);
@@ -157,6 +195,7 @@ export function CertificatesTab() {
           createdAt: req?.createdAt ?? null,
           rejected: req?.status === "rechazado",
           rejectReason: cert.request?.rejectReason ?? req?.rejectReason ?? null,
+          tookInAula: matchesAula(course.title, completedAulaTitles),
         };
       }),
   );
@@ -303,6 +342,26 @@ export function CertificatesTab() {
         </div>
       </div>
 
+      {/* Puente Aula Virtual → Tutor IA: explica por qué "completado" ≠ "certificado" */}
+      {completedAulaTitles.length > 0 && (
+        <div className="flex items-start gap-3 bg-cedu-blue-light/60 border border-cedu-blue/20 rounded-2xl px-5 py-4" data-testid="cert-aula-bridge">
+          <span className="text-xl leading-none mt-0.5">💡</span>
+          <div className="text-sm text-cedu-ink-soft">
+            <p className="font-semibold text-cedu-ink">
+              Completaste {completedAulaTitles.length} {completedAulaTitles.length === 1 ? "curso" : "cursos"} en el Aula Virtual — pero esas clases no emiten constancia por sí solas.
+            </p>
+            <p className="mt-1 leading-relaxed">
+              Las constancias <strong>DC-3 STPS</strong> y <strong>SEP</strong> se obtienen tomando <strong>el mismo curso en el Tutor IA</strong> y aprobando su quiz. Cada placa de abajo te lleva a su curso en el Tutor IA para desbloquearla.
+            </p>
+            <Link href="/tutor-ia">
+              <span className="inline-block mt-2 text-cedu-blue font-semibold hover:underline cursor-pointer" data-testid="cert-aula-bridge-cta">
+                Ver mis cursos en el Tutor IA →
+              </span>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Estados de carga / error / vacío de la colección */}
       {isCoursesLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
@@ -408,6 +467,7 @@ function PlacaCard({ placa, requestMutation }: { placa: Placa; requestMutation: 
         <div className="a-type">{rarity.typeName}</div>
         <div className="a-title">{placa.title}</div>
         {ui.owned && placa.createdAt && <div className="a-inst">Emitida · {FMT(placa.createdAt)}</div>}
+        {ui.locked && placa.tookInAula && <div className="a-inst a-aula">✓ Ya lo llevaste en el Aula — apruébalo en el Tutor IA</div>}
         <div className="a-spacer" />
         <div className="a-foot">
           <span className={`a-status ${ui.pillClass}`}>
@@ -499,6 +559,7 @@ const PLACA_CSS = `
 .placas-scope .a-type{position:relative;z-index:2;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-accent);}
 .placas-scope .a-title{position:relative;z-index:2;font-family:'DM Serif Display',Georgia,serif;font-weight:400;font-size:16px;line-height:1.15;color:#1a1a2e;text-wrap:balance;}
 .placas-scope .a-inst{position:relative;z-index:2;font-size:10.5px;color:#7a7a99;margin-top:-3px;}
+.placas-scope .a-aula{color:#00875c;font-weight:700;line-height:1.25;padding:0 4px;}
 .placas-scope .a-spacer{flex:1;}
 .placas-scope .a-foot{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;gap:8px;}
 .placas-scope .a-status{font-size:10.5px;font-weight:700;padding:4px 8px;border-radius:6px;align-self:center;display:inline-flex;align-items:center;gap:5px;}
