@@ -1866,6 +1866,15 @@ export default function StudioCoursePage() {
                 <Play size={18} /> Continuar curso
               </Button>
               <Button
+                variant="ghost"
+                size="lg"
+                onClick={() => navigate("/dashboard?tab=courses")}
+                className="gap-2 w-full max-w-xs rounded-xl min-h-11 text-cedu-ink-soft dark:text-gray-300"
+                data-testid="button-back-to-mis-cursos"
+              >
+                <ArrowLeft size={16} /> Regresar a Mis Cursos
+              </Button>
+              <Button
                 variant="outline"
                 size="lg"
                 onClick={() => { setShowResumeLanding(false); setShowResetDialog(true); }}

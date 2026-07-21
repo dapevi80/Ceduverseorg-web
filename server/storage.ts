@@ -1,4 +1,4 @@
-import { eq, ne, and, or, asc, desc, sql } from "drizzle-orm";
+import { eq, ne, and, or, asc, desc, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -172,6 +172,7 @@ export interface IStorage {
   updateGeneratedContent(id: string, data: Partial<InsertGeneratedContent>): Promise<GeneratedContent | undefined>;
   createStudioEnrollment(data: InsertStudioEnrollment): Promise<StudioEnrollment>;
   getStudioEnrollments(userId: string): Promise<StudioEnrollment[]>;
+  getStudioEnrollmentsWithProgress(userId: string): Promise<StudioEnrollment[]>;
   getStudioEnrollment(userId: string, source: string, courseIdentifier: string): Promise<StudioEnrollment | undefined>;
   updateStudioEnrollment(id: string, data: Partial<InsertStudioEnrollment>): Promise<StudioEnrollment | undefined>;
   getModuleProgress(enrollmentId: string, moduleIdentifier: string): Promise<StudioModuleProgress | undefined>;
@@ -647,6 +648,58 @@ export class DatabaseStorage implements IStorage {
 
   async getStudioEnrollments(userId: string): Promise<StudioEnrollment[]> {
     return db.select().from(studioEnrollments).where(eq(studioEnrollments.userId, userId)).orderBy(desc(studioEnrollments.enrolledAt));
+  }
+
+  // Igual que getStudioEnrollments, pero recalcula `progressPercent` desde la
+  // FUENTE DE VERDAD (módulos completados en studio_module_progress ÷ módulos
+  // actuales del curso) en vez de confiar en el valor cacheado en la fila.
+  //
+  // Por qué: `studio_enrollments.progress_percent` solo se reescribe al COMPLETAR
+  // un módulo (routes/courses.ts). Si un curso crece de módulos DESPUÉS de que el
+  // socio lo terminó (el seed re-siembra), el cache queda clavado —p.ej. "100%
+  // / completado" cuando en realidad es 1 de 5— y Mis Cursos miente. Este cómputo
+  // al vuelo es idempotente y auto-sanador: NO escribe en la base. 4 queries en
+  // bloque (no N+1). Si no se puede resolver el curso/su conteo de módulos, se
+  // respeta el valor almacenado (no se zerea algo que no se pudo calcular).
+  async getStudioEnrollmentsWithProgress(userId: string): Promise<StudioEnrollment[]> {
+    const enrollments = await this.getStudioEnrollments(userId);
+    if (enrollments.length === 0) return enrollments;
+
+    const slugs = Array.from(new Set(enrollments.map((e) => e.courseIdentifier)));
+    const courses = await db
+      .select({ id: studioCourses.id, slug: studioCourses.slug })
+      .from(studioCourses)
+      .where(inArray(studioCourses.slug, slugs));
+    const courseIdBySlug = new Map(courses.map((c) => [c.slug, c.id]));
+    const courseIds = courses.map((c) => c.id);
+
+    const totalByCourse = new Map<string, number>();
+    if (courseIds.length > 0) {
+      const rows = await db
+        .select({ courseId: studioModules.courseId, n: sql<number>`count(*)::int` })
+        .from(studioModules)
+        .where(inArray(studioModules.courseId, courseIds))
+        .groupBy(studioModules.courseId);
+      for (const r of rows) totalByCourse.set(r.courseId, Number(r.n));
+    }
+
+    const enrollmentIds = enrollments.map((e) => e.id);
+    const doneByEnrollment = new Map<string, number>();
+    const progressRows = await db
+      .select({ enrollmentId: studioModuleProgress.enrollmentId, n: sql<number>`count(*)::int` })
+      .from(studioModuleProgress)
+      .where(and(inArray(studioModuleProgress.enrollmentId, enrollmentIds), eq(studioModuleProgress.completed, true)))
+      .groupBy(studioModuleProgress.enrollmentId);
+    for (const r of progressRows) doneByEnrollment.set(r.enrollmentId, Number(r.n));
+
+    return enrollments.map((e) => {
+      const courseId = courseIdBySlug.get(e.courseIdentifier);
+      const total = courseId ? totalByCourse.get(courseId) : undefined;
+      if (total === undefined) return e; // curso no encontrado / sin conteo: respeta lo almacenado
+      const done = Math.min(doneByEnrollment.get(e.id) ?? 0, total);
+      const progressPercent = total > 0 ? Math.round((done / total) * 100) : 0;
+      return { ...e, progressPercent };
+    });
   }
 
   async getStudioEnrollment(userId: string, source: string, courseIdentifier: string): Promise<StudioEnrollment | undefined> {

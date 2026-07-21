@@ -1682,7 +1682,10 @@ export function registerCourseRoutes(app: Express) {
   app.get("/api/studio/enrollments", requireAuth, async (req, res, next) => {
     try {
       const userId = req.supabaseUserId!;
-      const enrollments = await storage.getStudioEnrollments(userId);
+      // progressPercent recalculado desde la fuente de verdad (ver storage):
+      // el valor cacheado en la fila puede estar clavado si el curso creció de
+      // módulos después de completarlo. Mis Cursos y el Resumen leen esto.
+      const enrollments = await storage.getStudioEnrollmentsWithProgress(userId);
       res.json(enrollments);
     } catch (err) { next(err); }
   });

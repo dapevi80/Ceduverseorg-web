@@ -717,8 +717,25 @@ function CoursesTab({ enrollments, allCourses }: {
   enrollments: CourseEnrollment[];
   allCourses: CourseInfo[];
 }) {
-  const [statusFilter, setStatusFilter] = useState<"all" | "in-progress" | "completed">("all");
-  const [sourceFilter, setSourceFilter] = useState<"all" | "stps" | "tutor-ia">("all");
+  // Los filtros se recuerdan en sessionStorage para que "Regresar a Mis Cursos"
+  // (desde un curso) reabra la vista con lo que el socio estaba buscando.
+  const readSaved = <T extends string>(key: string, allowed: readonly T[], fallback: T): T => {
+    if (typeof window === "undefined") return fallback;
+    const v = sessionStorage.getItem(key) as T | null;
+    return v && (allowed as readonly string[]).includes(v) ? v : fallback;
+  };
+  const [statusFilter, setStatusFilter] = useState<"all" | "in-progress" | "completed">(
+    () => readSaved("cedu:cursos:estado", ["all", "in-progress", "completed"] as const, "all"),
+  );
+  const [sourceFilter, setSourceFilter] = useState<"all" | "stps" | "tutor-ia">(
+    () => readSaved("cedu:cursos:tipo", ["all", "stps", "tutor-ia"] as const, "all"),
+  );
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("cedu:cursos:estado", statusFilter);
+      sessionStorage.setItem("cedu:cursos:tipo", sourceFilter);
+    } catch { /* sessionStorage no disponible: los filtros simplemente no se recuerdan */ }
+  }, [statusFilter, sourceFilter]);
   const [, setLocation] = useLocation();
   const courseLookup = new Map(allCourses.map(c => [c.id, c]));
 
@@ -1721,7 +1738,11 @@ export default function Dashboard() {
   const { user, isLoading: authLoading, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+  // Pestaña inicial desde ?tab= (p.ej. "Regresar a Mis Cursos" abre ?tab=courses).
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window === "undefined") return "overview";
+    return new URLSearchParams(window.location.search).get("tab") || "overview";
+  });
   useForceLightMode();
 
   const { data: account, isLoading: accountLoading } = useQuery<Account>({
