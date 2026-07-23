@@ -154,12 +154,42 @@ verificación.
 
 ```
 Instructor entra a "Mi Voz"
-  -> lee el consentimiento versionado y acepta
+  -> la pantalla le muestra el TEXTO DEL CONSENTIMIENTO en pantalla
+  -> lo GRABA LEYÉNDOLO EN VOZ ALTA (~3 min)
+     [un solo archivo -> R2: voces/instructor-{id}/consentimiento-{ts}.webm]
      [sella consent_accepted, consent_text_version, consent_ip, consent_accepted_at]
-  -> graba o sube 3 min de audio  -> R2: voces/instructor-{id}/muestra-{ts}.webm
   -> POST /clone -> ElevenLabs IVC -> external_voice_id, status = ready
   -> escucha una frase de prueba y aprueba, o regraba
 ```
+
+**La grabación es a la vez la muestra de entrenamiento y la prueba del consentimiento.** No son dos
+pasos ni dos archivos: el instructor lee en voz alta el texto que autoriza el uso de su voz, y esa
+lectura es exactamente el audio que entrena el clon.
+
+Por qué esto es mejor que una casilla más un audio cualquiera:
+
+1. **Evidencia mucho más fuerte.** Una casilla marcada prueba que alguien hizo clic. Una grabación
+   de la persona diciendo con su propia voz que autoriza el uso de su voz es prueba de otro orden,
+   y es justo el tipo de consentimiento verificable que ElevenLabs exige para clonación.
+2. **Cero fricción.** Es una sola acción en vez de dos. Al instructor le pides tres minutos, no
+   "acepta esto y además grábate".
+3. **El texto queda amarrado al audio.** `consent_text_version` identifica qué versión se leyó, y el
+   audio prueba que se leyó esa y no otra.
+
+Consecuencia en el modelo de datos: `sample_r2_key` y el archivo de consentimiento son **el mismo
+objeto en R2**. No se duplica. La revocación borra ese único archivo.
+
+Requisitos del texto de consentimiento, que condicionan su redacción (§9):
+
+- **Duración leído: entre 1 y 5 minutos** — es lo que pide IVC. En español mexicano leído a ritmo
+  normal, eso son aproximadamente **300 a 700 palabras**. Un texto más corto no sirve para clonar;
+  uno mucho más largo cansa y la gente lo lee de corrida y mal.
+- **Redacción hablada**, en primera persona y en frases que una persona pueda leer en voz alta sin
+  trabarse. Un párrafo de contrato con cuatro subordinadas produce una lectura pésima, y una
+  lectura pésima produce un clon pésimo. El texto legal y la calidad del audio son el mismo
+  problema aquí.
+- **Fonéticamente variado**: conviene que incluya números, nombres propios y preguntas, para que el
+  clon tenga material de entonación y no sólo declarativas planas.
 
 El clon se genera **cuando el instructor revisa su curso y carga su voz**, no antes. Los estados
 `pending → processing → ready | failed` se muestran explícitos en la UI, con el mensaje de error real

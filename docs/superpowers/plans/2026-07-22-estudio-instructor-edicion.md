@@ -783,6 +783,35 @@ export function registerInstructorCursosRoutes(app: Express, requireAuth: any, r
     } catch (err) { next(err); }
   });
 
+  // ORDEN OBLIGATORIO: /modules/reorder va ANTES que /modules/:moduleId.
+  // Express toma la primera ruta que coincide, así que si :moduleId se registra
+  // primero captura la palabra "reorder" como si fuera un id y el reordenamiento
+  // nunca se ejecuta. Registrar en este mismo orden en el archivo.
+  app.patch("/api/instructor/my-courses/:id/modules/reorder", requireAuth, requireInstructor, async (req, res, next) => {
+    try {
+      const course = await ownedCourse(req.params.id, req.supabaseUserId!);
+      if (!course) return res.status(404).json({ message: "Curso no encontrado" });
+
+      const { moduleIds } = req.body as { moduleIds: string[] };
+      if (!Array.isArray(moduleIds)) return res.status(400).json({ message: "moduleIds debe ser un arreglo" });
+
+      const own = await db.select({ id: instructorCourseModules.id })
+        .from(instructorCourseModules)
+        .where(eq(instructorCourseModules.courseId, course.id));
+      const ownIds = new Set(own.map((m) => m.id));
+      if (moduleIds.length !== ownIds.size || moduleIds.some((id) => !ownIds.has(id))) {
+        return res.status(400).json({ message: "La lista debe contener exactamente los modulos de este curso" });
+      }
+
+      for (let i = 0; i < moduleIds.length; i++) {
+        await db.update(instructorCourseModules)
+          .set({ order: i + 1, updatedAt: new Date() })
+          .where(eq(instructorCourseModules.id, moduleIds[i]));
+      }
+      res.json({ ok: true });
+    } catch (err) { next(err); }
+  });
+
   app.patch("/api/instructor/my-courses/:id/modules/:moduleId", requireAuth, requireInstructor, async (req, res, next) => {
     try {
       const course = await ownedCourse(req.params.id, req.supabaseUserId!);
@@ -841,34 +870,8 @@ export function registerInstructorCursosRoutes(app: Express, requireAuth: any, r
     } catch (err) { next(err); }
   });
 
-  app.patch("/api/instructor/my-courses/:id/modules/reorder", requireAuth, requireInstructor, async (req, res, next) => {
-    try {
-      const course = await ownedCourse(req.params.id, req.supabaseUserId!);
-      if (!course) return res.status(404).json({ message: "Curso no encontrado" });
-
-      const { moduleIds } = req.body as { moduleIds: string[] };
-      if (!Array.isArray(moduleIds)) return res.status(400).json({ message: "moduleIds debe ser un arreglo" });
-
-      const own = await db.select({ id: instructorCourseModules.id })
-        .from(instructorCourseModules)
-        .where(eq(instructorCourseModules.courseId, course.id));
-      const ownIds = new Set(own.map((m) => m.id));
-      if (moduleIds.length !== ownIds.size || moduleIds.some((id) => !ownIds.has(id))) {
-        return res.status(400).json({ message: "La lista debe contener exactamente los modulos de este curso" });
-      }
-
-      for (let i = 0; i < moduleIds.length; i++) {
-        await db.update(instructorCourseModules)
-          .set({ order: i + 1, updatedAt: new Date() })
-          .where(eq(instructorCourseModules.id, moduleIds[i]));
-      }
-      res.json({ ok: true });
-    } catch (err) { next(err); }
-  });
 }
 ```
-
-**Nota sobre el orden de rutas:** `/modules/reorder` debe registrarse **después** de `/modules/:moduleId` sólo si Express llegara a confundirlas. Como `reorder` es `PATCH /modules/reorder` y el otro es `PATCH /modules/:moduleId`, Express toma la primera que coincide — así que en el archivo **`reorder` debe ir antes** o `:moduleId` capturará la palabra "reorder". Mover el bloque de `reorder` arriba del de `:moduleId` al implementar.
 
 - [ ] **Step 3: Registrar en `server/routes.ts`**
 
@@ -1158,10 +1161,14 @@ git commit -m "feat(estudio): frases destacadas por modulo"
 
 **Files:**
 - Modify: `server/routes.ts:690-714` (`POST /api/instructor/my-courses`)
-- Modify: `client/src/pages/instructor-dashboard.tsx:789` (`CreateCourseTab`)
+- Modify: `server/routes.ts:716-723` (`GET /api/instructor/my-courses/:id`)
 
 **Interfaces:**
 - Consumes: `instructorCourseModules` (Task 1), `sanitizeCourseHtml` (Task 5)
+
+**No se toca el cliente en esta tarea.** `CreateCourseTab` sigue enviando el mismo cuerpo con
+`modules`; lo único que cambia es dónde los guarda el servidor. El cliente se modifica hasta la
+Task 10.
 
 - [ ] **Step 1: Insertar los módulos en su tabla al crear el curso**
 
