@@ -1385,6 +1385,51 @@ export const instructorCourses = pgTable("instructor_courses", {
   updatedAt: timestamp("updated_at", { withTimezone: true }),
 });
 
+export const instructorCourseModules = pgTable("instructor_course_modules", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  courseId: uuid("course_id").notNull().references(() => instructorCourses.id, { onDelete: "cascade" }),
+  order: integer("order").notNull().default(1),
+  title: text("title").notNull(),
+  description: text("description"),
+  durationMin: integer("duration_min"),
+  contentHtml: text("content_html"),
+  audioUrl: text("audio_url"),
+  youtubeIds: text("youtube_ids").array().notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+}, (table) => [
+  index("idx_instructor_course_modules_course").on(table.courseId, table.order),
+]);
+
+export const instructorCourseReferences = pgTable("instructor_course_references", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  courseId: uuid("course_id").notNull().references(() => instructorCourses.id, { onDelete: "cascade" }),
+  authors: text("authors").notNull(),
+  year: integer("year"),
+  title: text("title").notNull(),
+  source: text("source"),
+  url: text("url"),
+  verifiedByInstructor: boolean("verified_by_instructor").notNull().default(false),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("idx_instructor_course_references_course").on(table.courseId),
+]);
+
+export const instructorModuleQuotes = pgTable("instructor_module_quotes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  moduleId: uuid("module_id").notNull().references(() => instructorCourseModules.id, { onDelete: "cascade" }),
+  order: integer("order").notNull().default(1),
+  text: text("text").notNull(),
+  attribution: text("attribution"),
+}, (table) => [
+  index("idx_instructor_module_quotes_module").on(table.moduleId, table.order),
+]);
+
+export type InstructorCourseModule = typeof instructorCourseModules.$inferSelect;
+export type InstructorCourseReference = typeof instructorCourseReferences.$inferSelect;
+export type InstructorModuleQuote = typeof instructorModuleQuotes.$inferSelect;
+
 export const insertInstructorProfileSchema = createInsertSchema(instructorProfiles).omit({ createdAt: true });
 export const insertInstructorCourseSchema = createInsertSchema(instructorCourses).omit({ id: true, createdAt: true, updatedAt: true });
 export type InstructorProfile = typeof instructorProfiles.$inferSelect;
