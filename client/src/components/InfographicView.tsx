@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -224,8 +224,8 @@ export default function InfographicView({
   contentHtml: string;
   moduleTitle: string;
 }) {
-  const sections = parseHtmlToSections(contentHtml);
-  const summary = extractSummary(contentHtml);
+  const sections = useMemo(() => parseHtmlToSections(contentHtml), [contentHtml]);
+  const summary = useMemo(() => extractSummary(contentHtml), [contentHtml]);
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   if (sections.length < 2) {
