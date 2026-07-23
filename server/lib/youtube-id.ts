@@ -25,8 +25,16 @@ export function extractYoutubeId(input: string): string | null {
   } else if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
     if (url.pathname === "/watch") {
       candidate = url.searchParams.get("v");
-    } else if (url.pathname.startsWith("/embed/")) {
-      candidate = url.pathname.slice("/embed/".length);
+    } else {
+      // /embed/, /shorts/ y /live/ llevan el ID en el propio camino. Shorts es
+      // forma común al copiar desde el celular, y no reconocerla se traduciría
+      // en un "no se reconocio un video" que el instructor no sabría corregir.
+      for (const prefijo of ["/embed/", "/shorts/", "/live/"]) {
+        if (url.pathname.startsWith(prefijo)) {
+          candidate = url.pathname.slice(prefijo.length);
+          break;
+        }
+      }
     }
   }
 

@@ -19,6 +19,12 @@ describe("extractYoutubeId", () => {
     expect(extractYoutubeId("https://youtu.be/dQw4w9WgXcQ?t=42")).toBe("dQw4w9WgXcQ");
   });
 
+  it("acepta /shorts/ y /live/", () => {
+    expect(extractYoutubeId("https://www.youtube.com/shorts/dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
+    expect(extractYoutubeId("https://youtube.com/shorts/dQw4w9WgXcQ?feature=share")).toBe("dQw4w9WgXcQ");
+    expect(extractYoutubeId("https://www.youtube.com/live/dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
+  });
+
   it("acepta un ID pelado", () => {
     expect(extractYoutubeId("dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
   });
