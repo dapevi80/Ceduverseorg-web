@@ -10,6 +10,7 @@ import { ViewAsProvider } from "@/hooks/use-view-as";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ViewAsSwitcher from "@/components/ViewAsSwitcher";
+import { AudioPlayerProvider } from "@/components/audio/audio-player-context";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Empresas from "@/pages/empresas";
@@ -149,9 +150,11 @@ function App() {
                 <PendingTermsModal />
                 <ViewAsSwitcher />
                 <ReferralCapture />
-                <ErrorBoundary>
-                  <Router />
-                </ErrorBoundary>
+                <AudioPlayerProvider>
+                  <ErrorBoundary>
+                    <Router />
+                  </ErrorBoundary>
+                </AudioPlayerProvider>
               </TooltipProvider>
             </ViewAsProvider>
           </AuthProvider>
