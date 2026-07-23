@@ -34,6 +34,8 @@ import {
   achievementUsers,
   instructorProfiles,
   instructorCourses,
+  instructorCourseModules,
+  instructorCourseReferences,
   instructorApplications,
   courseModules,
   termsVersions,
@@ -67,6 +69,9 @@ import { registerVaultRoutes } from "./routes/vault";
 import { registerHeygenRoutes } from "./routes/heygen";
 import { registerApiKeyRoutes } from "./routes/api-keys";
 import { registerEmpresaRoutes } from "./routes/empresa";
+import { registerInstructorCursosRoutes } from "./routes/instructor-cursos";
+import { canPublish } from "./lib/course-publish";
+import { sanitizeCourseHtml } from "./lib/course-html";
 import { createOrUpdateContactCard, getInitialsFromName, generateSlug, getUniqueSlug } from "./routes/helpers";
 
 export async function registerRoutes(
@@ -704,11 +709,28 @@ export async function registerRoutes(
         availableForAll: availableForAll !== false,
         tags: tags || [],
         nomsRelated: nomsRelated || [],
-        modules: modules || [],
         quizzes: quizzes || [],
         status: status || "draft",
         publishedAt: status === "review" ? new Date() : null,
       }).returning();
+
+      // Los módulos ahora viven en instructor_course_modules. La columna jsonb
+      // "modules" deja de escribirse; se retira en un cambio aparte, cuando se
+      // confirme en producción que nada la lee.
+      if (Array.isArray(modules)) {
+        for (let i = 0; i < modules.length; i++) {
+          const m = modules[i];
+          await db.insert(instructorCourseModules).values({
+            courseId: course.id,
+            order: i + 1,
+            title: m.title,
+            description: m.description ?? null,
+            durationMin: m.durationMin ?? null,
+            contentHtml: sanitizeCourseHtml(m.content || ""),
+          });
+        }
+      }
+
       res.json(course);
     } catch (err) { next(err); }
   });
@@ -718,7 +740,12 @@ export async function registerRoutes(
       const userId = req.supabaseUserId!;
       const [course] = await db.select().from(instructorCourses).where(and(eq(instructorCourses.id, (req.params.id as string)), eq(instructorCourses.instructorId, userId)));
       if (!course) return res.status(404).json({ message: "Curso no encontrado" });
-      res.json(course);
+      const modules = await db.select().from(instructorCourseModules)
+        .where(eq(instructorCourseModules.courseId, course.id))
+        .orderBy(asc(instructorCourseModules.order));
+      const references = await db.select().from(instructorCourseReferences)
+        .where(eq(instructorCourseReferences.courseId, course.id));
+      res.json({ ...course, modules, references });
     } catch (err) { next(err); }
   });
 
@@ -741,11 +768,36 @@ export async function registerRoutes(
       if (availableForAll !== undefined) updateData.availableForAll = availableForAll;
       if (tags !== undefined) updateData.tags = tags;
       if (nomsRelated !== undefined) updateData.nomsRelated = nomsRelated;
-      if (modules !== undefined) updateData.modules = modules;
+      // Los módulos ya no se editan por aquí: viven en instructor_course_modules
+      // y el GET los lee de ahí. Aceptar el jsonb dejaría al cliente creyendo que
+      // guardó cambios que nadie va a leer, así que se rechaza de frente.
+      if (modules !== undefined) {
+        return res.status(400).json({
+          message: "Los modulos se editan en /api/instructor/my-courses/:id/modules, no en este endpoint",
+        });
+      }
       if (quizzes !== undefined) updateData.quizzes = quizzes;
       if (status !== undefined) {
         updateData.status = status;
         if (status === "review" && !existing.publishedAt) updateData.publishedAt = new Date();
+      }
+
+      // Un curso no se publica con bibliografía sin verificar: publicar es el
+      // momento en que el contenido deja de ser borrador y lo ve un alumno.
+      if (status === "published") {
+        const refs = await db.select({
+          id: instructorCourseReferences.id,
+          title: instructorCourseReferences.title,
+          verifiedByInstructor: instructorCourseReferences.verifiedByInstructor,
+        }).from(instructorCourseReferences).where(eq(instructorCourseReferences.courseId, existing.id));
+
+        const check = canPublish(refs);
+        if (!check.ok) {
+          return res.status(409).json({
+            message: "No se puede publicar: hay referencias sin verificar",
+            unverified: check.unverified,
+          });
+        }
       }
 
       await db.update(instructorCourses).set(updateData).where(eq(instructorCourses.id, (req.params.id as string)));
@@ -1514,6 +1566,7 @@ export async function registerRoutes(
   registerMembershipRoutes(app);
   registerApiKeyRoutes(app);
   registerEmpresaRoutes(app);
+  registerInstructorCursosRoutes(app);
 
   return httpServer;
 }
