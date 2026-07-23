@@ -240,7 +240,7 @@ function CoursesTab({ courses, onSelectCourse }: { courses: InstructorCourse[]; 
       <Card className="border-black/[0.06]">
         <CardContent className="py-12 text-center">
           <BookOpen size={40} className="mx-auto text-cedu-ink-muted/40 mb-3" />
-          <p className="text-sm text-cedu-ink-muted">No tienes cursos asignados aún</p>
+          <p className="text-sm text-cedu-ink-muted">No tienes conferencias asignadas aún</p>
         </CardContent>
       </Card>
     );
@@ -685,7 +685,7 @@ function CourseDetailTab({ courseId, onBack }: { courseId: string; onBack: () =>
   return (
     <div className="space-y-5">
       <Button variant="ghost" size="sm" onClick={onBack} className="text-cedu-ink-muted hover:text-cedu-ink" data-testid="button-back-to-courses">
-        <ArrowLeft size={16} className="mr-1.5" /> Volver a mis cursos
+        <ArrowLeft size={16} className="mr-1.5" /> Volver a mis conferencias
       </Button>
 
       <div className="flex items-start gap-4">
@@ -705,7 +705,7 @@ function CourseDetailTab({ courseId, onBack }: { courseId: string; onBack: () =>
       <Card className="border-cedu-blue/10 bg-cedu-blue/[0.02]">
         <CardContent className="py-3 px-4">
           <p className="text-xs text-cedu-ink-muted leading-relaxed">
-            <strong className="text-cedu-ink">Editor de Curso:</strong> Haz clic en cada módulo para expandirlo. Puedes subir tu propia grabación de voz para reemplazar el audio IA, 
+            <strong className="text-cedu-ink">Editor de Conferencia:</strong> Haz clic en cada módulo para expandirlo. Puedes subir tu propia grabación de voz para reemplazar el audio IA,
             y editar el guión/transcripción que los alumnos ven en Conferencias Ceduverse.
           </p>
         </CardContent>
@@ -719,7 +719,7 @@ function CourseDetailTab({ courseId, onBack }: { courseId: string; onBack: () =>
           <Card className="border-black/[0.06]">
             <CardContent className="py-8 text-center">
               <BookOpen size={32} className="mx-auto text-cedu-ink-muted/40 mb-2" />
-              <p className="text-sm text-cedu-ink-muted">Este curso no tiene módulos configurados</p>
+              <p className="text-sm text-cedu-ink-muted">Esta conferencia no tiene módulos configurados</p>
             </CardContent>
           </Card>
         ) : (
@@ -1695,7 +1695,7 @@ export default function InstructorDashboard() {
 
   const navItems: NavItem[] = [
     { id: "overview", label: "Resumen", icon: LayoutDashboard },
-    { id: "courses", label: "Mis Cursos STPS", icon: BookOpen },
+    { id: "courses", label: "Mis Conferencias", icon: BookOpen },
     { id: "my-created", label: "Cursos Creados", icon: PenTool },
     { id: "create", label: "Crear Curso", icon: Plus },
     { id: "students", label: "Alumnos", icon: Users },
