@@ -31,6 +31,7 @@ import PropuestaPage from "@/pages/propuesta";
 import CrmDashboard from "@/pages/crm-dashboard";
 import InstructorDashboard from "@/pages/instructor-dashboard";
 import InstructorAcreditacion from "@/pages/instructor-acreditacion";
+import InstructorCursoEditor from "@/pages/instructor-curso-editor";
 import AdminPanel from "@/pages/admin-panel";
 import VCardPage from "@/pages/vcard";
 import BlogPage from "@/pages/blog";
@@ -90,6 +91,7 @@ function Router() {
       <Route path="/admin" component={AdminPanel} />
 
       <Route path="/instructor/acreditacion" component={InstructorAcreditacion} />
+      <Route path="/instructor/curso/:id" component={InstructorCursoEditor} />
       <Route path="/instructor" component={InstructorDashboard} />
       <Route path="/partner" component={PartnerDashboard} />
       <Route path="/kit-cooperativo" component={KitCooperativo} />

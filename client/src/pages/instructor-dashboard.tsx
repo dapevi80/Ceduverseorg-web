@@ -1128,6 +1128,7 @@ function CreateCourseTab({ onComplete }: { onComplete: () => void }) {
 }
 
 function MyCreatedCoursesTab({ setActiveTab }: { setActiveTab: (t: string) => void }) {
+  const [, navigate] = useLocation();
   const { data: myCourses = [], isLoading } = useQuery<MyCreatedCourse[]>({
     queryKey: ["/api/instructor/my-courses"],
   });
@@ -1185,6 +1186,15 @@ function MyCreatedCoursesTab({ setActiveTab }: { setActiveTab: (t: string) => vo
                     </div>
                     {course.description && <p className="text-xs text-cedu-ink-muted mt-1 line-clamp-2">{course.description}</p>}
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-shrink-0"
+                    onClick={() => navigate(`/instructor/curso/${course.id}`)}
+                    data-testid={`button-editar-curso-${course.id}`}
+                  >
+                    <PenTool size={13} className="mr-1" /> Editar
+                  </Button>
                 </div>
               </CardContent>
             </Card>

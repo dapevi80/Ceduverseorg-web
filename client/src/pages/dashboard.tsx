@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useViewAs } from "@/hooks/use-view-as";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
+import { extractServerMessage } from "@/lib/server-message";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -1496,29 +1497,6 @@ type TeamProgressItem = {
   objectivesAssigned: number;
   objectivesCompleted: number;
 };
-
-/**
- * apiRequest lanza `Error(`${status}: ${body}`)` con el body crudo de la
- * respuesta (ver client/src/lib/queryClient.ts). Nuestras rutas siempre
- * responden JSON con { message }, así que aquí lo extraemos para mostrar el
- * mensaje real del servidor en el toast en vez de "404: {"message":"..."}"
- * tal cual.
- */
-function extractServerMessage(err: unknown): string {
-  if (err instanceof Error) {
-    const raw = err.message;
-    const idx = raw.indexOf(": ");
-    const body = idx >= 0 ? raw.slice(idx + 2) : raw;
-    try {
-      const parsed = JSON.parse(body);
-      if (parsed && typeof parsed.message === "string") return parsed.message;
-    } catch {
-      // body no era JSON — usamos el mensaje crudo abajo
-    }
-    return raw;
-  }
-  return "Ocurrió un error inesperado";
-}
 
 function OrgTab({ userTeams }: { userTeams: TeamInfo[] }) {
   const { toast } = useToast();
