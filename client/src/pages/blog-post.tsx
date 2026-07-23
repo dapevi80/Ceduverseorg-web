@@ -38,10 +38,10 @@ const CATEGORIES: Record<string, { label: string; color: string; bg: string }> =
 };
 
 const CATEGORY_CTA: Record<string, { title: string; desc: string; href: string; btn: string }> = {
-  stps: { title: "Cumple con la STPS sin multas", desc: "Nuestros cursos cubren todas las NOMs principales. Capacita a tu equipo hoy.", href: "/aula-virtual", btn: "Ver cursos STPS" },
+  stps: { title: "Cumple con la STPS sin multas", desc: "Nuestros cursos cubren todas las NOMs principales. Capacita a tu equipo hoy.", href: "/conferencias", btn: "Ver cursos STPS" },
   fiscal: { title: "Deduce el 100% de capacitación", desc: "Todos nuestros servicios son deducibles con factura CFDI.", href: "/empresas", btn: "Conoce los beneficios" },
   ia: { title: "Prueba Tutor IA gratis", desc: "49 cursos generados por IA, personalizados para tu industria.", href: "/tutor-ia", btn: "Explorar Tutor IA" },
-  cursos: { title: "Catálogo de cursos gratuitos", desc: "Conferencias STPS con diploma digital y constancia DC-3.", href: "/aula-virtual", btn: "Explorar catálogo" },
+  cursos: { title: "Catálogo de cursos gratuitos", desc: "Conferencias STPS con diploma digital y constancia DC-3.", href: "/conferencias", btn: "Explorar catálogo" },
   casos: { title: "Agenda una demo personalizada", desc: "Conoce cómo Ceduverse puede transformar la capacitación de tu empresa.", href: "/empresas", btn: "Solicitar demo" },
 };
 

@@ -624,7 +624,7 @@ function ModuleCard({ mod, courseId, refetch }: { mod: CourseModule; courseId: s
 
               {editingContent && (
                 <div className="space-y-3">
-                  <p className="text-xs text-cedu-ink-muted">Edita el guión de la conferencia. Este texto es el que los alumnos ven en el Aula Virtual y se usa como base para generar el audio IA.</p>
+                  <p className="text-xs text-cedu-ink-muted">Edita el guión de la conferencia. Este texto es el que los alumnos ven en Conferencias Ceduverse y se usa como base para generar el audio IA.</p>
                   <Textarea
                     value={editedContent}
                     onChange={(e) => setEditedContent(e.target.value)}
@@ -706,7 +706,7 @@ function CourseDetailTab({ courseId, onBack }: { courseId: string; onBack: () =>
         <CardContent className="py-3 px-4">
           <p className="text-xs text-cedu-ink-muted leading-relaxed">
             <strong className="text-cedu-ink">Editor de Curso:</strong> Haz clic en cada módulo para expandirlo. Puedes subir tu propia grabación de voz para reemplazar el audio IA, 
-            y editar el guión/transcripción que los alumnos ven en el Aula Virtual.
+            y editar el guión/transcripción que los alumnos ven en Conferencias Ceduverse.
           </p>
         </CardContent>
       </Card>
@@ -1705,7 +1705,7 @@ export default function InstructorDashboard() {
     { id: "gemelo", label: "Gemelo Digital", icon: Bot },
     { id: "analytics", label: "Estadísticas", icon: BarChart3 },
     { id: "profile", label: "Perfil", icon: UserCircle },
-    { id: "aula-virtual-link", label: "Aula Virtual", icon: GraduationCap, href: "/aula-virtual" },
+    { id: "aula-virtual-link", label: "Conferencias Ceduverse", icon: GraduationCap, href: "/conferencias" },
     { id: "dashboard-link", label: "Mi Dashboard", icon: School, href: "/dashboard" },
   ];
 

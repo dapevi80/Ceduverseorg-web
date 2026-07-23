@@ -448,7 +448,7 @@ function chapter06(ctx: DocCtx) {
 
 function chapter07(ctx: DocCtx) {
   chHead(ctx, "07", "Catálogo de 78 Cursos", "29 cursos STPS + 49 cursos con Tutor IA.", CEDU_BLUE);
-  sub(ctx, "Aula Virtual STPS — 29 cursos", CEDU_BLUE);
+  sub(ctx, "Conferencias Ceduverse — 29 cursos", CEDU_BLUE);
   body(ctx, "Cursos con registro oficial ante la STPS. Cumplen requisitos para constancias DC-3 y certificados SEP.");
   bullets(ctx, [
     "Seguridad e higiene industrial", "Prevención de riesgos laborales",

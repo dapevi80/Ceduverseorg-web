@@ -1472,7 +1472,7 @@ function Footer() {
             {
               heading: "Plataforma",
               links: [
-                { label: "Catálogo", href: "/aula-virtual" },
+                { label: "Catálogo", href: "/conferencias" },
                 { label: "Para Empresas", href: "/empresas" },
                 { label: "Instructores", href: "/socios" },
                 { label: "Diplomas", href: "/auth", authHref: "/dashboard?tab=certificados" },

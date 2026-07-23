@@ -85,12 +85,12 @@ type Placa = {
   createdAt: string | null;
   rejected: boolean;
   rejectReason: string | null;
-  tookInAula: boolean; // el socio ya completó el curso gemelo en el Aula Virtual (match confiable)
+  tookInAula: boolean; // el socio ya completó el curso gemelo en Conferencias Ceduverse (match confiable)
 };
 
 const FMT = (iso: string) => new Date(iso).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
 
-// Aula Virtual (tabla `courses`) y Tutor IA (studio_courses) son catálogos
+// Conferencias Ceduverse (tabla `courses`) y Tutor IA (studio_courses) son catálogos
 // distintos con títulos parecidos pero NO idénticos. Solo afirmamos "ya lo
 // llevaste en el Aula" con un match CONFIABLE (regla no-claims-falsos): título
 // idéntico normalizado, o el mismo código NOM. Si es difuso, no se afirma nada.
@@ -132,7 +132,7 @@ export function CertificatesTab() {
   });
   const courses = coursesData?.courses ?? [];
 
-  // Aula Virtual: inscripciones + catálogo (ya en caché, los pide el dashboard).
+  // Conferencias Ceduverse: inscripciones + catálogo (ya en caché, los pide el dashboard).
   // Sirven para el PUENTE: explicar por qué un curso completado en el Aula no
   // aparece como certificado, y marcar las placas cuyo gemelo del Aula ya llevó.
   const { data: aulaEnrollments = [] } = useQuery<{ id: number; courseId: string; courseSlug: string; completed: number }[]>({
@@ -342,13 +342,13 @@ export function CertificatesTab() {
         </div>
       </div>
 
-      {/* Puente Aula Virtual → Tutor IA: explica por qué "completado" ≠ "certificado" */}
+      {/* Puente Conferencias Ceduverse → Tutor IA: explica por qué "completado" ≠ "certificado" */}
       {completedAulaTitles.length > 0 && (
         <div className="flex items-start gap-3 bg-cedu-blue-light/60 border border-cedu-blue/20 rounded-2xl px-5 py-4" data-testid="cert-aula-bridge">
           <span className="text-xl leading-none mt-0.5">💡</span>
           <div className="text-sm text-cedu-ink-soft">
             <p className="font-semibold text-cedu-ink">
-              Completaste {completedAulaTitles.length} {completedAulaTitles.length === 1 ? "curso" : "cursos"} en el Aula Virtual — pero esas clases no emiten constancia por sí solas.
+              Completaste {completedAulaTitles.length} {completedAulaTitles.length === 1 ? "curso" : "cursos"} en Conferencias Ceduverse — pero esas clases no emiten constancia por sí solas.
             </p>
             <p className="mt-1 leading-relaxed">
               Las constancias <strong>DC-3 STPS</strong> y <strong>SEP</strong> se obtienen tomando <strong>el mismo curso en el Tutor IA</strong> y aprobando su quiz. Cada placa de abajo te lleva a su curso en el Tutor IA para desbloquearla.

@@ -51,7 +51,7 @@ export default function CookiesPage() {
                     <tr className="border-b border-black/[0.04]">
                       <td className="py-3 pr-4"><code className="bg-black/[0.04] px-1.5 py-0.5 rounded text-xs">aula_virtual_onboarding_seen</code></td>
                       <td className="py-3 pr-4">Funcional</td>
-                      <td className="py-3 pr-4">Registra si ya viste la pantalla de bienvenida del Aula Virtual.</td>
+                      <td className="py-3 pr-4">Registra si ya viste la pantalla de bienvenida de Conferencias Ceduverse.</td>
                       <td className="py-3">Permanente</td>
                     </tr>
                     <tr>

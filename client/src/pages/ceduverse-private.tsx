@@ -214,7 +214,7 @@ function ModeloSection() {
           {[
             { icon: "🏢", title: "Empresas Afiliadas", desc: "Cumplen STPS, inscriben comisiones mixtas, invierten en capacitación.", color: "cedu-orange", count: "Comisiones Mixtas STPS" },
             { icon: "🤝", title: "Socios Cooperativistas", desc: "Integrantes de comisiones mixtas asociados a la cooperativa. Reciben anticipos, rendimientos y excedentes.", color: "cedu-blue", count: "Comisiones Mixtas" },
-            { icon: "🧑‍🎓", title: "Estudiantes", desc: "Personas individuales que acceden a cursos, diplomados y certificaciones en la plataforma.", color: "cedu-green", count: "Aula Virtual + Academy" },
+            { icon: "🧑‍🎓", title: "Estudiantes", desc: "Personas individuales que acceden a cursos, diplomados y certificaciones en la plataforma.", color: "cedu-green", count: "Conferencias Ceduverse + Academy" },
             { icon: "🧑‍🏫", title: "Instructores", desc: "Facilitadores certificados DC-5 que imparten cursos dentro del ecosistema cooperativo.", color: "cedu-violet", count: "Con aptitud STPS" },
           ].map((p, i) => (
             <div key={i} className={`flex-1 min-w-[240px] p-[18px] rounded-[14px] border
@@ -243,7 +243,7 @@ function ModeloSection() {
         <h3 className="text-lg font-serif text-cedu-ink mb-4">Plataforma E-Learning</h3>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3">
           {[
-            { icon: "📋", name: "Aula Virtual", sub: "29 cursos STPS", desc: "Conferencias de temas STPS con diploma digital y DC-3 disponible.", color: "text-cedu-blue" },
+            { icon: "📋", name: "Conferencias Ceduverse", sub: "29 cursos STPS", desc: "Conferencias de temas STPS con diploma digital y DC-3 disponible.", color: "text-cedu-blue" },
             { icon: "🤖", name: "Tutor IA", sub: "49 cursos con IA", desc: "Cursos personalizados por instructores y la IA, listos para escuchar.", color: "text-cedu-violet" },
             { icon: "📚", name: "Academy", sub: "988 cursos", desc: "Biblioteca completa. Diplomados, talleres, especializaciones.", color: "text-cedu-orange" },
             { icon: "🔗", name: "Certificados Blockchain", sub: "NFTs en Polygon", desc: "DC-3, DC-5, diplomas como tokens verificables e inmutables.", color: "text-cedu-green" },
@@ -448,9 +448,9 @@ function FlujoSection() {
 
 function PlanesSection() {
   const planes = [
-    { name: "Impulsa", umas: 6, fee: 20, color: "green", range: "1–10 colaboradores", desc: "Entrada accesible para PyMEs.", certDiscount: 5, feats: ["Aula Virtual + Tutor IA + Academy", "DC-3 con 5% desc.", "Soporte básico", "5% desc. en todas las certificaciones"] },
-    { name: "Transforma", umas: 10, fee: 13, color: "blue", range: "11–99 colaboradores", desc: "Mayor volumen, menor comisión.", certDiscount: 10, feats: ["Aula Virtual + Tutor IA + Academy", "DC-3 + DC-5 con 10% desc.", "Consultor dedicado", "Reportes STPS", "10% desc. en todas las certificaciones"] },
-    { name: "Lidera", umas: 20, fee: 10, color: "violet", range: "100–500 colaboradores", desc: "Máximo beneficio para corporativos.", certDiscount: 15, feats: ["Aula Virtual + Tutor IA + Academy", "DC-3 + DC-5 con 15% desc.", "Director de cuenta", "API empresarial", "Certificados NFT", "Prioridad en soporte", "15% desc. en todas las certificaciones"] },
+    { name: "Impulsa", umas: 6, fee: 20, color: "green", range: "1–10 colaboradores", desc: "Entrada accesible para PyMEs.", certDiscount: 5, feats: ["Conferencias Ceduverse + Tutor IA + Academy", "DC-3 con 5% desc.", "Soporte básico", "5% desc. en todas las certificaciones"] },
+    { name: "Transforma", umas: 10, fee: 13, color: "blue", range: "11–99 colaboradores", desc: "Mayor volumen, menor comisión.", certDiscount: 10, feats: ["Conferencias Ceduverse + Tutor IA + Academy", "DC-3 + DC-5 con 10% desc.", "Consultor dedicado", "Reportes STPS", "10% desc. en todas las certificaciones"] },
+    { name: "Lidera", umas: 20, fee: 10, color: "violet", range: "100–500 colaboradores", desc: "Máximo beneficio para corporativos.", certDiscount: 15, feats: ["Conferencias Ceduverse + Tutor IA + Academy", "DC-3 + DC-5 con 15% desc.", "Director de cuenta", "API empresarial", "Certificados NFT", "Prioridad en soporte", "15% desc. en todas las certificaciones"] },
   ];
   const colorMap: Record<string, { text: string; badge: string }> = {
     green: { text: "text-cedu-green", badge: "green" },
@@ -523,7 +523,7 @@ function PlanesSection() {
       <HoverCard className="mb-[18px] !bg-cedu-blue-light !border-cedu-blue/[0.09]">
         <h3 className="text-base font-serif text-cedu-blue mb-3">🆓 Primer año gratuito para estudiantes</h3>
         <p className="text-[13px] text-cedu-ink-soft leading-[1.7] m-0">
-          Todos los usuarios estudiantes tienen <strong className="text-cedu-ink">acceso gratuito</strong> al uso de las herramientas de capacitación de la plataforma durante el <strong className="text-cedu-blue">primer año</strong>. Incluye Aula Virtual, Tutor IA, Academy y certificados digitales básicos (DC-3).
+          Todos los usuarios estudiantes tienen <strong className="text-cedu-ink">acceso gratuito</strong> al uso de las herramientas de capacitación de la plataforma durante el <strong className="text-cedu-blue">primer año</strong>. Incluye Conferencias Ceduverse, Tutor IA, Academy y certificados digitales básicos (DC-3).
         </p>
       </HoverCard>
 

@@ -68,7 +68,7 @@ function BlogNavbar() {
         </Link>
         <div className="flex items-center gap-4">
           <Link href="/blog" className="text-sm font-semibold text-cedu-blue no-underline" data-testid="blog-nav-blog">Blog</Link>
-          <Link href="/aula-virtual" className="text-sm font-semibold text-cedu-ink-muted hover:text-cedu-ink no-underline hidden sm:block" data-testid="blog-nav-cursos">Cursos</Link>
+          <Link href="/conferencias" className="text-sm font-semibold text-cedu-ink-muted hover:text-cedu-ink no-underline hidden sm:block" data-testid="blog-nav-cursos">Cursos</Link>
           <Link href="/empresas" className="text-sm font-semibold text-cedu-ink-muted hover:text-cedu-ink no-underline hidden sm:block" data-testid="blog-nav-empresas">Empresas</Link>
           <Link href="/auth">
             <Button size="sm" className="rounded-xl bg-cedu-blue hover:bg-cedu-blue/90 text-white text-xs h-8 px-4" data-testid="blog-nav-login">
@@ -330,10 +330,10 @@ export default function BlogListPage() {
                   <h3 className="font-serif text-base text-cedu-ink">Cursos gratuitos</h3>
                 </div>
                 <div className="space-y-3">
-                  <Link href="/aula-virtual/nom-035-stps-medina" className="block text-sm text-cedu-ink hover:text-cedu-blue no-underline" data-testid="blog-sidebar-course-1">
+                  <Link href="/conferencias/nom-035-stps-medina" className="block text-sm text-cedu-ink hover:text-cedu-blue no-underline" data-testid="blog-sidebar-course-1">
                     NOM-035 STPS <ChevronRight size={12} className="inline" />
                   </Link>
-                  <Link href="/aula-virtual/formacion-instructores" className="block text-sm text-cedu-ink hover:text-cedu-blue no-underline" data-testid="blog-sidebar-course-2">
+                  <Link href="/conferencias/formacion-instructores" className="block text-sm text-cedu-ink hover:text-cedu-blue no-underline" data-testid="blog-sidebar-course-2">
                     Formación de Instructores <ChevronRight size={12} className="inline" />
                   </Link>
                   <Link href="/tutor-ia" className="block text-sm text-cedu-ink hover:text-cedu-blue no-underline" data-testid="blog-sidebar-course-3">

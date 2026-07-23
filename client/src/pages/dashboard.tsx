@@ -182,7 +182,7 @@ type SidebarItem = { id: string; label: string; icon: typeof LayoutDashboard; hr
 const SIDEBAR_MAP: Record<string, SidebarItem> = {
   resumen: { id: "overview", label: "Resumen", icon: LayoutDashboard },
   mis_cursos: { id: "courses", label: "Mis Cursos", icon: BookOpen },
-  aula_virtual: { id: "aula-virtual", label: "Aula Virtual", icon: School, href: "/aula-virtual" },
+  aula_virtual: { id: "aula-virtual", label: "Conferencias Ceduverse", icon: School, href: "/conferencias" },
   tutor_ia: { id: "tutor-ia-link", label: "Tutor IA", icon: Brain, href: "/tutor-ia" },
   academy: { id: "academy-link", label: "Academy", icon: Library, href: "/academy" },
   logros: { id: "achievements", label: "Logros", icon: Trophy },
@@ -521,7 +521,7 @@ function OverviewTab({ profile, account, enrollments, allCourses, userAchievemen
         <Card className="border-black/[0.06]" data-testid="card-continue-learning">
           <CardContent className="pt-5 pb-5">
             <h3 className="font-serif text-base text-cedu-ink mb-3">Continuar aprendiendo</h3>
-            <Link href={`/aula-virtual/${lastCourse!.courseSlug}`} className="no-underline">
+            <Link href={`/conferencias/${lastCourse!.courseSlug}`} className="no-underline">
               <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-[#1b5adf]/[0.03] hover:bg-[#1b5adf]/[0.06] transition-colors cursor-pointer">
                 <div className="w-11 h-11 sm:w-14 sm:h-14 bg-gradient-to-br from-[#1b5adf] to-[#7c3aed] rounded-xl flex items-center justify-center flex-shrink-0">
                   <Play size={20} className="text-white sm:hidden" />
@@ -529,7 +529,7 @@ function OverviewTab({ profile, account, enrollments, allCourses, userAchievemen
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-cedu-ink line-clamp-1" data-testid="text-continue-course">{lastCourseInfo.title}</p>
-                  <p className="text-xs text-cedu-ink-muted mt-0.5 hidden sm:block">{lastCourseInfo.instructor || "Aula Virtual STPS"}</p>
+                  <p className="text-xs text-cedu-ink-muted mt-0.5 hidden sm:block">{lastCourseInfo.instructor || "Conferencias Ceduverse"}</p>
                   <div className="mt-2">
                     <Progress value={lastCourse!.completed} className="h-2" />
                   </div>
@@ -548,7 +548,7 @@ function OverviewTab({ profile, account, enrollments, allCourses, userAchievemen
             <GraduationCap size={36} className="mx-auto text-cedu-ink-muted/40 mb-3" />
             <p className="text-sm font-semibold text-cedu-ink mb-1">Aún no has empezado un curso</p>
             <p className="text-xs text-cedu-ink-muted mb-4">¡Explora el catálogo y comienza tu aprendizaje!</p>
-            <Link href="/aula-virtual">
+            <Link href="/conferencias">
               <Button className="bg-[#1b5adf] hover:bg-blue-700 text-white" data-testid="button-explore-courses">
                 Ver cursos <ArrowRight size={14} className="ml-1" />
               </Button>
@@ -558,14 +558,14 @@ function OverviewTab({ profile, account, enrollments, allCourses, userAchievemen
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Link href="/aula-virtual" className="no-underline">
+        <Link href="/conferencias" className="no-underline">
           <Card className="border-black/[0.06] overflow-hidden hover:shadow-md hover:scale-[1.02] transition-all cursor-pointer h-full" data-testid="card-catalog-aula">
             <div className="h-1.5 bg-gradient-to-r from-[#1b5adf] to-[#7c3aed]" />
             <CardContent className="pt-5 pb-5 text-center">
               <div className="w-12 h-12 bg-[#1b5adf]/10 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <BookOpen size={24} className="text-[#1b5adf]" />
               </div>
-              <h3 className="font-serif text-base text-cedu-ink">Aula Virtual</h3>
+              <h3 className="font-serif text-base text-cedu-ink">Conferencias Ceduverse</h3>
               <p className="text-xs text-cedu-ink-muted mt-1">29 cursos STPS</p>
               <p className="text-[10px] text-cedu-ink-muted mt-0.5">Instructores reales + DC-3</p>
             </CardContent>
@@ -772,10 +772,10 @@ function CoursesTab({ enrollments, allCourses }: {
       return {
         id: `stps-${e.id}`,
         title: course?.title || e.courseSlug,
-        subtitle: course?.instructor || "Aula Virtual STPS",
+        subtitle: course?.instructor || "Conferencias Ceduverse",
         progress: e.completed,
         type: "stps",
-        href: `/aula-virtual/${e.courseSlug}`,
+        href: `/conferencias/${e.courseSlug}`,
         icon: "🏛️",
         color: "text-cedu-blue",
         bgColor: "bg-cedu-blue-light",
@@ -835,12 +835,12 @@ function CoursesTab({ enrollments, allCourses }: {
               Cada paso te acerca a tus metas profesionales.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto">
-              <Link href="/aula-virtual" className="no-underline">
+              <Link href="/conferencias" className="no-underline">
                 <div className="p-4 rounded-xl border border-black/[0.06] hover:border-cedu-blue/20 hover:shadow-sm transition-all text-center group" data-testid="link-empty-aula">
                   <div className="w-10 h-10 bg-cedu-blue-light rounded-lg flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
                     <School size={20} className="text-cedu-blue" />
                   </div>
-                  <p className="text-xs font-semibold text-cedu-ink">Aula Virtual</p>
+                  <p className="text-xs font-semibold text-cedu-ink">Conferencias Ceduverse</p>
                   <p className="text-[10px] text-cedu-ink-muted mt-0.5">29 cursos STPS</p>
                 </div>
               </Link>
@@ -939,7 +939,7 @@ function CoursesTab({ enrollments, allCourses }: {
               }`}
               data-testid="filter-source-stps"
             >
-              <School size={12} /> Aula Virtual <span className="ml-1 text-[10px] opacity-70">{stpsCount}</span>
+              <School size={12} /> Conferencias Ceduverse <span className="ml-1 text-[10px] opacity-70">{stpsCount}</span>
             </button>
           )}
           {tutorIaCount > 0 && (
@@ -1813,7 +1813,7 @@ export default function Dashboard() {
   const defaultNavItems: SidebarItem[] = [
     { id: "overview", label: "Resumen", icon: LayoutDashboard },
     { id: "courses", label: "Mis Cursos", icon: BookOpen },
-    { id: "aula-virtual", label: "Aula Virtual", icon: School, href: "/aula-virtual" },
+    { id: "aula-virtual", label: "Conferencias Ceduverse", icon: School, href: "/conferencias" },
     { id: "academy-link", label: "Academy", icon: Library, href: "/academy" },
     { id: "achievements", label: "Logros", icon: Trophy },
     { id: "wallet", label: "Wallet", icon: Wallet },

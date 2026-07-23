@@ -26,12 +26,12 @@ interface ShareCourseModalProps {
 const courseTypeConfig = {
   "aula-virtual": {
     label: "Conferencia pregrabada con expertos",
-    sublabel: "Aula Virtual — Capacitación STPS",
+    sublabel: "Conferencias Ceduverse — Capacitación STPS",
     icon: Video,
     color: "cedu-blue",
     bgClass: "bg-cedu-blue-light/50 dark:bg-cedu-blue/10 border-cedu-blue/10 dark:border-cedu-blue/20",
     shareIntro: "¡Te comparto esta conferencia pregrabada con expertos en",
-    shareBody: "Es parte del Aula Virtual de Ceduverse — conferencias profesionales con especialistas certificados en cumplimiento STPS y desarrollo laboral.",
+    shareBody: "Es parte de Conferencias Ceduverse — conferencias profesionales con especialistas certificados en cumplimiento STPS y desarrollo laboral.",
   },
   "tutor-ia": {
     label: "Curso con Tutor de Inteligencia Artificial",
@@ -84,7 +84,7 @@ export default function ShareCourseModal({
       case "tutor-ia":
         return `/tutor-ia/${courseSlug}/onboarding`;
       case "aula-virtual":
-        return `/aula-virtual/${courseSlug}`;
+        return `/conferencias/${courseSlug}`;
       case "academy":
         return `/academy/${courseId || courseSlug}`;
       default:

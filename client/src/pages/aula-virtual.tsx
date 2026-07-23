@@ -122,7 +122,7 @@ function CourseCard({ course }: { course: CourseInfo }) {
   );
 
   return (
-    <Link href={`/aula-virtual/${course.slug}`}>
+    <Link href={`/conferencias/${course.slug}`}>
       <Card
         className="border-black/[0.06] hover-elevate active-elevate-2 cursor-pointer h-full"
         data-testid={`card-course-${course.slug}`}
@@ -291,11 +291,11 @@ export default function AulaVirtual() {
             className="font-serif text-3xl sm:text-4xl text-white mb-3"
             data-testid="text-hero-title"
           >
-            Aula de Capacitación Virtual STPS
+            Conferencias Ceduverse
           </h1>
           <p className="text-white/80 text-sm sm:text-base max-w-xl mx-auto mb-6">
-            Cursos alineados a las Normas Oficiales Mexicanas para el cumplimiento
-            normativo de tu centro de trabajo. Diploma digital gratis al aprobar.
+            Conferencias tipo charla alineadas a las Normas Oficiales Mexicanas para el
+            cumplimiento normativo de tu centro de trabajo. Diploma digital gratis al aprobar.
           </p>
           <div className="flex flex-wrap justify-center gap-4 text-white/90 text-sm">
             <span className="flex items-center gap-1.5" data-testid="stat-courses">

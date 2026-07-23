@@ -97,8 +97,13 @@ function Router() {
       <Route path="/kit-cooperativo" component={KitCooperativo} />
       <Route path="/academy" component={AcademyPage} />
       <Route path="/academy/:id" component={AcademyCourse} />
-      <Route path="/aula-virtual" component={AulaVirtual} />
-      <Route path="/aula-virtual/:slug" component={CursoVirtual} />
+      <Route path="/conferencias" component={AulaVirtual} />
+      <Route path="/conferencias/:slug" component={CursoVirtual} />
+      {/* Rutas viejas: redirect para no romper enlaces/bookmarks previos al rename. */}
+      <Route path="/aula-virtual"><Redirect to="/conferencias" /></Route>
+      <Route path="/aula-virtual/:slug">
+        {(params) => <Redirect to={`/conferencias/${params.slug}`} />}
+      </Route>
       <Route path="/tutor-ia" component={StudioPage} />
       <Route path="/tutor-ia/:slug/onboarding" component={TutorIaOnboarding} />
       <Route path="/tutor-ia/:slug" component={StudioCoursePage} />

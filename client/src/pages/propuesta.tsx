@@ -508,7 +508,7 @@ function SlideModelo() {
                 </div>
                 <div className="mt-4 pt-3 border-t border-gray-100 text-left space-y-1">
                   <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Incluye</p>
-                  <p className="text-xs text-gray-600">Aula Virtual + Tutor IA + Academy</p>
+                  <p className="text-xs text-gray-600">Conferencias Ceduverse + Tutor IA + Academy</p>
                   <p className="text-xs text-gray-600">{p.certDiscount}% desc. en todas las certificaciones</p>
                 </div>
               </div>

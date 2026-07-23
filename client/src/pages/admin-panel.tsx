@@ -506,7 +506,7 @@ function CursosTab() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-serif text-2xl text-cedu-ink" data-testid="text-admin-cursos-title">Gestión de Cursos</h2>
-          <p className="text-sm text-cedu-ink-muted">{coursesList?.length || 0} cursos registrados en Aula Virtual</p>
+          <p className="text-sm text-cedu-ink-muted">{coursesList?.length || 0} cursos registrados en Conferencias Ceduverse</p>
         </div>
       </div>
 
@@ -1241,8 +1241,8 @@ const ROLE_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 const ROLE_ACCESS_MAP: Record<string, string[]> = {
-  socio_estudiante: ["Cursos STPS", "Certificaciones DC-3", "Aula Virtual", "Wallet Web3"],
-  socio_instructor: ["Cursos STPS", "Certificaciones DC-3", "Aula Virtual", "Wallet Web3", "Impartir cursos", "Sesiones privadas", "Gemelo Digital", "Panel de instructor"],
+  socio_estudiante: ["Cursos STPS", "Certificaciones DC-3", "Conferencias Ceduverse", "Wallet Web3"],
+  socio_instructor: ["Cursos STPS", "Certificaciones DC-3", "Conferencias Ceduverse", "Wallet Web3", "Impartir cursos", "Sesiones privadas", "Gemelo Digital", "Panel de instructor"],
   socio_comercial: ["Cursos STPS", "Certificaciones DC-3", "Wallet Web3", "CRM Comercial", "Gestión de prospectos", "Comisiones", "Kit Cooperativo"],
   director: ["Cursos STPS", "Certificaciones DC-3", "Wallet Web3", "CRM Comercial", "Gestión de prospectos", "Comisiones", "Kit Cooperativo", "Equipo comercial", "Métricas de zona"],
   empresa: ["Panel empresarial", "Gestión de empleados", "Objetivos de capacitación", "Reportes", "Facturación CFDI"],
@@ -5600,13 +5600,13 @@ export default function AdminPanel() {
               </span>
             </Link>
           )}
-          <Link href="/aula-virtual">
+          <Link href="/conferencias">
             <span
               className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-cedu-ink-muted hover:bg-black/[0.03] hover:text-cedu-ink transition-all cursor-pointer"
               data-testid="nav-admin-aula-virtual"
             >
               <GraduationCap size={18} />
-              Aula Virtual
+              Conferencias Ceduverse
             </span>
           </Link>
           <Link href="/dashboard">

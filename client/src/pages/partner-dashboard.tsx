@@ -251,7 +251,7 @@ export default function PartnerDashboard() {
   ];
 
   const externalLinks: { id: string; label: string; icon: typeof BarChart3; href: string }[] = [
-    { id: "aula-virtual", label: "Aula Virtual", icon: GraduationCap, href: "/aula-virtual" },
+    { id: "aula-virtual", label: "Conferencias Ceduverse", icon: GraduationCap, href: "/conferencias" },
     { id: "certificados", label: "Certificados", icon: Award, href: "/dashboard?tab=certificados" },
     { id: "mi-dashboard", label: "Mi Dashboard", icon: ArrowLeft, href: "/dashboard" },
   ];

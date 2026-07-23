@@ -442,9 +442,9 @@ function SimuladorRendimientos() {
   const [dc3Pct, setDc3Pct] = useState(40);
 
   const plans = {
-    impulsa: { umas: 6, fee: 0.20, label: "Impulsa", range: "1–10 colaboradores", desc: "6 UMAs/colaborador/mes. Ideal para negocios pequeños. Incluye Aula Virtual, Tutor IA, Academy y 5% desc. en certificaciones." },
-    transforma: { umas: 10, fee: 0.13, label: "Transforma", range: "11–99 colaboradores", desc: "10 UMAs/colaborador/mes. Para PyMEs en crecimiento. Incluye Aula Virtual, Tutor IA, Academy y 10% desc. en certificaciones." },
-    lidera: { umas: 20, fee: 0.10, label: "Lidera", range: "100–500 colaboradores", desc: "20 UMAs/colaborador/mes. Para empresas grandes. Incluye Aula Virtual, Tutor IA, Academy y 15% desc. en certificaciones." },
+    impulsa: { umas: 6, fee: 0.20, label: "Impulsa", range: "1–10 colaboradores", desc: "6 UMAs/colaborador/mes. Ideal para negocios pequeños. Incluye Conferencias Ceduverse, Tutor IA, Academy y 5% desc. en certificaciones." },
+    transforma: { umas: 10, fee: 0.13, label: "Transforma", range: "11–99 colaboradores", desc: "10 UMAs/colaborador/mes. Para PyMEs en crecimiento. Incluye Conferencias Ceduverse, Tutor IA, Academy y 10% desc. en certificaciones." },
+    lidera: { umas: 20, fee: 0.10, label: "Lidera", range: "100–500 colaboradores", desc: "20 UMAs/colaborador/mes. Para empresas grandes. Incluye Conferencias Ceduverse, Tutor IA, Academy y 15% desc. en certificaciones." },
   };
 
   // Precios desde la fuente ÚNICA de verdad (@shared/cert-pricing), la misma que
@@ -678,7 +678,7 @@ function SimuladorRendimientos() {
 
 function CatalogoSection() {
   const catalogs = [
-    { icon: BookOpen, title: "Aula Virtual STPS", count: 29, desc: "Instructores reales, contenido multimedia, certificación DC-3 oficial", gradient: "from-[#1b5adf]/5 to-[#1b5adf]/10", textColor: "text-[#1b5adf]" },
+    { icon: BookOpen, title: "Conferencias Ceduverse", count: 29, desc: "Instructores reales, contenido multimedia, certificación DC-3 oficial", gradient: "from-[#1b5adf]/5 to-[#1b5adf]/10", textColor: "text-[#1b5adf]" },
     { icon: Brain, title: "Tutor IA", count: 49, desc: "Contenido personalizado por IA al puesto e industria del trabajador", gradient: "from-[#7c3aed]/5 to-[#7c3aed]/10", textColor: "text-[#7c3aed]" },
     { icon: Library, title: "Academy", count: 988, desc: "Catálogo completo de ceducap.academy sincronizado", gradient: "from-[#f28023]/5 to-[#f28023]/10", textColor: "text-[#f28023]" },
   ];

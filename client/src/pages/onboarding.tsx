@@ -694,7 +694,7 @@ function CompletionStep({ onFinish }: { onFinish: () => void }) {
         ¡Ya estás listo!
       </h1>
       <p className="text-cedu-ink-muted text-base max-w-md mx-auto mb-8">
-        Tu cuenta está configurada. Explora el Aula Virtual, toma cursos STPS y colecciona logros certificados en blockchain.
+        Tu cuenta está configurada. Explora Conferencias Ceduverse, toma cursos STPS y colecciona logros certificados en blockchain.
       </p>
       <Button
         onClick={() => completeMutation.mutate()}

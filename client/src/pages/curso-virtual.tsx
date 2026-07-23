@@ -451,7 +451,7 @@ function PdfDownloadButton({ courseTitle }: { courseTitle: string }) {
       subtitle.style.fontSize = "12px";
       subtitle.style.color = "#666";
       subtitle.style.margin = "0";
-      subtitle.textContent = "Material de capacitación — Ceduverse Aula Virtual STPS";
+      subtitle.textContent = "Material de capacitación — Ceduverse Conferencias STPS";
       header.appendChild(h1);
       header.appendChild(subtitle);
       wrapper.appendChild(header);
@@ -485,7 +485,7 @@ function PdfDownloadButton({ courseTitle }: { courseTitle: string }) {
       const now = new Date();
       const dateStr = now.toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" });
       const footerLeft = document.createElement("span");
-      footerLeft.textContent = "Ceduverse — Aula Virtual STPS";
+      footerLeft.textContent = "Ceduverse — Conferencias STPS";
       const footerRight = document.createElement("span");
       footerRight.textContent = `Generado: ${dateStr}`;
       footer.appendChild(footerLeft);
@@ -958,7 +958,7 @@ export default function CursoVirtual() {
       localStorage.removeItem(`ceduverse-completed-${slug}`);
       setCompletedModules(new Set());
       toast({ title: "Has salido del curso", description: "Tu inscripción ha sido eliminada." });
-      navigate("/aula-virtual");
+      navigate("/conferencias");
     },
     onError: () => {
       toast({ title: "Error", description: "No se pudo salir del curso.", variant: "destructive" });
@@ -1030,9 +1030,9 @@ export default function CursoVirtual() {
         <div className="text-center">
           <AlertCircle size={48} className="mx-auto text-cedu-ink-muted/40 mb-4" />
           <h2 className="font-serif text-xl text-cedu-ink mb-2">Curso no encontrado</h2>
-          <Link href="/aula-virtual">
+          <Link href="/conferencias">
             <Button className="bg-cedu-blue hover:bg-cedu-blue-dark mt-4" data-testid="button-back-aula">
-              Volver al Aula Virtual
+              Volver a Conferencias
             </Button>
           </Link>
         </div>
@@ -1066,9 +1066,9 @@ export default function CursoVirtual() {
             Iniciar curso
           </Button>
           <div className="mt-4">
-            <Link href="/aula-virtual">
+            <Link href="/conferencias">
               <Button variant="outline" data-testid="button-back-aula">
-                <ArrowLeft size={14} className="mr-2" /> Volver al Aula Virtual
+                <ArrowLeft size={14} className="mr-2" /> Volver a Conferencias
               </Button>
             </Link>
           </div>
@@ -1190,9 +1190,9 @@ export default function CursoVirtual() {
     <div className="min-h-screen bg-cedu-cream" data-testid="page-curso-virtual">
       <header className="sticky top-0 z-20 bg-cedu-cream/85 backdrop-blur-xl border-b border-black/[0.06] px-4 sm:px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <Link href="/aula-virtual">
+          <Link href="/conferencias">
             <Button variant="ghost" size="sm" className="gap-1 text-cedu-ink-muted" data-testid="button-back-aula">
-              <ArrowLeft size={16} /> <span className="hidden sm:inline">Aula Virtual</span>
+              <ArrowLeft size={16} /> <span className="hidden sm:inline">Conferencias</span>
             </Button>
           </Link>
           <div className="min-w-0">
@@ -1260,9 +1260,9 @@ export default function CursoVirtual() {
             <p className="text-sm text-cedu-ink-muted max-w-md mb-2">
               Estamos trabajando en el contenido de este curso. La sesión estará disponible muy pronto.
             </p>
-            <Link href="/aula-virtual">
+            <Link href="/conferencias">
               <Button className="bg-cedu-blue hover:bg-cedu-blue-dark mt-4" data-testid="button-back-aula-empty">
-                <ArrowLeft size={16} className="mr-2" /> Volver al Aula Virtual
+                <ArrowLeft size={16} className="mr-2" /> Volver a Conferencias
               </Button>
             </Link>
           </div>
@@ -1359,7 +1359,7 @@ export default function CursoVirtual() {
               </div>
               <DialogHeader className="space-y-1">
                 <DialogTitle className="font-serif text-2xl text-cedu-ink text-center" data-testid="onboarding-title">
-                  Bienvenido al Aula Virtual STPS
+                  Bienvenido a Conferencias Ceduverse
                 </DialogTitle>
                 <DialogDescription className="text-cedu-ink-muted text-sm text-center">
                   Así funciona tu capacitación:
