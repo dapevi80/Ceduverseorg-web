@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Mic, Loader2, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Mic, Loader2, ChevronDown, ChevronUp, RefreshCw, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
+import { useAudioPlayer } from "@/components/audio/audio-player-context";
 
 interface AudioClassPlayerProps {
   courseSlug: string;
@@ -41,7 +42,9 @@ function extractSectionMarkers(script: string): SectionMarker[] {
 }
 
 export default function AudioClassPlayer({ courseSlug, moduleIndex, classScript, moduleTitle }: AudioClassPlayerProps) {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const player = useAudioPlayer();
+  const trackId = `studio:${courseSlug}:${moduleIndex}`;
+  const isThisPlaying = player.track?.id === trackId && player.isPlaying;
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [pollInterval, setPollInterval] = useState<number | false>(false);
 
@@ -90,14 +93,13 @@ export default function AudioClassPlayer({ courseSlug, moduleIndex, classScript,
   const handleRegenerateAudio = useCallback(async () => {
     setIsRegeneratingAudio(true);
     try {
-      const audio = audioRef.current;
-      if (audio) { audio.pause(); }
+      player.stop();
       await apiRequest("POST", `/api/studio/courses/${courseSlug}/modules/${moduleIndex}/audio/regenerate`);
       refetch();
     } finally {
       setIsRegeneratingAudio(false);
     }
-  }, [courseSlug, moduleIndex, refetch]);
+  }, [courseSlug, moduleIndex, refetch, player]);
 
   if (!audioData || audioData.status === "no_script") {
     return null;
@@ -170,14 +172,13 @@ export default function AudioClassPlayer({ courseSlug, moduleIndex, classScript,
           </button>
         </div>
 
-        <audio
-          ref={audioRef}
-          src={audioData.audioUrl}
-          controls
-          preload="metadata"
-          className="w-full"
+        <button
+          onClick={() => player.toggle({ id: trackId, url: audioData.audioUrl!, title: moduleTitle || "Clase en Audio" })}
+          className="flex items-center gap-2 w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-sm font-semibold justify-center"
           data-testid="audio-native-player"
-        />
+        >
+          {isThisPlaying ? <><Pause className="h-4 w-4" /> Pausar</> : <><Play className="h-4 w-4" /> Escuchar la clase</>}
+        </button>
 
         {!isCollapsed && (
           <div className="space-y-3 mt-3">
