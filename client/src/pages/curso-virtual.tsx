@@ -54,6 +54,8 @@ import {
 } from "lucide-react";
 import ShareCourseModal from "@/components/ShareCourseModal";
 import InfographicView from "@/components/InfographicView";
+import { useAudioPlayer } from "@/components/audio/audio-player-context";
+import { resolveAudioUrl } from "@/lib/audio-url";
 
 type CourseInfo = {
   id: string;
@@ -103,112 +105,25 @@ function StpsPlayer({
   onListeningProgress?: (pct: number) => void;
   initialListeningPct?: number;
 }) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [playbackRate, setPlaybackRate] = useState(1);
-  const listenedSegments = useRef<Set<number>>(new Set());
-  const lastTimeRef = useRef<number>(0);
-  const maxListenedSecond = useRef<number>(0);
+  const player = useAudioPlayer();
+  const trackId = `conf:${audioUrl}`;
+  const isThis = player.track?.id === trackId;
+  const isPlaying = isThis && player.isPlaying;
+  const currentTime = isThis ? player.currentTime : 0;
+  const duration = isThis ? player.duration : 0;
+  const playbackRate = isThis ? player.playbackRate : 1;
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  useEffect(() => {
-    if (initialListeningPct && initialListeningPct > 0) {
-      const audio = audioRef.current;
-      if (audio && audio.duration && audio.duration > 0) {
-        const totalSegs = Math.ceil(audio.duration);
-        const preSegs = Math.floor((initialListeningPct / 100) * totalSegs);
-        for (let s = 0; s < preSegs; s++) listenedSegments.current.add(s);
-        maxListenedSecond.current = preSegs;
-      }
-    }
-  }, [initialListeningPct, duration]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    // El audio ahora cambia al cambiar de módulo activo. Sin reiniciar los
-    // contadores de escucha, el progreso del módulo anterior se arrastraría y
-    // el guardia anti-adelanto (maxListenedSecond + 10%) dejaría saltarse el
-    // audio nuevo por completo.
-    listenedSegments.current = new Set();
-    maxListenedSecond.current = 0;
-    lastTimeRef.current = 0;
-    setProgress(0);
-    setCurrentTime(0);
-    setIsPlaying(false);
-    const onTimeUpdate = () => {
-      const ct = audio.currentTime;
-      const dur = audio.duration;
-      setCurrentTime(ct);
-      setProgress(dur ? (ct / dur) * 100 : 0);
-
-      const diff = ct - lastTimeRef.current;
-      if (diff > 0 && diff < 2) {
-        const seg = Math.floor(ct);
-        listenedSegments.current.add(seg);
-        if (seg > maxListenedSecond.current) maxListenedSecond.current = seg;
-        if (dur && dur > 0 && onListeningProgress) {
-          const totalSegs = Math.ceil(dur);
-          const pct = (listenedSegments.current.size / totalSegs) * 100;
-          onListeningProgress(pct);
-        }
-      }
-      lastTimeRef.current = ct;
-    };
-    const onLoadedMetadata = () => setDuration(audio.duration);
-    const onEnded = () => setIsPlaying(false);
-    const onSeeking = () => {
-      const dur = audio.duration;
-      if (!dur || dur <= 0) return;
-      const maxAllowed = maxListenedSecond.current + (dur * 0.1);
-      if (audio.currentTime > maxAllowed) {
-        audio.currentTime = maxAllowed;
-      }
-    };
-    const onSeeked = () => { lastTimeRef.current = audio.currentTime; };
-    audio.addEventListener("timeupdate", onTimeUpdate);
-    audio.addEventListener("loadedmetadata", onLoadedMetadata);
-    audio.addEventListener("ended", onEnded);
-    audio.addEventListener("seeking", onSeeking);
-    audio.addEventListener("seeked", onSeeked);
-    return () => {
-      audio.removeEventListener("timeupdate", onTimeUpdate);
-      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
-      audio.removeEventListener("ended", onEnded);
-      audio.removeEventListener("seeking", onSeeking);
-      audio.removeEventListener("seeked", onSeeked);
-    };
-  }, [audioUrl]);
-
-  const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (isPlaying) audio.pause();
-    else audio.play();
-    setIsPlaying(!isPlaying);
-  };
-
-  const skip = (seconds: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const dur = audio.duration || 0;
-    let target = audio.currentTime + seconds;
-    if (seconds > 0) {
-      const maxAllowed = maxListenedSecond.current + (dur * 0.1);
-      target = Math.min(target, maxAllowed);
-    }
-    audio.currentTime = Math.max(0, Math.min(dur, target));
-  };
-
-  const changeSpeed = () => {
-    const speeds = [0.75, 1, 1.25, 1.5, 2];
-    const nextIdx = (speeds.indexOf(playbackRate) + 1) % speeds.length;
-    const newRate = speeds[nextIdx];
-    setPlaybackRate(newRate);
-    if (audioRef.current) audioRef.current.playbackRate = newRate;
-  };
+  const startOrToggle = () => player.toggle({
+    id: trackId,
+    url: audioUrl || "",
+    title: course.title,
+    subtitle: course.instructor ?? undefined,
+    restrictSeek: true,
+    onProgress: onListeningProgress,
+    initialPct: initialListeningPct,
+  });
+  const doSkip = (sec: number) => { if (isThis) player.skip(sec); else startOrToggle(); };
 
   const formatTime = (s: number) => {
     const h = Math.floor(s / 3600);
@@ -221,12 +136,7 @@ function StpsPlayer({
   const instructorInitial = course.instructor ? course.instructor.replace(/^(Psic\.|Ing\.)\s*/i, "").charAt(0).toUpperCase() : "C";
   const totalDuration = modules.reduce((s, m) => s + (m.durationMinutes || 0), 0);
 
-  const resolvedAudioUrl = (() => {
-    if (!audioUrl) return null;
-    if (audioUrl.startsWith("/audio/") || audioUrl.startsWith("http")) return audioUrl;
-    const filename = audioUrl.replace(/^audio-cache\//, "");
-    return `/audio/${filename}`;
-  })();
+  const resolvedAudioUrl = resolveAudioUrl(audioUrl);
 
   if (!resolvedAudioUrl) {
     return (
@@ -270,7 +180,6 @@ function StpsPlayer({
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#1b5adf] rounded-full blur-[100px]" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#7c3aed] rounded-full blur-[80px]" />
       </div>
-      <audio ref={audioRef} src={resolvedAudioUrl} preload="metadata" />
 
       <div className="relative flex flex-col sm:flex-row items-center gap-5 mb-6">
         <div className="relative">
@@ -299,9 +208,7 @@ function StpsPlayer({
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const pct = (e.clientX - rect.left) / rect.width;
-            if (audioRef.current && audioRef.current.duration) {
-              audioRef.current.currentTime = pct * audioRef.current.duration;
-            }
+            if (isThis) player.seekToPct(pct);
           }}
           data-testid="stps-progress-bar"
         >
@@ -315,28 +222,28 @@ function StpsPlayer({
 
       <div className="relative flex items-center justify-center gap-4 mt-4">
         <button
-          onClick={changeSpeed}
+          onClick={() => { if (isThis) player.cycleRate(); }}
           className="px-3 py-1.5 rounded-lg bg-white/10 text-xs font-bold text-white/70 hover:bg-white/20 transition-colors cursor-pointer"
           data-testid="stps-speed"
         >
           {playbackRate}x
         </button>
         <button
-          onClick={() => skip(-15)}
+          onClick={() => doSkip(-15)}
           className="w-10 h-10 rounded-full bg-white/10 text-white/70 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
           data-testid="stps-skip-back"
         >
           <SkipBack size={16} />
         </button>
         <button
-          onClick={togglePlay}
+          onClick={startOrToggle}
           className="w-16 h-16 rounded-full bg-white text-[#0f1729] flex items-center justify-center hover:bg-white/90 transition-all shadow-lg shadow-white/20 cursor-pointer"
           data-testid="stps-play"
         >
           {isPlaying ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
         </button>
         <button
-          onClick={() => skip(30)}
+          onClick={() => doSkip(30)}
           className="w-10 h-10 rounded-full bg-white/10 text-white/70 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer"
           data-testid="stps-skip-forward"
         >
