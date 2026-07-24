@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import GemeloDigitalTab from "./instructor-gemelo-tab";
 import type { LucideIcon } from "lucide-react";
+import { useAudioPlayer } from "@/components/audio/audio-player-context";
 
 type NavTabItem = { id: string; label: string; icon: LucideIcon };
 type NavLinkItem = { id: string; label: string; icon: LucideIcon; href: string };
@@ -306,10 +307,12 @@ function ModuleCard({ mod, courseId, refetch }: { mod: CourseModule; courseId: s
   const [editingContent, setEditingContent] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [uploadingAudio, setUploadingAudio] = useState(false);
-  const [playingAudio, setPlayingAudio] = useState(false);
-  const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
   const [videoScript, setVideoScript] = useState("");
   const [showVideoGen, setShowVideoGen] = useState(false);
+
+  const audio = useAudioPlayer();
+  const audioTrackId = `course:${courseId}:module:${mod.id}`;
+  const isThisPlaying = audio.track?.id === audioTrackId && audio.isPlaying;
 
   const hasCustomAudio = mod.audioUrl?.startsWith("instructor_");
   const hasAudio = !!mod.audioUrl;
@@ -422,21 +425,6 @@ function ModuleCard({ mod, courseId, refetch }: { mod: CourseModule; courseId: s
     input.click();
   }
 
-  function toggleAudio() {
-    if (playingAudio && audioEl) {
-      audioEl.pause();
-      setPlayingAudio(false);
-      setAudioEl(null);
-      return;
-    }
-    if (audioEl) audioEl.pause();
-    const url = mod.audioUrl!.startsWith("http") ? mod.audioUrl! : `/audio/${mod.audioUrl}`;
-    const el = new Audio(url);
-    el.play();
-    el.onended = () => { setPlayingAudio(false); setAudioEl(null); };
-    setPlayingAudio(true);
-    setAudioEl(el);
-  }
 
   function startEditing() {
     setEditedContent(mod.contentHtml || "");
@@ -480,8 +468,19 @@ function ModuleCard({ mod, courseId, refetch }: { mod: CourseModule; courseId: s
               </h5>
               <div className="flex items-center gap-2 flex-wrap">
                 {hasAudio && (
-                  <Button variant="outline" size="sm" className="h-8 text-xs" onClick={toggleAudio} data-testid={`button-play-audio-${mod.id}`}>
-                    {playingAudio ? <><Pause size={12} className="mr-1.5" /> Pausar</> : <><Play size={12} className="mr-1.5" /> Escuchar {hasCustomAudio ? "mi audio" : "audio IA"}</>}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={() => audio.toggle({
+                      id: audioTrackId,
+                      url: mod.audioUrl!,
+                      title: mod.title,
+                      subtitle: hasCustomAudio ? "Tu grabación" : "Audio IA",
+                    })}
+                    data-testid={`button-play-audio-${mod.id}`}
+                  >
+                    {isThisPlaying ? <><Pause size={12} className="mr-1.5" /> Pausar</> : <><Play size={12} className="mr-1.5" /> Escuchar {hasCustomAudio ? "mi audio" : "audio IA"}</>}
                   </Button>
                 )}
                 <Button
