@@ -11,6 +11,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ViewAsSwitcher from "@/components/ViewAsSwitcher";
 import { AudioPlayerProvider } from "@/components/audio/audio-player-context";
+import FloatingAudioPlayer from "@/components/audio/floating-audio-player";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Empresas from "@/pages/empresas";
@@ -154,6 +155,7 @@ function App() {
                   <ErrorBoundary>
                     <Router />
                   </ErrorBoundary>
+                  <FloatingAudioPlayer />
                 </AudioPlayerProvider>
               </TooltipProvider>
             </ViewAsProvider>
