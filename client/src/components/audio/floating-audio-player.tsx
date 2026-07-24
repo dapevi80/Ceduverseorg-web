@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import { useAudioPlayer } from "./audio-player-context";
 import { Play, Pause, X, Volume2 } from "lucide-react";
 
@@ -10,11 +11,24 @@ function fmt(s: number): string {
 
 export default function FloatingAudioPlayer() {
   const { track, isPlaying, currentTime, duration, playbackRate, toggle, skip, seekToPct, cycleRate, stop } = useAudioPlayer();
+  const barRef = useRef<HTMLDivElement>(null);
+
+  // La barra es fixed y no ocupa espacio en el layout: sin esto tapa lo último de
+  // la página. Se reserva ese alto empujando el contenido con padding en el body,
+  // y se libera al cerrar el reproductor.
+  useEffect(() => {
+    if (!track) { document.body.style.paddingBottom = ""; return; }
+    const h = barRef.current?.offsetHeight ?? 80;
+    document.body.style.paddingBottom = `${h}px`;
+    return () => { document.body.style.paddingBottom = ""; };
+  }, [track]);
+
   if (!track) return null;
   const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
     <div
+      ref={barRef}
       className="fixed bottom-0 inset-x-0 z-[60] bg-[#0f1729] text-white shadow-2xl border-t border-white/10"
       data-testid="floating-audio-player"
     >
