@@ -68,10 +68,16 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       const dur = audio.duration || 0;
       setCurrentTime(ct);
       const diff = ct - lastTimeRef.current;
+      // El tope de "hasta dónde ha escuchado" avanza con la reproducción real.
+      // Como el adelanto está bloqueado, currentTime solo alcanza posiciones ya
+      // escuchadas, así que tomar el máximo es seguro y NO se queda atrás cuando
+      // timeupdate se ralentiza (p.ej. al navegar en otra pantalla) — que era la
+      // causa de que el retroceso "regresara todo".
+      const secNow = Math.floor(ct);
+      if (secNow > maxListenedSecond.current) maxListenedSecond.current = secNow;
+      // El % para el diploma sí exige escucha contigua (no contar rangos saltados).
       if (diff > 0 && diff < 2) {
-        const seg = Math.floor(ct);
-        listenedSegments.current.add(seg);
-        if (seg > maxListenedSecond.current) maxListenedSecond.current = seg;
+        listenedSegments.current.add(secNow);
         const t = trackRef.current;
         if (t?.onProgress && dur > 0) {
           t.onProgress((listenedSegments.current.size / Math.ceil(dur)) * 100);
@@ -84,9 +90,13 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     const onSeeking = () => {
       const t = trackRef.current;
       if (!t?.restrictSeek) return;
+      // Solo se bloquea el ADELANTO más allá de lo escuchado. El retroceso es
+      // siempre libre (currentTime <= la última posición reproducida).
       const dur = audio.duration || 0;
-      const allowed = clampSeek(audio.currentTime, maxListenedSecond.current, dur);
-      if (audio.currentTime > allowed) audio.currentTime = allowed;
+      const allowed = maxListenedSecond.current + dur * 0.1;
+      if (audio.currentTime > lastTimeRef.current && audio.currentTime > allowed) {
+        audio.currentTime = allowed;
+      }
     };
     const onSeeked = () => { lastTimeRef.current = audio.currentTime; };
     const onPlay = () => setIsPlaying(true);
@@ -157,7 +167,10 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     const audio = audioRef.current;
     if (!audio || !audio.duration) return;
     let target = pct * audio.duration;
-    if (trackRef.current?.restrictSeek) target = clampSeek(target, maxListenedSecond.current, audio.duration);
+    // Solo el adelanto se limita; el retroceso es libre.
+    if (trackRef.current?.restrictSeek && target > audio.currentTime) {
+      target = clampSeek(target, maxListenedSecond.current, audio.duration);
+    }
     audio.currentTime = Math.max(0, Math.min(audio.duration, target));
   }, []);
 
