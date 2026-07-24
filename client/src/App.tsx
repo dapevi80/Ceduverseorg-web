@@ -10,6 +10,7 @@ import { ViewAsProvider } from "@/hooks/use-view-as";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ViewAsSwitcher from "@/components/ViewAsSwitcher";
+import ScrollToTop from "@/components/scroll-to-top";
 import { AudioPlayerProvider } from "@/components/audio/audio-player-context";
 import FloatingAudioPlayer from "@/components/audio/floating-audio-player";
 import NotFound from "@/pages/not-found";
@@ -151,6 +152,7 @@ function App() {
                 <PendingTermsModal />
                 <ViewAsSwitcher />
                 <ReferralCapture />
+                <ScrollToTop />
                 <AudioPlayerProvider>
                   <ErrorBoundary>
                     <Router />
